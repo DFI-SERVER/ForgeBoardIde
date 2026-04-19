@@ -1,5 +1,15 @@
 import "./StatusBar.css";
 import { connectedBoard, connectedPort, saveState } from "../state/appState";
+import { ping } from "../ipc/ping";
+
+async function handlePing() {
+  try {
+    const r = await ping();
+    alert(`${r.pong} (v${r.version})`);
+  } catch (e) {
+    alert(`Ping failed: ${e}`);
+  }
+}
 
 export function StatusBar() {
   return (
@@ -11,6 +21,7 @@ export function StatusBar() {
       <span class="sb-item muted">{connectedBoard.value ?? "No board"}</span>
       <span class="sb-item">Ln 14 · Col 22</span>
       <span class="sb-item">Spaces: 2</span>
+      <button class="sb-item sb-ping" onClick={handlePing}>ping</button>
       <span class="sb-spacer" />
       <span class="sb-item">UTF-8</span>
       <span class="sb-item">LF</span>
