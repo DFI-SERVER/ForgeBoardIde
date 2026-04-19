@@ -1,0 +1,27 @@
+.titlebar {
+  height: var(--titlebar-h);
+  background: var(--panel-alt);
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px;
+  font-size: 10px;
+  color: var(--text-muted);
+  -webkit-app-region: drag;
+}
+.titlebar-brand {
+  color: var(--accent-gold);
+  font-weight: 700;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  letter-spacing: 0.3px;
+}
+.titlebar-sep { color: var(--text-dim); margin: 0 8px; }
+.titlebar-file { color: var(--text-dim); }
+.titlebar-right {
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  -webkit-app-region: no-drag;
+}

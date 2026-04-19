@@ -1,0 +1,24 @@
+.statusbar {
+  height: var(--statusbar-h);
+  background: var(--panel-alt);
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  gap: 18px;
+  padding: 0 14px;
+  font-size: 9px;
+  color: var(--text-muted);
+  font-family: var(--font-ui);
+  align-items: center;
+}
+.sb-item { display: inline-flex; align-items: center; gap: 5px; }
+.sb-item.muted { color: var(--text-disabled); }
+.sb-dot { width: 6px; height: 6px; border-radius: 50%; }
+.sb-dot.connected {
+  background: var(--accent-sage);
+  box-shadow: 0 0 4px var(--accent-sage);
+}
+.sb-spacer { flex: 1; }
+.save-state.saved { color: var(--accent-sage); }
+.save-state.saving { color: var(--accent-gold); }
+.save-state.unsaved { color: var(--warn); }
+.sb-ping { color: var(--accent-gold); cursor: pointer; }
