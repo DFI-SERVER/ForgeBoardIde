@@ -14,8 +14,6 @@ pub struct SerialLine {
 /// A live serial connection. A single task owns the port; the frontend
 /// sends outgoing bytes through `tx`.
 pub struct SerialHandle {
-    pub port: String,
-    pub baud: u32,
     pub tx: mpsc::Sender<Vec<u8>>,
     pub task: tokio::task::JoinHandle<()>,
 }
@@ -81,12 +79,7 @@ pub async fn open(
         }
     });
 
-    Ok(SerialHandle {
-        port: port_name.to_string(),
-        baud,
-        tx,
-        task,
-    })
+    Ok(SerialHandle { tx, task })
 }
 
 /// Abort the connection's task and wait for it to release the port.
