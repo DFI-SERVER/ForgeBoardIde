@@ -40,10 +40,10 @@
   --radius-lg: 5px;
 
   /* Layout */
-  --rail-w: 132px;
-  --sidebar-w: 240px;
-  --titlebar-h: 28px;
-  --actionbar-h: 44px;
-  --statusbar-h: 22px;
-  --bottompanel-h: 180px;
+  --rail-w: 156px;
+  --sidebar-w: 256px;
+  --titlebar-h: 34px;
+  --actionbar-h: 52px;
+  --statusbar-h: 28px;
+  --bottompanel-h: 188px;
 }

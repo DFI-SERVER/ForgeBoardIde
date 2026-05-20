@@ -1,14 +1,14 @@
 .tabbar {
   display: flex;
   align-items: stretch;
-  font-size: 10.5px;
+  font-size: 12.5px;
   font-family: var(--font-mono);
 }
 .tab {
   display: flex;
   align-items: center;
-  gap: 7px;
-  padding: 7px 12px 6px;
+  gap: 8px;
+  padding: 9px 15px 8px;
   color: var(--text-muted);
   border-right: 1px solid var(--border-subtle);
   border-top: 2px solid transparent;
@@ -21,21 +21,21 @@
   border-top-color: var(--accent-gold);
 }
 .tab:hover:not(.active) { color: var(--text); }
-.tab-dot { font-size: 8px; }
+.tab-dot { font-size: 9px; }
 .tab-dot.modified { color: var(--accent-gold); }
 .tab-dot.saved { color: var(--border); }
-.tab-name { font-size: 10px; }
+.tab-name { font-size: 12.5px; }
 .tab-x {
   color: var(--text-dim);
   margin-left: 4px;
-  font-size: 12px;
-  padding: 0 2px;
+  font-size: 14px;
+  padding: 0 3px;
   border-radius: 2px;
 }
 .tab-x:hover { background: var(--border); color: var(--text); }
 .tab-plus {
-  padding: 7px 12px;
+  padding: 9px 14px;
   color: var(--text-dim);
-  font-size: 12px;
+  font-size: 14px;
 }
 .tab-plus:hover { color: var(--accent-gold); }

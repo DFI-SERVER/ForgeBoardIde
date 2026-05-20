@@ -5,7 +5,7 @@
   display: flex;
   gap: 18px;
   padding: 0 14px;
-  font-size: 9px;
+  font-size: 11px;
   color: var(--text-muted);
   font-family: var(--font-ui);
   align-items: center;

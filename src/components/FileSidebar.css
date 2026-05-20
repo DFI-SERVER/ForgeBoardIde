@@ -17,16 +17,16 @@
   color: var(--text);
   font-family: var(--font-ui);
   font-weight: 600;
-  font-size: 12px;
+  font-size: 14px;
 }
-.sb-new { color: var(--accent-gold); font-size: 11px; cursor: pointer; }
+.sb-new { color: var(--accent-gold); font-size: 12.5px; cursor: pointer; }
 
 .sb-body { padding: 12px 10px; flex: 1; overflow-y: auto; }
 
 .sb-section-label {
   color: var(--text-muted);
   letter-spacing: 1.2px;
-  font-size: 8.5px;
+  font-size: 10.5px;
   font-weight: 700;
   margin: 14px 8px 7px;
   font-family: var(--font-mono);
@@ -35,21 +35,21 @@
 
 .sb-folder {
   color: var(--text);
-  padding: 3px 8px;
+  padding: 4px 8px;
   display: flex;
   align-items: center;
   gap: 6px;
   cursor: pointer;
-  font-size: 10.5px;
+  font-size: 13px;
   font-family: var(--font-ui);
 }
 .sb-folder.muted { color: var(--text-muted); }
-.sb-caret { color: var(--accent-gold); font-size: 8px; width: 8px; }
+.sb-caret { color: var(--accent-gold); font-size: 9px; width: 9px; }
 
 .sb-file {
   color: var(--text-muted);
-  padding: 3px 8px 3px 24px;
-  font-size: 10px;
+  padding: 4px 8px 4px 24px;
+  font-size: 12.5px;
   font-family: var(--font-ui);
   cursor: pointer;
 }
@@ -59,15 +59,15 @@
   padding-left: 22px;
   color: var(--text);
 }
-.sb-mod { color: var(--accent-gold); font-size: 7px; margin-right: 5px; }
-.sb-add { color: var(--text-dim); padding: 4px 24px; font-size: 10px; cursor: pointer; }
+.sb-mod { color: var(--accent-gold); font-size: 8px; margin-right: 5px; }
+.sb-add { color: var(--text-dim); padding: 4px 24px; font-size: 12px; cursor: pointer; }
 .sb-add:hover { color: var(--accent-gold); }
 
 .sb-placeholder {
   color: var(--text-muted);
   padding: 40px 16px;
   text-align: center;
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.6;
   font-family: var(--font-ui);
 }
