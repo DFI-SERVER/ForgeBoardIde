@@ -2,7 +2,7 @@ import "./TitleBar.css";
 import { activeTabIndex, openTabs } from "../state/appState";
 
 export function TitleBar() {
-  const activeFile = openTabs.value[activeTabIndex.value]?.path ?? "—";
+  const activeFile = openTabs.value[activeTabIndex.value]?.name ?? "—";
 
   return (
     <div class="titlebar" data-tauri-drag-region>
