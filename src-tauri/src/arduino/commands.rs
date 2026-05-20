@@ -57,3 +57,11 @@ pub async fn arduino_install_core(
 pub async fn arduino_update_index(app: tauri::AppHandle) -> Result<(), String> {
     super::core::update_index(&app).await
 }
+
+#[tauri::command]
+pub async fn arduino_identify_board(
+    app: tauri::AppHandle,
+    port: String,
+) -> Result<super::detect::BoardId, String> {
+    super::detect::identify(&app, &port).await
+}

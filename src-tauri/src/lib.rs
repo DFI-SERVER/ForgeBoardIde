@@ -28,6 +28,7 @@ pub fn run() {
             arduino::commands::arduino_search_cores,
             arduino::commands::arduino_install_core,
             arduino::commands::arduino_update_index,
+            arduino::commands::arduino_identify_board,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
