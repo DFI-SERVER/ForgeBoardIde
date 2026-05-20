@@ -7,9 +7,9 @@
   --border-subtle: #1f1e1a;
 
   --text: #e8e6e1;
-  --text-muted: #8a8680;
-  --text-disabled: #5a5650;
-  --text-dim: #3a3834;
+  --text-muted: #a8a39a;
+  --text-disabled: #807c73;
+  --text-dim: #5c5851;
 
   --accent-gold: #c9922f;
   --accent-gold-bg: rgba(201, 146, 47, 0.06);
@@ -27,11 +27,11 @@
   --code-function: #e8c585;
   --code-string: #a8c479;
   --code-number: #d19a66;
-  --code-comment: #5a5650;
+  --code-comment: #807c73;
   --code-type: #7fb2a1;
 
   /* Fonts */
-  --font-ui: "Instrument Sans", -apple-system, "Segoe UI", sans-serif;
+  --font-ui: "Inter Variable", "Segoe UI", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", "Consolas", "SFMono-Regular", monospace;
 
   /* Radii */

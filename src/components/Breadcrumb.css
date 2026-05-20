@@ -1,7 +1,7 @@
 .breadcrumb {
   background: var(--bg);
   padding: 4px 18px;
-  font-size: 9px;
+  font-size: 11px;
   color: var(--text-disabled);
   border-bottom: 1px solid var(--border-subtle);
   font-family: var(--font-mono);

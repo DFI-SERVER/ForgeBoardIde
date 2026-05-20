@@ -23,7 +23,7 @@ export function MonacoEditor() {
       value: "",
       language: "arduino",
       theme: "forgeboard",
-      fontFamily: "JetBrains Mono",
+      fontFamily: "JetBrains Mono, Consolas, monospace",
       fontSize: 13,
       lineHeight: 22,
       fontLigatures: false,
