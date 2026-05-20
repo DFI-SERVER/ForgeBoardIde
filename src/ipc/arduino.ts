@@ -21,6 +21,13 @@ export interface UploadResult {
   exit_code: number;
   stderr: string;
 }
+export interface Core {
+  id: string;
+  name: string;
+  version?: string;
+  maintainer?: string;
+  installed: boolean;
+}
 
 /** Frontend wrapper around the arduino-cli Tauri commands and streaming events. */
 export const arduinoApi = {
@@ -34,4 +41,10 @@ export const arduinoApi = {
     listen<string>("compile-output", (e) => cb(e.payload)),
   onUploadOutput: (cb: (line: string) => void) =>
     listen<string>("upload-output", (e) => cb(e.payload)),
+  listCores: () => invoke<Core[]>("arduino_list_cores"),
+  searchCores: (query: string) => invoke<Core[]>("arduino_search_cores", { query }),
+  installCore: (coreId: string) => invoke<number>("arduino_install_core", { coreId }),
+  updateIndex: () => invoke<void>("arduino_update_index"),
+  onCoreInstallOutput: (cb: (line: string) => void) =>
+    listen<string>("core-install-output", (e) => cb(e.payload)),
 };

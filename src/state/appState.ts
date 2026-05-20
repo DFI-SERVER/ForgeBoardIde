@@ -1,5 +1,6 @@
 import { signal, computed } from "@preact/signals";
 import type { Sketch } from "../ipc/project";
+import type { Core, Board, DetectedBoard } from "../ipc/arduino";
 
 export type RailIcon =
   | "home"
@@ -54,3 +55,10 @@ export const serialLog = signal<SerialLogEntry[]>([]);
 export const serialBaud = signal<number>(115200);
 export const serialLineEnding = signal<"\n" | "\r\n" | "\r" | "">("\n");
 export const serialConnected = signal<boolean>(false);
+
+/** Boards & Ports — installed cores + detected hardware (Phase 8). */
+export const installedCores = signal<Core[]>([]);
+export const installedBoards = signal<Board[]>([]);
+export const detectedPorts = signal<DetectedBoard[]>([]);
+export const coreInstallProgress = signal<string[]>([]);
+export const coreInstallRunning = signal<string | null>(null);
