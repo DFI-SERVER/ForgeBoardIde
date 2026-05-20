@@ -103,11 +103,15 @@ pub async fn identify(app: &tauri::AppHandle, port: &str) -> Result<BoardId, Str
                     let fqbn = p.pointer("/matching_boards/0/fqbn").and_then(Value::as_str);
                     let name = p.pointer("/matching_boards/0/name").and_then(Value::as_str);
                     if let (Some(fqbn), Some(name)) = (fqbn, name) {
-                        return Ok(BoardId {
-                            fqbn: fqbn.to_string(),
-                            name: name.to_string(),
-                            source: "usb".to_string(),
-                        });
+                        // Skip the generic "ESP32 Family Device" catch-all —
+                        // the esptool probe below gives the exact chip.
+                        if fqbn != "esp32:esp32:esp32_family" {
+                            return Ok(BoardId {
+                                fqbn: fqbn.to_string(),
+                                name: name.to_string(),
+                                source: "usb".to_string(),
+                            });
+                        }
                     }
                 }
             }
