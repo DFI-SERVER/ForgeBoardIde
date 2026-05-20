@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "preact/hooks";
-import { detectedPorts, connectedPort, selectedFqbn } from "../state/appState";
+import { detectedPorts, connectedPort, selectedFqbn, toast } from "../state/appState";
 import { arduinoApi } from "../ipc/arduino";
 import "./PortSelector.css";
 
@@ -40,10 +40,17 @@ export function PortSelector() {
   const current = connectedPort.value;
   const ports = detectedPorts.value;
 
-  function pick(port: string, fqbn?: string) {
+  async function pick(port: string) {
     connectedPort.value = port;
-    if (fqbn) selectedFqbn.value = fqbn;
     setOpen(false);
+    toast.value = `Detecting board on ${port}…`;
+    try {
+      const id = await arduinoApi.identifyBoard(port);
+      selectedFqbn.value = id.fqbn;
+      toast.value = `Detected ${id.name} on ${port}`;
+    } catch {
+      toast.value = `${port}: couldn't auto-detect — select the board manually.`;
+    }
   }
 
   return (
@@ -65,7 +72,7 @@ export function PortSelector() {
               <button
                 key={p.port}
                 class={`ps-item ${p.port === current ? "active" : ""}`}
-                onClick={() => pick(p.port, p.fqbn)}
+                onClick={() => pick(p.port)}
               >
                 <div class="ps-item-port">{p.port}</div>
                 <div class="ps-item-name">{p.name ?? "Unknown device"}</div>

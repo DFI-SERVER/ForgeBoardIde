@@ -62,3 +62,6 @@ export const installedBoards = signal<Board[]>([]);
 export const detectedPorts = signal<DetectedBoard[]>([]);
 export const coreInstallProgress = signal<string[]>([]);
 export const coreInstallRunning = signal<string | null>(null);
+
+/** Transient bottom-right notification (board auto-detect, etc.). */
+export const toast = signal<string | null>(null);

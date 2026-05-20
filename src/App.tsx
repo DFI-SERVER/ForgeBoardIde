@@ -5,6 +5,7 @@ import { FileSidebar } from "./components/FileSidebar";
 import { EditorArea } from "./components/EditorArea";
 import { BottomPanel } from "./components/BottomPanel";
 import { StatusBar } from "./components/StatusBar";
+import { Toast } from "./components/Toast";
 
 export default function App() {
   return (
@@ -18,6 +19,7 @@ export default function App() {
       </div>
       <BottomPanel />
       <StatusBar />
+      <Toast />
     </div>
   );
 }

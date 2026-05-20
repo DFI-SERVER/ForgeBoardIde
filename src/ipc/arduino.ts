@@ -28,6 +28,11 @@ export interface Core {
   maintainer?: string;
   installed: boolean;
 }
+export interface BoardId {
+  fqbn: string;
+  name: string;
+  source: string;
+}
 
 /** Frontend wrapper around the arduino-cli Tauri commands and streaming events. */
 export const arduinoApi = {
@@ -45,6 +50,7 @@ export const arduinoApi = {
   searchCores: (query: string) => invoke<Core[]>("arduino_search_cores", { query }),
   installCore: (coreId: string) => invoke<number>("arduino_install_core", { coreId }),
   updateIndex: () => invoke<void>("arduino_update_index"),
+  identifyBoard: (port: string) => invoke<BoardId>("arduino_identify_board", { port }),
   onCoreInstallOutput: (cb: (line: string) => void) =>
     listen<string>("core-install-output", (e) => cb(e.payload)),
 };
