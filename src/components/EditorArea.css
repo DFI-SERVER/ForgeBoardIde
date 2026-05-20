@@ -6,4 +6,31 @@
   display: flex;
   flex-direction: column;
 }
-.editor-monaco-host { flex: 1; min-height: 0; }
+.editor-monaco-host {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+.editor-empty {
+  position: absolute;
+  inset: 0;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  text-align: center;
+  padding: 24px;
+}
+.editor-empty-title {
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 15px;
+  font-weight: 600;
+}
+.editor-empty-sub {
+  color: var(--text-muted);
+  font-family: var(--font-ui);
+  font-size: 12.5px;
+}

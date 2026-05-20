@@ -1,14 +1,9 @@
 import "./ActionBar.css";
 import { connectedBoard, connectedPort } from "../state/appState";
-import { TabBar } from "./TabBar";
 
 export function ActionBar() {
   return (
     <div class="actionbar">
-      <TabBar />
-
-      <div class="actionbar-spacer" />
-
       <button class="btn btn-ghost" title="Check code for errors">
         <span class="btn-icon check">✓</span>
         <span>Check code</span>
@@ -19,7 +14,7 @@ export function ActionBar() {
         <span>→</span>
       </button>
 
-      <div class="actionbar-divider" />
+      <div class="actionbar-spacer" />
 
       <div class="pill">
         <span class="pill-dot sage">◆</span>

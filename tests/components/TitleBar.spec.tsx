@@ -1,14 +1,6 @@
 import { render, screen } from "@testing-library/preact";
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect } from "vitest";
 import { TitleBar } from "../../src/components/TitleBar";
-import { openTabs, activeTabIndex } from "../../src/state/appState";
-
-beforeEach(() => {
-  openTabs.value = [
-    { path: "/sketches/led-chase/led-chase.ino", name: "led-chase.ino", modified: false },
-  ];
-  activeTabIndex.value = 0;
-});
 
 describe("TitleBar", () => {
   it("renders the ForgeBoard IDE brand", () => {
@@ -17,8 +9,10 @@ describe("TitleBar", () => {
     expect(screen.getByText("IDE")).toBeInTheDocument();
   });
 
-  it("shows the active file name", () => {
+  it("renders the window controls", () => {
     render(<TitleBar />);
-    expect(screen.getByText("led-chase.ino")).toBeInTheDocument();
+    expect(screen.getByTitle("Minimize")).toBeInTheDocument();
+    expect(screen.getByTitle("Maximize")).toBeInTheDocument();
+    expect(screen.getByTitle("Close")).toBeInTheDocument();
   });
 });

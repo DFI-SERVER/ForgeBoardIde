@@ -8,7 +8,6 @@
   padding: 0 16px;
 }
 .actionbar-spacer { flex: 1; }
-.actionbar-divider { width: 1px; height: 26px; background: var(--border); margin: 0 4px; }
 
 .btn {
   padding: 8px 14px;

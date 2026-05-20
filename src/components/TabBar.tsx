@@ -31,7 +31,6 @@ export function TabBar() {
           <span class="tab-x" onClick={(e) => closeTab(i, e as any)}>×</span>
         </button>
       ))}
-      <button class="tab-plus" title="New file">+</button>
     </div>
   );
 }

@@ -31,8 +31,8 @@
   --code-type: #7fb2a1;
 
   /* Fonts */
-  --font-ui: "Inter Variable", "Segoe UI", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", "Consolas", "SFMono-Regular", monospace;
+  --font-ui: "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono: "Consolas", "Courier New", monospace;
 
   /* Radii */
   --radius-sm: 2px;
@@ -42,8 +42,9 @@
   /* Layout */
   --rail-w: 156px;
   --sidebar-w: 256px;
-  --titlebar-h: 38px;
-  --actionbar-h: 52px;
+  --titlebar-h: 34px;
+  --actionbar-h: 46px;
+  --tabstrip-h: 36px;
   --statusbar-h: 28px;
   --bottompanel-h: 188px;
 }

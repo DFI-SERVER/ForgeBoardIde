@@ -4,9 +4,8 @@
   border-bottom: 1px solid var(--border-subtle);
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 0 16px;
-  -webkit-app-region: drag;
+  justify-content: space-between;
+  padding-left: 16px;
 }
 .titlebar-brand {
   display: flex;
@@ -14,7 +13,7 @@
   gap: 8px;
 }
 .titlebar-logo {
-  height: 24px;
+  height: 22px;
   width: auto;
   object-fit: contain;
   display: block;
@@ -23,7 +22,7 @@
   color: var(--text);
   font-family: var(--font-ui);
   font-weight: 700;
-  font-size: 13px;
+  font-size: 12.5px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -31,16 +30,7 @@
   color: var(--text-muted);
   font-family: var(--font-ui);
   font-weight: 400;
-  font-size: 13px;
+  font-size: 12.5px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
-.titlebar-file {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-}
-.titlebar-file-sep { color: var(--text-dim); }
-.titlebar-file-name { color: var(--text-disabled); }
