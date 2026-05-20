@@ -7,7 +7,10 @@ export function TitleBar() {
   return (
     <div class="titlebar" data-tauri-drag-region>
       <div class="titlebar-left">
-        <span class="titlebar-brand">◆ ForgeBoard IDE</span>
+        <span class="titlebar-brand">
+          <img src="/forgeboard-logo.png" class="titlebar-logo" alt="" />
+          ForgeBoard IDE
+        </span>
         <span class="titlebar-sep">—</span>
         <span class="titlebar-file">{activeFile}</span>
       </div>

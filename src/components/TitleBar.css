@@ -10,12 +10,21 @@
   color: var(--text-muted);
   -webkit-app-region: drag;
 }
+.titlebar-left { display: flex; align-items: center; }
 .titlebar-brand {
   color: var(--accent-gold);
   font-weight: 700;
   font-family: var(--font-ui);
   font-size: 13px;
   letter-spacing: 0.3px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.titlebar-logo {
+  height: 17px;
+  width: auto;
+  display: block;
 }
 .titlebar-sep { color: var(--text-dim); margin: 0 8px; }
 .titlebar-file { color: var(--text-dim); }
