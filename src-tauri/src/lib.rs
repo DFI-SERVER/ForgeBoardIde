@@ -14,6 +14,10 @@ pub fn run() {
             project::commands::project_read_file,
             project::commands::project_save_file,
             project::commands::project_list_recent,
+            arduino::commands::arduino_list_boards,
+            arduino::commands::arduino_detect_ports,
+            arduino::commands::arduino_compile,
+            arduino::commands::arduino_upload,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
