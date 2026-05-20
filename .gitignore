@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# arduino-cli — downloaded at build time by scripts/download-arduino-cli.ps1
+src-tauri/binaries/
