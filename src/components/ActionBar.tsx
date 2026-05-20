@@ -120,6 +120,8 @@ export function ActionBar() {
         <span>{connectedPort.value ?? "No port"}</span>
         <span class="pill-caret">▾</span>
       </div>
+
+      {busy && <div class="actionbar-progress" />}
     </div>
   );
 }

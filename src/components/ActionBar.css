@@ -1,4 +1,5 @@
 .actionbar {
+  position: relative;
   height: var(--actionbar-h);
   background: var(--panel);
   border-bottom: 1px solid var(--border);
@@ -45,3 +46,27 @@
   box-shadow: 0 0 5px var(--accent-sage);
 }
 .pill-caret { color: var(--text-muted); font-size: 10px; }
+
+/* Indeterminate progress bar — slides while compiling / uploading */
+.actionbar-progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  overflow: hidden;
+  background: var(--accent-gold-bg);
+}
+.actionbar-progress::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 34%;
+  background: var(--accent-gold);
+  animation: actionbar-progress-slide 1.05s ease-in-out infinite;
+}
+@keyframes actionbar-progress-slide {
+  0% { left: -34%; }
+  100% { left: 100%; }
+}
