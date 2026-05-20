@@ -1,6 +1,5 @@
 import "./ActionBar.css";
 import {
-  connectedBoard,
   connectedPort,
   currentSketch,
   buildPhase,
@@ -10,6 +9,8 @@ import {
   bottomPanelTab,
 } from "../state/appState";
 import { arduinoApi } from "../ipc/arduino";
+import { BoardSelector } from "./BoardSelector";
+import { PortSelector } from "./PortSelector";
 
 let listenersReady = false;
 async function ensureListeners() {
@@ -109,17 +110,8 @@ export function ActionBar() {
 
       <div class="actionbar-spacer" />
 
-      <div class="pill">
-        <span class="pill-dot sage">◆</span>
-        <span>{connectedBoard.value ?? "No board"}</span>
-        <span class="pill-caret">▾</span>
-      </div>
-
-      <div class="pill">
-        <span class="pill-dot-connected" />
-        <span>{connectedPort.value ?? "No port"}</span>
-        <span class="pill-caret">▾</span>
-      </div>
+      <BoardSelector />
+      <PortSelector />
 
       {busy && <div class="actionbar-progress" />}
     </div>
