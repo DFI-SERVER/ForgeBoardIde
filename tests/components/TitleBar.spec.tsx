@@ -13,11 +13,12 @@ beforeEach(() => {
 describe("TitleBar", () => {
   it("renders the ForgeBoard IDE brand", () => {
     render(<TitleBar />);
-    expect(screen.getByText(/ForgeBoard IDE/i)).toBeInTheDocument();
+    expect(screen.getByText("ForgeBoard")).toBeInTheDocument();
+    expect(screen.getByText("IDE")).toBeInTheDocument();
   });
 
   it("shows the active file name", () => {
     render(<TitleBar />);
-    expect(screen.getByText(/led-chase.ino/i)).toBeInTheDocument();
+    expect(screen.getByText("led-chase.ino")).toBeInTheDocument();
   });
 });
