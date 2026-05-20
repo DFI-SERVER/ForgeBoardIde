@@ -1,29 +1,64 @@
 import "./FileSidebar.css";
-import { activeRail } from "../state/appState";
+import {
+  currentSketch,
+  activeRail,
+  openTabs,
+  activeTabIndex,
+  fileContents,
+} from "../state/appState";
+import { projectApi } from "../ipc/project";
 
 function FilesView() {
+  const sketch = currentSketch.value;
+  if (!sketch) return <div class="sb-placeholder">No sketch open.</div>;
+
+  const activeTab = openTabs.value[activeTabIndex.value];
+
   return (
     <>
       <div class="sb-header">
         <span class="sb-title">Your files</span>
-        <span class="sb-new">+ new</span>
+        <span
+          class="sb-new"
+          onClick={async () => {
+            const name = prompt("New sketch name:");
+            if (!name) return;
+            try {
+              const created = await projectApi.create(name);
+              currentSketch.value = created;
+              const contents = new Map<string, string>();
+              for (const f of created.files) {
+                contents.set(f.path, await projectApi.readFile(f.path));
+              }
+              fileContents.value = contents;
+              openTabs.value = created.files.map((f) => ({
+                path: f.path,
+                name: f.name,
+                modified: false,
+              }));
+              activeTabIndex.value = 0;
+            } catch (e) {
+              alert(`Couldn't create: ${e}`);
+            }
+          }}
+        >
+          + new
+        </span>
       </div>
       <div class="sb-body">
-        <div class="sb-section-label">THIS SKETCH</div>
-        <div class="sb-folder">
-          <span class="sb-caret">▾</span> led-chase
-        </div>
-        <div class="sb-file active">
-          <span class="sb-mod">●</span> led-chase.ino
-        </div>
-        <div class="sb-file">pins.h</div>
-        <div class="sb-file">config.h</div>
-        <div class="sb-add">+ add file</div>
-
-        <div class="sb-section-label">RECENT</div>
-        <div class="sb-folder muted">wifi-scanner</div>
-        <div class="sb-folder muted">dht-reader</div>
-        <div class="sb-folder muted">blink</div>
+        <div class="sb-section-label">SKETCH · {sketch.name}</div>
+        {sketch.files.map((f) => (
+          <div
+            class={`sb-file ${activeTab?.path === f.path ? "active" : ""}`}
+            onClick={() => {
+              const idx = openTabs.value.findIndex((t) => t.path === f.path);
+              if (idx >= 0) activeTabIndex.value = idx;
+            }}
+          >
+            {f.is_main && <span class="sb-mod">◆</span>}
+            {f.name}
+          </div>
+        ))}
       </div>
     </>
   );
