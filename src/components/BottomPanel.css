@@ -50,3 +50,26 @@
   font-family: var(--font-ui);
   padding: 20px 0;
 }
+
+/* Compile / upload output */
+.bp-output {
+  margin: 0;
+  height: 100%;
+  overflow-y: auto;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--text-muted);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.bp-output-line { min-height: 1.2em; }
+.bp-output-empty {
+  color: var(--text-dim);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  padding: 6px 0;
+}
+.bp-output-status { color: var(--accent-gold); font-weight: 600; margin-top: 8px; }
+.bp-output-ok { color: var(--success); font-weight: 700; margin-top: 8px; }
+.bp-output-err { color: var(--error); font-weight: 700; margin-top: 8px; }

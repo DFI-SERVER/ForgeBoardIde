@@ -1,5 +1,12 @@
 import "./BottomPanel.css";
-import { bottomPanelTab, bottomPanelOpen, problemsCount } from "../state/appState";
+import { useEffect, useRef } from "preact/hooks";
+import {
+  bottomPanelTab,
+  bottomPanelOpen,
+  problemsCount,
+  buildOutput,
+  buildPhase,
+} from "../state/appState";
 
 const TABS = [
   { id: "serial", label: "Serial Monitor" },
@@ -7,6 +14,40 @@ const TABS = [
   { id: "plotter", label: "Plotter" },
   { id: "problems", label: "Problems" },
 ] as const;
+
+function OutputView() {
+  const lines = buildOutput.value;
+  const phase = buildPhase.value;
+  const ref = useRef<HTMLPreElement>(null);
+
+  useEffect(() => {
+    if (ref.current) ref.current.scrollTop = ref.current.scrollHeight;
+  }, [lines.length, phase]);
+
+  if (lines.length === 0 && phase === "idle") {
+    return (
+      <div class="bp-output-empty">
+        No output yet. Click "Check code" to compile, or "Upload" to flash a connected board.
+      </div>
+    );
+  }
+
+  return (
+    <pre ref={ref} class="bp-output">
+      {lines.map((line, i) => (
+        <div key={i} class="bp-output-line">
+          {line || " "}
+        </div>
+      ))}
+      {phase === "compiling" && <div class="bp-output-status">▸ Compiling…</div>}
+      {phase === "uploading" && (
+        <div class="bp-output-status">▸ Compiling and uploading…</div>
+      )}
+      {phase === "success" && <div class="bp-output-ok">✓ Done</div>}
+      {phase === "error" && <div class="bp-output-err">✕ Failed</div>}
+    </pre>
+  );
+}
 
 export function BottomPanel() {
   if (!bottomPanelOpen.value) {
@@ -42,13 +83,16 @@ export function BottomPanel() {
         </button>
       </div>
       <div class="bp-body">
-        <div class="bp-placeholder">
-          {bottomPanelTab.value === "serial" && "Serial Monitor — arrives in Phase 5."}
-          {bottomPanelTab.value === "output" && "Compile output — arrives in Phase 4."}
-          {bottomPanelTab.value === "plotter" && "Serial Plotter — arrives in Phase 11."}
-          {bottomPanelTab.value === "problems" &&
-            "Problems list — arrives with Smart Help in Phase 6."}
-        </div>
+        {bottomPanelTab.value === "output" ? (
+          <OutputView />
+        ) : (
+          <div class="bp-placeholder">
+            {bottomPanelTab.value === "serial" && "Serial Monitor — arrives in Phase 5."}
+            {bottomPanelTab.value === "plotter" && "Serial Plotter — arrives in Phase 11."}
+            {bottomPanelTab.value === "problems" &&
+              "Problems list — arrives with Smart Help in Phase 6."}
+          </div>
+        )}
       </div>
     </section>
   );
