@@ -43,3 +43,14 @@ export const buildOutput = signal<string[]>([]);
 
 /** FQBN the IDE compiles and uploads against. Board-selector wiring lands in Phase 8. */
 export const selectedFqbn = signal<string>("esp32:esp32:esp32s3");
+
+/** Serial Monitor log — received lines, sent lines, and info notices. */
+export interface SerialLogEntry {
+  ts: number;
+  text: string;
+  kind: "rx" | "tx" | "info";
+}
+export const serialLog = signal<SerialLogEntry[]>([]);
+export const serialBaud = signal<number>(115200);
+export const serialLineEnding = signal<"\n" | "\r\n" | "\r" | "">("\n");
+export const serialConnected = signal<boolean>(false);
