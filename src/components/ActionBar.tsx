@@ -1,12 +1,11 @@
 import "./ActionBar.css";
 import { connectedBoard, connectedPort } from "../state/appState";
+import { TabBar } from "./TabBar";
 
 export function ActionBar() {
   return (
     <div class="actionbar">
-      <div class="actionbar-tabs">
-        <span class="actionbar-placeholder-tab">led-chase.ino</span>
-      </div>
+      <TabBar />
 
       <div class="actionbar-spacer" />
 
