@@ -1,5 +1,6 @@
 import "./BottomPanel.css";
 import { useEffect, useRef } from "preact/hooks";
+import { SerialMonitor } from "./SerialMonitor";
 import {
   bottomPanelTab,
   bottomPanelOpen,
@@ -83,15 +84,13 @@ export function BottomPanel() {
         </button>
       </div>
       <div class="bp-body">
-        {bottomPanelTab.value === "output" ? (
-          <OutputView />
-        ) : (
-          <div class="bp-placeholder">
-            {bottomPanelTab.value === "serial" && "Serial Monitor — arrives in Phase 5."}
-            {bottomPanelTab.value === "plotter" && "Serial Plotter — arrives in Phase 11."}
-            {bottomPanelTab.value === "problems" &&
-              "Problems list — arrives with Smart Help in Phase 6."}
-          </div>
+        {bottomPanelTab.value === "output" && <OutputView />}
+        {bottomPanelTab.value === "serial" && <SerialMonitor />}
+        {bottomPanelTab.value === "plotter" && (
+          <div class="bp-placeholder">Serial Plotter — arrives in Phase 11.</div>
+        )}
+        {bottomPanelTab.value === "problems" && (
+          <div class="bp-placeholder">Problems list — arrives with Smart Help in Phase 6.</div>
         )}
       </div>
     </section>
