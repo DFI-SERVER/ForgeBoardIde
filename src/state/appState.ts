@@ -33,3 +33,13 @@ export const openTabs = signal<{ path: string; name: string; modified: boolean }
 export const activeTabIndex = signal<number>(0);
 
 export const saveState = signal<"saved" | "saving" | "unsaved">("saved");
+
+/** Compile / upload lifecycle phase — drives the ActionBar buttons and Output panel. */
+export type BuildPhase = "idle" | "compiling" | "uploading" | "success" | "error";
+export const buildPhase = signal<BuildPhase>("idle");
+
+/** arduino-cli output lines for the current build, in order. */
+export const buildOutput = signal<string[]>([]);
+
+/** FQBN the IDE compiles and uploads against. Board-selector wiring lands in Phase 8. */
+export const selectedFqbn = signal<string>("esp32:esp32:esp32s3");
