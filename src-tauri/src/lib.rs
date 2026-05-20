@@ -7,6 +7,7 @@ mod commands;
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .manage(serial::commands::SerialState(std::sync::Mutex::new(None)))
         .invoke_handler(tauri::generate_handler![
             commands::ping::ping,
             project::commands::project_sketches_root,
@@ -19,6 +20,10 @@ pub fn run() {
             arduino::commands::arduino_detect_ports,
             arduino::commands::arduino_compile,
             arduino::commands::arduino_upload,
+            serial::commands::serial_open,
+            serial::commands::serial_close,
+            serial::commands::serial_write,
+            serial::commands::serial_is_open,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
