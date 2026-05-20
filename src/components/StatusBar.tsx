@@ -1,5 +1,11 @@
 import "./StatusBar.css";
-import { connectedBoard, connectedPort, saveState } from "../state/appState";
+import {
+  connectedBoard,
+  connectedPort,
+  saveState,
+  serialConnected,
+  serialBaud,
+} from "../state/appState";
 import { ping } from "../ipc/ping";
 
 async function handlePing() {
@@ -15,8 +21,8 @@ export function StatusBar() {
   return (
     <footer class="statusbar">
       <span class="sb-item">
-        <span class="sb-dot connected" />
-        {connectedPort.value ?? "—"} · 115200
+        <span class={`sb-dot ${serialConnected.value ? "connected" : "idle"}`} />
+        {connectedPort.value ?? "—"} · {serialBaud.value}
       </span>
       <span class="sb-item muted">{connectedBoard.value ?? "No board"}</span>
       <span class="sb-item">Ln 14 · Col 22</span>

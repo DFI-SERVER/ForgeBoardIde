@@ -17,6 +17,7 @@
   background: var(--accent-sage);
   box-shadow: 0 0 4px var(--accent-sage);
 }
+.sb-dot.idle { background: var(--text-dim); }
 .sb-spacer { flex: 1; }
 .save-state.saved { color: var(--accent-sage); }
 .save-state.saving { color: var(--accent-gold); }
