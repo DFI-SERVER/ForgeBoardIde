@@ -1,5 +1,6 @@
 mod project;
 mod arduino;
+mod serial;
 mod commands;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
