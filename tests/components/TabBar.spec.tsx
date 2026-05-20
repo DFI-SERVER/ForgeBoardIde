@@ -5,8 +5,8 @@ import { openTabs, activeTabIndex } from "../../src/state/appState";
 
 beforeEach(() => {
   openTabs.value = [
-    { path: "a.ino", modified: true },
-    { path: "b.h", modified: false },
+    { path: "/sketches/demo/a.ino", name: "a.ino", modified: true },
+    { path: "/sketches/demo/b.h", name: "b.h", modified: false },
   ];
   activeTabIndex.value = 0;
 });
@@ -36,6 +36,6 @@ describe("TabBar", () => {
     const xs = document.querySelectorAll(".tab-x");
     fireEvent.click(xs[0]);
     expect(openTabs.value).toHaveLength(1);
-    expect(openTabs.value[0].path).toBe("b.h");
+    expect(openTabs.value[0].name).toBe("b.h");
   });
 });

@@ -27,7 +27,7 @@ export function TabBar() {
           <span class={`tab-dot ${tab.modified ? "modified" : "saved"}`}>
             {tab.modified ? "●" : "○"}
           </span>
-          <span class="tab-name">{tab.path}</span>
+          <span class="tab-name">{tab.name}</span>
           <span class="tab-x" onClick={(e) => closeTab(i, e as any)}>×</span>
         </button>
       ))}

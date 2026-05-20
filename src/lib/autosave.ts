@@ -1,5 +1,6 @@
 import { effect } from "@preact/signals";
 import { saveState, fileContents, openTabs } from "../state/appState";
+import { projectApi } from "../ipc/project";
 
 const AUTOSAVE_MS = 2000;
 let pendingSave: number | null = null;
@@ -11,7 +12,7 @@ export function startAutoSaveLoop() {
     openTabs.value;
     if (saveState.value !== "unsaved") return;
     if (pendingSave) clearTimeout(pendingSave);
-    pendingSave = window.setTimeout(saveNow, AUTOSAVE_MS);
+    pendingSave = window.setTimeout(saveAllModified, AUTOSAVE_MS);
   });
 }
 
@@ -21,15 +22,25 @@ export function flushSave() {
     clearTimeout(pendingSave);
     pendingSave = null;
   }
-  if (saveState.value === "unsaved") saveNow();
+  if (saveState.value === "unsaved") saveAllModified();
 }
 
-async function saveNow() {
+async function saveAllModified() {
   saveState.value = "saving";
-  // Phase 2: save is a no-op (in-memory only). Phase 3 wires to disk.
-  await new Promise((r) => setTimeout(r, 100));
-  const newTabs = openTabs.value.map((t) => ({ ...t, modified: false }));
-  openTabs.value = newTabs;
+  const tabs = openTabs.value;
+  for (const t of tabs) {
+    if (!t.modified) continue;
+    const contents = fileContents.value.get(t.path);
+    if (contents == null) continue;
+    try {
+      await projectApi.saveFile(t.path, contents);
+    } catch (e) {
+      console.error("save failed for", t.path, e);
+      saveState.value = "unsaved";
+      return;
+    }
+  }
+  openTabs.value = tabs.map((t) => ({ ...t, modified: false }));
   saveState.value = "saved";
   pendingSave = null;
 }
