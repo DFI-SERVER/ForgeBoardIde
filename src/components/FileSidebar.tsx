@@ -7,6 +7,7 @@ import {
   fileContents,
 } from "../state/appState";
 import { projectApi } from "../ipc/project";
+import { BoardsView } from "./BoardsView";
 
 function FilesView() {
   const sketch = currentSketch.value;
@@ -81,7 +82,7 @@ export function FileSidebar() {
       {rail === "examples" && <PlaceholderView label="Examples" />}
       {rail === "search" && <PlaceholderView label="Search" />}
       {rail === "libraries" && <PlaceholderView label="Libraries" />}
-      {rail === "boards" && <PlaceholderView label="Boards" />}
+      {rail === "boards" && <BoardsView />}
       {rail === "walkthrough" && <PlaceholderView label="Walkthrough" />}
       {rail === "settings" && <PlaceholderView label="Settings" />}
     </aside>
