@@ -24,6 +24,10 @@ pub fn run() {
             serial::commands::serial_close,
             serial::commands::serial_write,
             serial::commands::serial_is_open,
+            arduino::commands::arduino_list_cores,
+            arduino::commands::arduino_search_cores,
+            arduino::commands::arduino_install_core,
+            arduino::commands::arduino_update_index,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
