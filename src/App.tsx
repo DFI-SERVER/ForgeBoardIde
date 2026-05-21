@@ -7,6 +7,7 @@ import { BottomPanel } from "./components/BottomPanel";
 import { StatusBar } from "./components/StatusBar";
 import { Toast } from "./components/Toast";
 import { NewSketchDialog } from "./components/NewSketchDialog";
+import { CommandPalette } from "./components/CommandPalette";
 
 export default function App() {
   return (
@@ -22,6 +23,7 @@ export default function App() {
       <StatusBar />
       <Toast />
       <NewSketchDialog />
+      <CommandPalette />
     </div>
   );
 }

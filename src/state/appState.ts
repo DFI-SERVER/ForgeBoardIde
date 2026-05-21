@@ -40,6 +40,10 @@ export const bottomPanelTab = signal<"serial" | "output" | "plotter" | "problems
  *  `newSketch()` action so both the sidebar button and the File menu can open it. */
 export const newSketchDialogOpen = signal<boolean>(false);
 
+/** Whether the fuzzy-search command palette overlay is open. Toggled by
+ *  Ctrl+Shift+P / Ctrl+K; the palette resets its query each time it opens. */
+export const paletteOpen = signal<boolean>(false);
+
 export const problemsCount = computed(() => 0);
 
 /** Currently opened sketch (metadata from disk). */

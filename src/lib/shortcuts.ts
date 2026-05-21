@@ -1,4 +1,4 @@
-import { openTabs, activeTabIndex } from "../state/appState";
+import { openTabs, activeTabIndex, paletteOpen } from "../state/appState";
 import { flushSave } from "./autosave";
 import {
   newSketch,
@@ -12,6 +12,14 @@ export function installShortcuts() {
     const mod = e.ctrlKey || e.metaKey;
     if (!mod) return;
     const key = e.key.toLowerCase();
+
+    // Ctrl+Shift+P / Ctrl+K — toggle the command palette. Checked before the
+    // single-key bindings so Ctrl+Shift+P doesn't fall through to anything.
+    if ((key === "p" && e.shiftKey) || (key === "k" && !e.shiftKey)) {
+      e.preventDefault();
+      paletteOpen.value = !paletteOpen.value;
+      return;
+    }
 
     // Ctrl+N — new sketch
     if (key === "n") {

@@ -1,0 +1,130 @@
+/* Command palette — a floating search layer over a scrim. The panel docks
+   near the top-centre of the window, the way IDE quick-open dialogs do. */
+
+.palette-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--scrim);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  /* Sit just below the title bar; high z so it floats over every panel. */
+  padding-top: 76px;
+  z-index: 320;
+}
+
+.palette-panel {
+  width: 540px;
+  max-width: calc(100vw - var(--space-9));
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-modal);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* --- Search row --- */
+
+.palette-search {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.palette-search-icon {
+  display: flex;
+  color: var(--fg-subtle);
+  flex-shrink: 0;
+}
+.palette-input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--fg-default);
+  font-family: var(--font-ui);
+  font-size: var(--text-md);
+}
+.palette-input::placeholder {
+  color: var(--fg-subtle);
+}
+
+/* --- Result list --- */
+
+.palette-results {
+  list-style: none;
+  margin: 0;
+  padding: var(--space-2) 0;
+  max-height: 336px;
+  overflow-y: auto;
+}
+
+.palette-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  height: 34px;
+  padding: 0 var(--space-5);
+  font-family: var(--font-ui);
+  font-size: var(--text-base);
+  color: var(--fg-default);
+  cursor: pointer;
+}
+.palette-row:hover {
+  background: rgba(255, 255, 255, 0.045);
+}
+/* The keyboard-highlighted row — wins over hover. */
+.palette-row.active,
+.palette-row.active:hover {
+  background: var(--accent-wash);
+}
+
+.palette-row-icon {
+  display: flex;
+  color: var(--fg-muted);
+  flex-shrink: 0;
+}
+.palette-row.active .palette-row-icon {
+  color: var(--accent);
+}
+
+.palette-row-title {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.palette-row-category {
+  color: var(--fg-subtle);
+  font-size: var(--text-xs);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.palette-row-shortcut {
+  color: var(--fg-subtle);
+  font-size: var(--text-xs);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* --- Empty state --- */
+
+.palette-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-8) var(--space-6);
+  color: var(--fg-subtle);
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+}
+.palette-empty-icon {
+  display: flex;
+  color: var(--fg-disabled);
+}
