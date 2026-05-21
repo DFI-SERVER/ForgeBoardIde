@@ -4,11 +4,13 @@
  * stays identical no matter how an action is triggered.
  */
 import { open as openNativeDialog } from "@tauri-apps/plugin-dialog";
+import * as monaco from "monaco-editor";
 import { projectApi } from "../ipc/project";
 import { arduinoApi } from "../ipc/arduino";
 import { loadSketch } from "./sketch";
 import { flushSave } from "./autosave";
 import { getActiveEditor } from "../components/MonacoEditor";
+import { parseDiagnostics, type Diagnostic } from "./diagnostics";
 import {
   currentSketch,
   connectedPort,
@@ -21,8 +23,12 @@ import {
   openTabs,
   activeTabIndex,
   fileContents,
+  diagnostics,
   toast,
 } from "../state/appState";
+
+/** The owner string under which the IDE's compiler markers are registered. */
+const MARKER_OWNER = "arduino";
 
 /** Pull a readable message out of a thrown value (incl. serialized ProjectError). */
 export function errText(e: unknown): string {
@@ -163,6 +169,98 @@ function beginBuild() {
   buildOutput.value = [];
   bottomPanelOpen.value = true;
   bottomPanelTab.value = "output";
+  // A fresh compile invalidates the previous run's problems and squiggles.
+  diagnostics.value = [];
+  clearDiagnosticMarkers();
+}
+
+/* ---------------------------------------------------------- Diagnostics --- */
+
+/** Wipe every editor model's compiler markers (start-of-compile reset). */
+function clearDiagnosticMarkers() {
+  for (const model of monaco.editor.getModels()) {
+    monaco.editor.setModelMarkers(model, MARKER_OWNER, []);
+  }
+}
+
+/**
+ * Paint compiler diagnostics onto the open editor models as squiggles.
+ *
+ * Diagnostics are grouped by file and matched to a Monaco model by the file's
+ * absolute path (`model.uri.path`). Monaco stores URI paths with a leading
+ * slash and forward slashes, so a Windows compiler path is normalised the
+ * same way before comparison. Diagnostics for files that have no open model
+ * are simply not drawn (they still appear in the Problems panel).
+ */
+function applyDiagnosticMarkers(list: Diagnostic[]) {
+  // model.uri.path style: forward slashes, lower-cased drive letter, leading
+  // slash. Normalise a raw compiler path to the same shape so they compare.
+  const normalize = (p: string) =>
+    p
+      .replace(/\\/g, "/")
+      .replace(/^([a-zA-Z]):/, (_, d: string) => `/${d.toLowerCase()}:`)
+      .replace(/^\/?/, "/")
+      .toLowerCase();
+
+  const byNormalizedFile = new Map<string, Diagnostic[]>();
+  for (const d of list) {
+    const key = normalize(d.file);
+    const bucket = byNormalizedFile.get(key);
+    if (bucket) bucket.push(d);
+    else byNormalizedFile.set(key, [d]);
+  }
+
+  for (const model of monaco.editor.getModels()) {
+    const modelKey = model.uri.path.toLowerCase();
+    const forModel = byNormalizedFile.get(modelKey);
+    if (!forModel || forModel.length === 0) {
+      monaco.editor.setModelMarkers(model, MARKER_OWNER, []);
+      continue;
+    }
+    const markers: monaco.editor.IMarkerData[] = forModel.map((d) => {
+      const maxLine = model.getLineCount();
+      const line = Math.min(Math.max(d.line, 1), maxLine);
+      const lineMaxCol = model.getLineMaxColumn(line);
+      const startCol = Math.min(Math.max(d.column, 1), lineMaxCol);
+      return {
+        severity:
+          d.severity === "error"
+            ? monaco.MarkerSeverity.Error
+            : monaco.MarkerSeverity.Warning,
+        message: d.message,
+        startLineNumber: line,
+        startColumn: startCol,
+        endLineNumber: line,
+        endColumn: lineMaxCol,
+      };
+    });
+    monaco.editor.setModelMarkers(model, MARKER_OWNER, markers);
+  }
+}
+
+/**
+ * Parse a finished compile's raw output into structured diagnostics, publish
+ * them to the `diagnostics` signal, and paint them as editor squiggles.
+ *
+ * `buildOutput` holds the streamed compiler lines; `stderr` is the captured
+ * stderr from the compile result (a superset on failure). Both are fed to the
+ * parser and de-duplicated so a problem emitted on both streams appears once.
+ */
+function recordDiagnostics(stderr: string) {
+  const parsed = [
+    ...parseDiagnostics(buildOutput.value),
+    ...parseDiagnostics(stderr),
+  ];
+  const seen = new Set<string>();
+  const unique: Diagnostic[] = [];
+  for (const d of parsed) {
+    const key = `${d.file}|${d.line}|${d.column}|${d.severity}|${d.message}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    unique.push(d);
+  }
+  diagnostics.value = unique;
+  applyDiagnosticMarkers(unique);
 }
 
 /** Verify / Compile the current sketch. */
@@ -181,9 +279,11 @@ export async function compileSketch(): Promise<void> {
     if (!result.success && result.stderr.trim()) {
       buildOutput.value = [...buildOutput.value, "", result.stderr.trimEnd()];
     }
+    recordDiagnostics(result.stderr);
   } catch (err) {
     buildPhase.value = "error";
     buildOutput.value = [...buildOutput.value, `Error: ${String(err)}`];
+    recordDiagnostics("");
   }
 }
 
@@ -208,9 +308,11 @@ export async function uploadSketch(): Promise<void> {
     if (!result.success && result.stderr.trim()) {
       buildOutput.value = [...buildOutput.value, "", result.stderr.trimEnd()];
     }
+    recordDiagnostics(result.stderr);
   } catch (err) {
     buildPhase.value = "error";
     buildOutput.value = [...buildOutput.value, `Error: ${String(err)}`];
+    recordDiagnostics("");
   }
 }
 
@@ -219,4 +321,10 @@ export async function uploadSketch(): Promise<void> {
 /** Show or hide the bottom panel. */
 export function toggleBottomPanel() {
   bottomPanelOpen.value = !bottomPanelOpen.value;
+}
+
+/** Open the bottom panel and switch it to the Problems tab. */
+export function showProblems() {
+  bottomPanelOpen.value = true;
+  bottomPanelTab.value = "problems";
 }

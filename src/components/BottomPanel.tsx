@@ -1,6 +1,15 @@
 import "./BottomPanel.css";
 import { useEffect, useRef } from "preact/hooks";
-import { ChevronUp, ChevronDown, Loader2, CheckCircle2, XCircle } from "lucide-preact";
+import {
+  ChevronUp,
+  ChevronDown,
+  Loader2,
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+  AlertTriangle,
+  FileCode2,
+} from "lucide-preact";
 import { SerialMonitor } from "./SerialMonitor";
 import {
   bottomPanelTab,
@@ -8,7 +17,10 @@ import {
   problemsCount,
   buildOutput,
   buildPhase,
+  diagnostics,
 } from "../state/appState";
+import { openFileAtLine } from "../lib/actions";
+import { groupDiagnostics } from "../lib/diagnostics";
 
 const TABS = [
   { id: "serial", label: "Serial Monitor" },
@@ -69,6 +81,63 @@ function OutputView() {
   );
 }
 
+/** Last path segment of a Windows- or POSIX-style absolute path. */
+function baseName(path: string): string {
+  const parts = path.split(/[\\/]/);
+  return parts[parts.length - 1] || path;
+}
+
+/** The Problems tab — compiler diagnostics grouped by file. */
+function ProblemsView() {
+  const list = diagnostics.value;
+
+  if (list.length === 0) {
+    return <div class="bp-problems-empty">No problems detected.</div>;
+  }
+
+  const groups = groupDiagnostics(list);
+
+  return (
+    <div class="bp-problems">
+      {groups.map((group) => (
+        <div class="bp-prob-group" key={group.file}>
+          <div class="bp-prob-file">
+            <FileCode2 size={13} strokeWidth={1.5} class="bp-prob-file-icon" />
+            <span class="bp-prob-file-name">{baseName(group.file)}</span>
+            <span class="bp-prob-file-count">{group.diagnostics.length}</span>
+          </div>
+          {group.diagnostics.map((d, i) => (
+            <button
+              class="bp-prob-row"
+              key={`${group.file}:${i}`}
+              title={`${d.file}:${d.line}:${d.column}`}
+              onClick={() => openFileAtLine(group.file, d.line)}
+            >
+              {d.severity === "error" ? (
+                <AlertCircle
+                  size={13}
+                  strokeWidth={1.5}
+                  class="bp-prob-icon bp-prob-icon-error"
+                />
+              ) : (
+                <AlertTriangle
+                  size={13}
+                  strokeWidth={1.5}
+                  class="bp-prob-icon bp-prob-icon-warning"
+                />
+              )}
+              <span class="bp-prob-msg">{d.message}</span>
+              <span class="bp-prob-loc">
+                {d.line}:{d.column}
+              </span>
+            </button>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function BottomPanel() {
   if (!bottomPanelOpen.value) {
     return (
@@ -109,9 +178,7 @@ export function BottomPanel() {
         {bottomPanelTab.value === "plotter" && (
           <div class="bp-placeholder">Serial Plotter — arrives in Phase 11.</div>
         )}
-        {bottomPanelTab.value === "problems" && (
-          <div class="bp-placeholder">Problems list — arrives with Smart Help in Phase 6.</div>
-        )}
+        {bottomPanelTab.value === "problems" && <ProblemsView />}
       </div>
     </section>
   );

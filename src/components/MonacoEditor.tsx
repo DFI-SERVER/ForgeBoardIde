@@ -6,6 +6,7 @@ import {
   activeTabIndex,
   fileContents,
   saveState,
+  cursorPosition,
 } from "../state/appState";
 
 /**
@@ -69,8 +70,17 @@ export function MonacoEditor() {
       saveState.value = "unsaved";
     });
 
+    // Mirror the caret into appState so the status bar shows "Ln X, Col Y".
+    const cursorDisposable = editor.onDidChangeCursorPosition((e) => {
+      cursorPosition.value = {
+        line: e.position.lineNumber,
+        column: e.position.column,
+      };
+    });
+
     return () => {
       disposable.dispose();
+      cursorDisposable.dispose();
       editor.dispose();
       if (activeEditor === editor) activeEditor = null;
     };
@@ -91,6 +101,9 @@ export function MonacoEditor() {
     const model = editor.getModel();
     if (model) monaco.editor.setModelLanguage(model, language);
     swapping.current = false;
+    // setValue resets the caret to the start but fires no cursor event —
+    // sync the status-bar signal so it does not show a stale position.
+    cursorPosition.value = { line: 1, column: 1 };
   }, [activeTabIndex.value, activePath]);
 
   return <div ref={hostRef} style={{ height: "100%", width: "100%" }} />;

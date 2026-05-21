@@ -47,18 +47,43 @@
 .save-state.saving { color: var(--fg-muted); }
 .save-state.unsaved { color: var(--warning); }
 
-.sb-ping {
+/* Interactive segments — cursor position, ping, problems summary. */
+.sb-button,
+.sb-problems {
   color: var(--fg-muted);
   cursor: pointer;
+  border: none;
+  background: transparent;
+  font: inherit;
   border-radius: var(--radius-sm);
+  padding: var(--space-1) var(--space-2);
   transition: background-color var(--dur-fast) var(--ease),
     color var(--dur-fast) var(--ease);
 }
-.sb-ping:hover {
+.sb-button:hover,
+.sb-problems:hover {
   background: rgba(255, 255, 255, 0.045);
   color: var(--fg-default);
 }
-.sb-ping:focus-visible {
+.sb-button:focus-visible,
+.sb-problems:focus-visible {
   outline: none;
   box-shadow: 0 0 0 2px var(--accent-ring);
 }
+
+/* Problems summary — error/warning tallies. Hue is meaning-bearing here. */
+.sb-problems { gap: var(--space-4); }
+.sb-prob {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--fg-subtle);
+}
+.sb-prob.has:nth-child(1) { color: var(--error); }
+.sb-prob.has:nth-child(2) { color: var(--warning); }
+
+/* Connection segment — the text takes the state colour, matching the dot. */
+.sb-conn-connected { color: var(--success); }
+.sb-conn-detecting,
+.sb-conn-unidentified { color: var(--warning); }
+.sb-conn-no-board { color: var(--fg-muted); }

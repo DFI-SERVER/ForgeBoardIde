@@ -1,6 +1,7 @@
 import { signal, computed } from "@preact/signals";
 import type { Sketch } from "../ipc/project";
 import type { Core, Board, DetectedBoard, Library } from "../ipc/arduino";
+import { countDiagnostics, type Diagnostic } from "../lib/diagnostics";
 
 export type RailIcon =
   | "home"
@@ -44,7 +45,30 @@ export const newSketchDialogOpen = signal<boolean>(false);
  *  Ctrl+Shift+P / Ctrl+K; the palette resets its query each time it opens. */
 export const paletteOpen = signal<boolean>(false);
 
-export const problemsCount = computed(() => 0);
+/**
+ * Structured compiler diagnostics from the most recent compile (see
+ * lib/diagnostics.ts). Replaced wholesale after each compile — empty until
+ * the first compile runs, and reset to empty at the start of every compile.
+ */
+export const diagnostics = signal<Diagnostic[]>([]);
+
+/** Error / warning tallies derived from `diagnostics`. */
+export const diagnosticCounts = computed(() => countDiagnostics(diagnostics.value));
+
+/** Total problem count — the badge on the Problems tab. */
+export const problemsCount = computed(
+  () => diagnosticCounts.value.errors + diagnosticCounts.value.warnings,
+);
+
+/**
+ * The editor caret position, 1-based, mirrored from Monaco's
+ * onDidChangeCursorPosition. The status bar reads this; the Monaco component
+ * is the only writer.
+ */
+export const cursorPosition = signal<{ line: number; column: number }>({
+  line: 1,
+  column: 1,
+});
 
 /** Currently opened sketch (metadata from disk). */
 export const currentSketch = signal<Sketch | null>(null);
