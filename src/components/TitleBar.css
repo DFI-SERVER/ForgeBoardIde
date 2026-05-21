@@ -1,16 +1,16 @@
 .titlebar {
   height: var(--titlebar-h);
-  background: var(--panel-alt);
+  background: var(--surface-0);
   border-bottom: 1px solid var(--border-subtle);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-left: 16px;
+  padding-left: var(--space-6);
 }
 .titlebar-brand {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-4);
 }
 .titlebar-logo {
   height: 22px;
@@ -19,18 +19,18 @@
   display: block;
 }
 .brand-name {
-  color: var(--text);
+  color: var(--fg-default);
   font-family: var(--font-ui);
-  font-weight: 700;
-  font-size: 12.5px;
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-sm);
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 .brand-sub {
-  color: var(--text-muted);
+  color: var(--fg-muted);
   font-family: var(--font-ui);
-  font-weight: 400;
-  font-size: 12.5px;
+  font-weight: var(--weight-normal);
+  font-size: var(--text-sm);
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }

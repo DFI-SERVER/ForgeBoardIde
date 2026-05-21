@@ -1,7 +1,7 @@
 import "./FileSidebar.css";
 import { useState } from "preact/hooks";
 import { open as openNativeDialog } from "@tauri-apps/plugin-dialog";
-import { FolderOpen, FilePlus2 } from "lucide-preact";
+import { FolderOpen, FilePlus2, FileCode2 } from "lucide-preact";
 import {
   currentSketch,
   activeRail,
@@ -102,10 +102,10 @@ function FilesView() {
             title="Open sketch…"
             onClick={openExistingSketch}
           >
-            <FolderOpen size={15} strokeWidth={1.75} />
+            <FolderOpen size={16} strokeWidth={1.5} />
           </button>
           <button class="sb-action" title="New sketch" onClick={startNewSketch}>
-            <FilePlus2 size={15} strokeWidth={1.75} />
+            <FilePlus2 size={16} strokeWidth={1.5} />
           </button>
         </span>
       </div>
@@ -119,8 +119,12 @@ function FilesView() {
               if (idx >= 0) activeTabIndex.value = idx;
             }}
           >
-            {f.is_main && <span class="sb-mod">◆</span>}
-            {f.name}
+            {f.is_main && (
+              <span class="sb-mod" title="Main sketch file">
+                <FileCode2 size={14} strokeWidth={1.5} />
+              </span>
+            )}
+            <span class="sb-file-name">{f.name}</span>
           </div>
         ))}
       </div>

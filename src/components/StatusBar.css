@@ -1,33 +1,64 @@
 .statusbar {
   height: var(--statusbar-h);
-  background: var(--panel-alt);
+  background: var(--surface-0);
   border-top: 1px solid var(--border-subtle);
   display: flex;
-  gap: 18px;
-  padding: 0 14px;
-  font-size: 11px;
-  color: var(--text-muted);
+  gap: var(--space-6);
+  padding: 0 var(--space-5);
+  font-size: var(--text-xs);
+  color: var(--fg-muted);
   font-family: var(--font-ui);
   align-items: center;
 }
-.sb-item { display: inline-flex; align-items: center; gap: 5px; }
+.sb-item { display: inline-flex; align-items: center; gap: var(--space-2); }
 .sb-spacer { flex: 1; }
 
-.sb-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-.sb-dot-connected { background: var(--accent-sage); box-shadow: 0 0 5px var(--accent-sage); }
+.sb-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.sb-dot-connected {
+  background: var(--success);
+  box-shadow: 0 0 5px var(--success);
+}
 .sb-dot-detecting {
-  background: var(--accent-gold);
-  box-shadow: 0 0 5px var(--accent-gold);
+  background: var(--warning);
+  box-shadow: 0 0 5px var(--warning);
   animation: sb-dot-pulse 1.05s ease-in-out infinite;
 }
-.sb-dot-unidentified { background: var(--warn); }
-.sb-dot-no-board { background: var(--text-dim); }
+.sb-dot-unidentified { background: var(--warning); }
+.sb-dot-no-board { background: var(--fg-subtle); }
 @keyframes sb-dot-pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.3; }
 }
 
-.save-state.saved { color: var(--accent-sage); }
-.save-state.saving { color: var(--accent-gold); }
-.save-state.unsaved { color: var(--warn); }
-.sb-ping { color: var(--accent-gold); cursor: pointer; }
+.sb-save-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--warning);
+}
+
+.save-state.saved { color: var(--success); }
+.save-state.saving { color: var(--fg-muted); }
+.save-state.unsaved { color: var(--warning); }
+
+.sb-ping {
+  color: var(--fg-muted);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: background-color var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease);
+}
+.sb-ping:hover {
+  background: rgba(255, 255, 255, 0.045);
+  color: var(--fg-default);
+}
+.sb-ping:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--accent-ring);
+}

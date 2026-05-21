@@ -1,5 +1,6 @@
 import "./BottomPanel.css";
 import { useEffect, useRef } from "preact/hooks";
+import { ChevronUp, ChevronDown, Loader2, CheckCircle2, XCircle } from "lucide-preact";
 import { SerialMonitor } from "./SerialMonitor";
 import {
   bottomPanelTab,
@@ -40,12 +41,30 @@ function OutputView() {
           {line || " "}
         </div>
       ))}
-      {phase === "compiling" && <div class="bp-output-status">▸ Compiling…</div>}
-      {phase === "uploading" && (
-        <div class="bp-output-status">▸ Compiling and uploading…</div>
+      {phase === "compiling" && (
+        <div class="bp-output-status">
+          <Loader2 class="bp-spin" size={14} strokeWidth={1.5} />
+          Compiling…
+        </div>
       )}
-      {phase === "success" && <div class="bp-output-ok">✓ Done</div>}
-      {phase === "error" && <div class="bp-output-err">✕ Failed</div>}
+      {phase === "uploading" && (
+        <div class="bp-output-status">
+          <Loader2 class="bp-spin" size={14} strokeWidth={1.5} />
+          Compiling and uploading…
+        </div>
+      )}
+      {phase === "success" && (
+        <div class="bp-output-ok">
+          <CheckCircle2 size={14} strokeWidth={1.5} />
+          Done
+        </div>
+      )}
+      {phase === "error" && (
+        <div class="bp-output-err">
+          <XCircle size={14} strokeWidth={1.5} />
+          Failed
+        </div>
+      )}
     </pre>
   );
 }
@@ -55,7 +74,8 @@ export function BottomPanel() {
     return (
       <div class="bp-collapsed">
         <button class="bp-expand" onClick={() => (bottomPanelOpen.value = true)}>
-          ▲ Show panel (Ctrl+`)
+          <ChevronUp size={14} strokeWidth={1.5} />
+          Show panel (Ctrl+`)
         </button>
       </div>
     );
@@ -80,7 +100,7 @@ export function BottomPanel() {
           title="Collapse panel"
           onClick={() => (bottomPanelOpen.value = false)}
         >
-          ▼
+          <ChevronDown size={14} strokeWidth={1.5} />
         </button>
       </div>
       <div class="bp-body">

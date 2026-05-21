@@ -1,105 +1,115 @@
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(8, 7, 6, 0.62);
+  background: var(--scrim);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 300;
 }
 .modal-panel {
-  background: var(--panel);
+  background: var(--surface-2);
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-modal);
   min-width: 340px;
   max-width: 440px;
   overflow: hidden;
 }
 .modal-title {
-  padding: 13px 18px;
+  padding: var(--space-5) var(--space-6);
   font-family: var(--font-ui);
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text);
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  color: var(--fg-default);
   border-bottom: 1px solid var(--border-subtle);
 }
 .modal-body {
-  padding: 16px 18px 18px;
+  padding: var(--space-6);
   font-family: var(--font-ui);
 }
 
 /* Shared dialog-form bits, used inside a Modal body. */
 .dlg-label {
   display: block;
-  font-size: 11px;
-  color: var(--text-muted);
-  margin-bottom: 6px;
+  font-size: var(--text-xs);
+  color: var(--fg-subtle);
+  margin-bottom: var(--space-3);
 }
 .dlg-input {
   width: 100%;
   box-sizing: border-box;
-  background: var(--bg);
+  background: var(--surface-2);
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 8px 11px;
-  color: var(--text);
+  border-radius: var(--radius-sm);
+  padding: var(--space-4) var(--space-5);
+  color: var(--fg-default);
   font-family: var(--font-ui);
-  font-size: 12.5px;
+  font-size: var(--text-base);
   outline: none;
+  transition: border-color var(--dur-fast) var(--ease);
 }
 .dlg-input:focus {
-  border-color: var(--accent-gold);
+  border-color: var(--accent);
 }
 .dlg-hint {
-  margin-top: 7px;
-  font-size: 10.5px;
-  color: var(--text-dim);
+  margin-top: var(--space-3);
+  font-size: var(--text-xs);
+  color: var(--fg-subtle);
 }
 .dlg-error {
-  margin-top: 9px;
-  font-size: 11px;
+  margin-top: var(--space-4);
+  font-size: var(--text-xs);
   color: var(--error);
 }
 .dlg-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 9px;
-  margin-top: 16px;
+  gap: var(--space-4);
+  margin-top: var(--space-6);
 }
 .dlg-btn {
   font-family: var(--font-ui);
-  font-size: 12px;
-  padding: 7px 14px;
-  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-sm);
   border: 1px solid var(--border);
-  background: var(--panel-alt);
-  color: var(--text);
+  background: var(--surface-2);
+  color: var(--fg-default);
+  transition: background-color var(--dur-fast) var(--ease);
 }
 .dlg-btn:hover {
-  border-color: var(--accent-gold-border);
+  background: rgba(255, 255, 255, 0.045);
+}
+.dlg-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--accent-ring);
 }
 .dlg-btn-primary {
-  background: var(--accent-gold);
-  border-color: var(--accent-gold);
-  color: #1a1410;
-  font-weight: 600;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-fg);
+  font-weight: var(--weight-semibold);
+}
+.dlg-btn-primary:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
 }
 .dlg-btn-primary:disabled {
   opacity: 0.55;
 }
 .dlg-btn-sm {
-  padding: 6px 11px;
-  font-size: 11px;
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--text-xs);
 }
 
 .dlg-label-spaced {
-  margin-top: 14px;
+  margin-top: var(--space-5);
 }
 .dlg-location {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-4);
 }
 .dlg-location-path {
   flex: 1;
@@ -108,10 +118,10 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--text-muted);
-  background: var(--bg);
+  font-size: var(--text-xs);
+  color: var(--fg-muted);
+  background: var(--surface-2);
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 7px 10px;
+  border-radius: var(--radius-sm);
+  padding: var(--space-3) var(--space-4);
 }

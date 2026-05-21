@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "preact/hooks";
+import { ChevronDown } from "lucide-preact";
 import {
   connectionState,
   connectedPort,
@@ -58,7 +59,9 @@ export function ConnectionPill() {
           )}
           {state === "unidentified" && `⚠ Couldn't identify · ${port}`}
         </span>
-        <span class="cp-caret">▾</span>
+        <span class="cp-caret">
+          <ChevronDown size={14} strokeWidth={1.5} color="currentColor" />
+        </span>
       </button>
 
       {open && (

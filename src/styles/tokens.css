@@ -98,7 +98,7 @@
   --font-mono: "Cascadia Code", "Cascadia Mono", "Consolas", "Courier New", monospace;
 
   /* --- Layout (rail-w drops to 52px when the rail becomes an activity bar) --- */
-  --rail-w:        156px;
+  --rail-w:        52px;
   --sidebar-w:     256px;
   --titlebar-h:    34px;
   --actionbar-h:   46px;

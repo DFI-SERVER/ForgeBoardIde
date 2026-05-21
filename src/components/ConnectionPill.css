@@ -3,18 +3,23 @@
 .cp-btn {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-4);
   min-width: 210px;
   max-width: 280px;
-  padding: 7px 12px;
-  background: var(--panel-alt);
+  padding: var(--space-3) var(--space-5);
+  background: var(--surface-2);
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  color: var(--text);
+  border-radius: var(--radius-sm);
+  color: var(--fg-default);
   font-family: var(--font-ui);
-  font-size: 12px;
+  font-size: var(--text-sm);
+  transition: background-color var(--dur-fast) var(--ease);
 }
-.cp-btn:hover { border-color: var(--accent-gold-border); }
+.cp-btn:hover { background: rgba(255, 255, 255, 0.045); }
+.cp-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--accent-ring);
+}
 
 .cp-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 .cp-label {
@@ -24,33 +29,27 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.cp-label b { font-weight: 600; color: var(--text); }
-.cp-caret { color: var(--text-muted); font-size: 10px; flex-shrink: 0; }
+.cp-label b { font-weight: var(--weight-semibold); color: var(--fg-default); }
+.cp-caret { color: var(--fg-subtle); flex-shrink: 0; display: flex; }
 
 /* --- states --- */
-.cp-no-board .cp-dot { background: transparent; border: 2px solid var(--text-dim); }
-.cp-no-board .cp-label { color: var(--text-muted); }
+.cp-no-board .cp-dot { background: var(--fg-subtle); }
+.cp-no-board .cp-label { color: var(--fg-muted); }
 
-.cp-detecting { border-color: var(--accent-gold-border); }
 .cp-detecting .cp-dot {
-  background: var(--accent-gold);
-  box-shadow: 0 0 7px var(--accent-gold);
+  background: var(--accent);
+  box-shadow: 0 0 7px var(--accent);
   animation: cp-pulse 1.05s ease-in-out infinite;
 }
-.cp-detecting .cp-label { color: var(--accent-gold); }
+.cp-detecting .cp-label { color: var(--fg-muted); }
 
-.cp-connected {
-  border-color: rgba(127, 178, 161, 0.35);
-  background: var(--accent-sage-bg);
-}
 .cp-connected .cp-dot {
-  background: var(--accent-sage);
-  box-shadow: 0 0 8px var(--accent-sage);
+  background: var(--sage);
+  box-shadow: 0 0 8px var(--sage);
 }
 
-.cp-unidentified { border-color: var(--accent-gold-border); }
-.cp-unidentified .cp-dot { background: var(--warn); }
-.cp-unidentified .cp-label { color: var(--warn); }
+.cp-unidentified .cp-dot { background: var(--warning); }
+.cp-unidentified .cp-label { color: var(--fg-muted); }
 
 @keyframes cp-pulse {
   0%, 100% { opacity: 1; }
@@ -60,39 +59,40 @@
 /* --- dropdown --- */
 .cp-dropdown {
   position: absolute;
-  top: calc(100% + 5px);
+  top: calc(100% + var(--space-2));
   right: 0;
   min-width: 260px;
-  background: var(--panel);
+  background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-dropdown);
   z-index: 50;
-  padding: 8px 0;
+  padding: var(--space-4) 0;
 }
-.cp-head { padding: 6px 14px; color: var(--text-muted); font-size: 10px; letter-spacing: 1px; }
-.cp-muted { color: var(--text-disabled); font-style: italic; }
+.cp-head { padding: var(--space-3) var(--space-6); color: var(--fg-subtle); font-size: var(--text-2xs); letter-spacing: 1px; }
+.cp-muted { color: var(--fg-subtle); font-style: italic; }
 .cp-empty {
-  padding: 16px;
+  padding: var(--space-6);
   text-align: center;
-  color: var(--text-muted);
-  font-size: 12px;
+  color: var(--fg-muted);
+  font-size: var(--text-sm);
   font-style: italic;
 }
 .cp-item {
   display: block;
   width: 100%;
   text-align: left;
-  padding: 8px 14px;
+  padding: var(--space-2) var(--space-6);
   background: transparent;
   font-family: var(--font-ui);
+  transition: background-color var(--dur-fast) var(--ease);
 }
-.cp-item:hover { background: var(--accent-gold-bg); }
-.cp-item.active { background: var(--accent-sage-bg); border-left: 2px solid var(--accent-sage); }
+.cp-item:hover { background: rgba(255, 255, 255, 0.045); }
+.cp-item.active { background: var(--accent-wash); }
 .cp-item-port {
-  color: var(--text);
-  font-weight: 600;
-  font-size: 12px;
+  color: var(--fg-default);
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-sm);
   font-family: var(--font-mono);
 }
-.cp-item-name { color: var(--text-muted); font-size: 10.5px; margin-top: 2px; }
+.cp-item-name { color: var(--fg-muted); font-size: var(--text-xs); margin-top: var(--space-1); }

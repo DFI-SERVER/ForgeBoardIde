@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "preact/hooks";
+import { ChevronDown } from "lucide-preact";
 import { installedBoards, selectedFqbn } from "../state/appState";
 import { arduinoApi } from "../ipc/arduino";
 import "./BoardSelector.css";
@@ -43,7 +44,9 @@ export function BoardSelector() {
       <button class="bs-btn" onClick={() => setOpen(!open)}>
         <span class="bs-icon">◆</span>
         <span class="bs-label">{current?.name ?? "Select board"}</span>
-        <span class="bs-caret">▾</span>
+        <span class="bs-caret">
+          <ChevronDown size={14} strokeWidth={1.5} color="currentColor" />
+        </span>
       </button>
       {open && (
         <div class="bs-dropdown">

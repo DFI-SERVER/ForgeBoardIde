@@ -1,4 +1,5 @@
 import "./StatusBar.css";
+import { Check } from "lucide-preact";
 import {
   connectionState,
   connectedBoard,
@@ -49,9 +50,19 @@ export function StatusBar() {
       <span class="sb-item">LF</span>
       <span class="sb-item">C++</span>
       <span class={`sb-item save-state ${saveState.value}`}>
-        {saveState.value === "saved" && "✓ Saved"}
-        {saveState.value === "saving" && "… Saving"}
-        {saveState.value === "unsaved" && "● Unsaved"}
+        {saveState.value === "saved" && (
+          <>
+            <Check size={12} strokeWidth={1.5} />
+            Saved
+          </>
+        )}
+        {saveState.value === "saving" && "Saving…"}
+        {saveState.value === "unsaved" && (
+          <>
+            <span class="sb-save-dot" />
+            Unsaved
+          </>
+        )}
       </span>
     </footer>
   );

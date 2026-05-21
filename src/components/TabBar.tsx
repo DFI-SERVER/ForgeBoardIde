@@ -1,4 +1,5 @@
 import "./TabBar.css";
+import { X } from "lucide-preact";
 import { openTabs, activeTabIndex } from "../state/appState";
 
 export function TabBar() {
@@ -24,11 +25,11 @@ export function TabBar() {
           class={`tab ${i === active ? "active" : ""}`}
           onClick={() => setActive(i)}
         >
-          <span class={`tab-dot ${tab.modified ? "modified" : "saved"}`}>
-            {tab.modified ? "●" : "○"}
-          </span>
+          <span class={`tab-dot ${tab.modified ? "modified" : "saved"}`} />
           <span class="tab-name">{tab.name}</span>
-          <span class="tab-x" onClick={(e) => closeTab(i, e as any)}>×</span>
+          <span class="tab-x" onClick={(e) => closeTab(i, e as any)}>
+            <X size={14} strokeWidth={1.5} />
+          </span>
         </button>
       ))}
     </div>

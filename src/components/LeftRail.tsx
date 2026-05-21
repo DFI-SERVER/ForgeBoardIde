@@ -41,10 +41,7 @@ function RailButton({ item }: { item: RailItem }) {
       onClick={() => (activeRail.value = item.id)}
       title={item.label}
     >
-      <span class="rail-icon">
-        <Icon size={17} strokeWidth={1.75} />
-      </span>
-      <span class="rail-label">{item.label}</span>
+      <Icon size={20} strokeWidth={1.5} />
     </button>
   );
 }
@@ -58,7 +55,6 @@ export function LeftRail() {
         ))}
       </div>
       <div class="rail-section rail-section-footer">
-        <div class="rail-divider">HELP</div>
         {HELP_ITEMS.map((item) => (
           <RailButton item={item} />
         ))}

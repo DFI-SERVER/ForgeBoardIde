@@ -1,4 +1,5 @@
 import "./ActionBar.css";
+import { Check, Upload } from "lucide-preact";
 import {
   connectedPort,
   currentSketch,
@@ -94,7 +95,7 @@ export function ActionBar() {
         onClick={doCheck}
         disabled={busy}
       >
-        <span class="btn-icon check">✓</span>
+        <Check size={14} strokeWidth={1.5} />
         <span>{phase === "compiling" ? "Checking…" : "Check code"}</span>
       </button>
 
@@ -105,7 +106,7 @@ export function ActionBar() {
         disabled={busy}
       >
         <span>{phase === "uploading" ? "Uploading…" : "Upload"}</span>
-        <span>→</span>
+        <Upload size={14} strokeWidth={1.5} />
       </button>
 
       <div class="actionbar-spacer" />

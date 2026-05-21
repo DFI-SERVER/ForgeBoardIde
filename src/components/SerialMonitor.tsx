@@ -106,7 +106,8 @@ export function SerialMonitor() {
           class={`sm-btn ${serialConnected.value ? "connected" : ""}`}
           onClick={toggleConnection}
         >
-          {serialConnected.value ? "● Disconnect" : "○ Connect"}
+          <span class="sm-dot" />
+          {serialConnected.value ? "Disconnect" : "Connect"}
         </button>
         <select
           class="sm-select"
