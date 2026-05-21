@@ -50,13 +50,13 @@
   --warning-wash: rgba(232, 178, 74, 0.13);
   --error-wash:   rgba(240, 98, 94, 0.13);
 
-  /* --- Syntax (Monaco) --- */
-  --code-keyword:  #b9a8ff;
-  --code-function: #7aa2f7;
-  --code-string:   #9ece6a;
-  --code-number:   #e0a878;
+  /* --- Syntax (Monaco) — mirrors the editor theme in lib/monaco-setup.ts --- */
+  --code-keyword:  #ab9fe0;
+  --code-function: #86a9e0;
+  --code-string:   #9ec293;
+  --code-number:   #7fbdbf;
   --code-comment:  #5e6478;
-  --code-type:     #56c8e0;
+  --code-type:     #66bccb;
 
   /* --- Elevation — shadows on floating layers only --- */
   --shadow-dropdown: 0 6px 20px rgba(0, 0, 0, 0.45);
