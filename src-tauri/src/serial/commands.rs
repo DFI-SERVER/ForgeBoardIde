@@ -17,7 +17,7 @@ pub async fn serial_open(
     if let Some(handle) = existing {
         port::close(handle).await;
     }
-    let handle = port::open(app, &port, baud).await?;
+    let handle = port::open(app, &port, baud)?;
     *state.0.lock().unwrap() = Some(handle);
     Ok(())
 }
@@ -38,7 +38,7 @@ pub async fn serial_write(state: State<'_, SerialState>, bytes: Vec<u8>) -> Resu
         guard.as_ref().map(|h| h.tx.clone())
     };
     match tx {
-        Some(tx) => tx.send(bytes).await.map_err(|e| e.to_string()),
+        Some(tx) => tx.send(bytes).map_err(|_| "serial port closed".to_string()),
         None => Err("no serial port open".into()),
     }
 }
