@@ -11,14 +11,22 @@
   align-items: center;
 }
 .sb-item { display: inline-flex; align-items: center; gap: 5px; }
-.sb-item.muted { color: var(--text-disabled); }
-.sb-dot { width: 6px; height: 6px; border-radius: 50%; }
-.sb-dot.connected {
-  background: var(--accent-sage);
-  box-shadow: 0 0 4px var(--accent-sage);
-}
-.sb-dot.idle { background: var(--text-dim); }
 .sb-spacer { flex: 1; }
+
+.sb-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.sb-dot-connected { background: var(--accent-sage); box-shadow: 0 0 5px var(--accent-sage); }
+.sb-dot-detecting {
+  background: var(--accent-gold);
+  box-shadow: 0 0 5px var(--accent-gold);
+  animation: sb-dot-pulse 1.05s ease-in-out infinite;
+}
+.sb-dot-unidentified { background: var(--warn); }
+.sb-dot-no-board { background: var(--text-dim); }
+@keyframes sb-dot-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
 .save-state.saved { color: var(--accent-sage); }
 .save-state.saving { color: var(--accent-gold); }
 .save-state.unsaved { color: var(--warn); }
