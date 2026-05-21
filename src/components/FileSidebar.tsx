@@ -123,7 +123,7 @@ function FilesView() {
 function PlaceholderView({ label }: { label: string }) {
   return (
     <div class="sb-body">
-      <div class="sb-placeholder">{label} view coming in a later phase.</div>
+      <div class="sb-placeholder">{label} — coming soon.</div>
     </div>
   );
 }

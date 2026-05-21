@@ -17,7 +17,7 @@
   color: var(--text);
   font-family: var(--font-ui);
   font-weight: 600;
-  font-size: 14px;
+  font-size: 13px;
 }
 .sb-new { color: var(--accent-gold); font-size: 12.5px; cursor: pointer; }
 
@@ -48,15 +48,20 @@
 
 .sb-file {
   color: var(--text-muted);
-  padding: 4px 8px 4px 24px;
+  padding: 5px 8px 5px 22px;
   font-size: 12.5px;
   font-family: var(--font-ui);
   cursor: pointer;
+  transition: background-color 0.1s ease, color 0.1s ease;
+}
+.sb-file:hover {
+  background: var(--accent-gold-bg);
+  color: var(--text);
 }
 .sb-file.active {
   background: var(--accent-gold-bg);
   border-left: 2px solid var(--accent-gold);
-  padding-left: 22px;
+  padding-left: 20px;
   color: var(--text);
 }
 .sb-mod { color: var(--accent-gold); font-size: 8px; margin-right: 5px; }

@@ -19,7 +19,7 @@
   font-weight: 500;
   font-size: 13px;
   letter-spacing: 0.4px;
-  transition: background-color 0.1s ease;
+  transition: background-color 0.1s ease, color 0.1s ease;
 }
 .rail-item:hover { background: var(--accent-gold-bg); color: var(--text); }
 .rail-item.active {

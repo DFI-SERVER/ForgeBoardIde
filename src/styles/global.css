@@ -4,7 +4,7 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-ui);
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   user-select: none;
@@ -27,3 +27,15 @@ code { font-family: var(--font-mono); font-size: 0.95em; }
 .sh-underline-error { text-decoration: wavy underline var(--error); text-underline-offset: 3px; }
 .sh-underline-warning { text-decoration: wavy underline var(--warn); text-underline-offset: 3px; }
 .sh-underline-info { text-decoration: dotted underline var(--text-muted); text-underline-offset: 3px; }
+
+/* Thin, subtle scrollbars — replaces the chunky native WebView2 ones. */
+::-webkit-scrollbar { width: 11px; height: 11px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background-color: var(--border);
+  border: 3px solid transparent;
+  background-clip: padding-box;
+  border-radius: 6px;
+}
+::-webkit-scrollbar-thumb:hover { background-color: var(--text-dim); }
+::-webkit-scrollbar-corner { background: transparent; }
