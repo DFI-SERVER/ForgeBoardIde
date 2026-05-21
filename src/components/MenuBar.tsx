@@ -21,7 +21,14 @@ import {
   editorFind,
   editorReplace,
 } from "../lib/editor-actions";
-import { AboutDialog, KeyboardShortcutsDialog } from "./HelpDialogs";
+import { comboFor, keybindingById } from "../lib/keybindings";
+import { keyboardShortcutsOpen, paletteOpen } from "../state/appState";
+import { AboutDialog } from "./HelpDialogs";
+
+/** Open the command palette from the View menu. */
+function openCommandPalette() {
+  paletteOpen.value = true;
+}
 
 /* ------------------------------------------------------------- model --- */
 
@@ -153,8 +160,9 @@ export function MenuBar() {
   // Which top-level menu is open (by name), or null.
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [recent, setRecent] = useState<RecentProject[]>([]);
-  // null = no dialog; otherwise the Help dialog to show.
-  const [dialog, setDialog] = useState<"about" | "shortcuts" | null>(null);
+  // Whether the About modal is open. (Keyboard Shortcuts is a global,
+  // signal-driven modal — opened by setting `keyboardShortcutsOpen`.)
+  const [aboutOpen, setAboutOpen] = useState(false);
   const barRef = useRef<HTMLDivElement>(null);
   const buttonRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
@@ -163,11 +171,11 @@ export function MenuBar() {
     {
       name: "File",
       entries: [
-        { kind: "item", label: "New Sketch", shortcut: "Ctrl+N", run: newSketch },
-        { kind: "item", label: "Open Sketch…", shortcut: "Ctrl+O", run: openSketch },
+        { kind: "item", label: "New Sketch", shortcut: comboFor("file.new"), run: newSketch },
+        { kind: "item", label: "Open Sketch…", shortcut: comboFor("file.open"), run: openSketch },
         { kind: "item", label: "Open Recent", submenu: "recent" },
         sep,
-        { kind: "item", label: "Save", shortcut: "Ctrl+S", run: saveActiveFile },
+        { kind: "item", label: "Save", shortcut: comboFor("file.save"), run: saveActiveFile },
         sep,
         {
           kind: "item",
@@ -179,15 +187,21 @@ export function MenuBar() {
     {
       name: "Edit",
       entries: [
-        { kind: "item", label: "Undo", shortcut: "Ctrl+Z", run: editorUndo },
-        { kind: "item", label: "Redo", shortcut: "Ctrl+Y", run: editorRedo },
+        { kind: "item", label: "Undo", shortcut: comboFor("edit.undo"), run: editorUndo },
+        { kind: "item", label: "Redo", shortcut: comboFor("edit.redo"), run: editorRedo },
         sep,
         { kind: "item", label: "Cut", run: editorCut },
         { kind: "item", label: "Copy", run: editorCopy },
         { kind: "item", label: "Paste", run: editorPaste },
         sep,
-        { kind: "item", label: "Find", shortcut: "Ctrl+F", run: editorFind },
-        { kind: "item", label: "Replace", shortcut: "Ctrl+H", run: editorReplace },
+        { kind: "item", label: "Find", shortcut: comboFor("edit.find"), run: editorFind },
+        { kind: "item", label: "Replace", shortcut: comboFor("edit.replace"), run: editorReplace },
+        {
+          kind: "item",
+          label: "Find in Project",
+          shortcut: comboFor("edit.findInProject"),
+          run: () => keybindingById("edit.findInProject")?.run(),
+        },
       ],
     },
     {
@@ -196,16 +210,22 @@ export function MenuBar() {
         {
           kind: "item",
           label: "Verify / Compile",
-          shortcut: "Ctrl+R",
+          shortcut: comboFor("sketch.compile"),
           run: compileSketch,
         },
-        { kind: "item", label: "Upload", shortcut: "Ctrl+U", run: uploadSketch },
+        { kind: "item", label: "Upload", shortcut: comboFor("sketch.upload"), run: uploadSketch },
       ],
     },
     {
       name: "View",
       entries: [
-        { kind: "item", label: "Toggle Bottom Panel", run: toggleBottomPanel },
+        { kind: "item", label: "Command Palette", shortcut: comboFor("view.commandPalette"), run: openCommandPalette },
+        {
+          kind: "item",
+          label: "Toggle Bottom Panel",
+          shortcut: comboFor("view.toggleBottomPanel"),
+          run: toggleBottomPanel,
+        },
       ],
     },
     {
@@ -214,12 +234,15 @@ export function MenuBar() {
         {
           kind: "item",
           label: "About ForgeBoard",
-          run: () => setDialog("about"),
+          run: () => setAboutOpen(true),
         },
         {
           kind: "item",
           label: "Keyboard Shortcuts",
-          run: () => setDialog("shortcuts"),
+          shortcut: comboFor("view.keyboardShortcuts"),
+          run: () => {
+            keyboardShortcutsOpen.value = true;
+          },
         },
       ],
     },
@@ -297,10 +320,7 @@ export function MenuBar() {
         />
       )}
 
-      {dialog === "about" && <AboutDialog onClose={() => setDialog(null)} />}
-      {dialog === "shortcuts" && (
-        <KeyboardShortcutsDialog onClose={() => setDialog(null)} />
-      )}
+      {aboutOpen && <AboutDialog onClose={() => setAboutOpen(false)} />}
     </>
   );
 }

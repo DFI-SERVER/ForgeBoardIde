@@ -45,6 +45,11 @@ export const newSketchDialogOpen = signal<boolean>(false);
  *  Ctrl+Shift+P / Ctrl+K; the palette resets its query each time it opens. */
 export const paletteOpen = signal<boolean>(false);
 
+/** Whether the Keyboard Shortcuts reference modal is open. Opened by F1, the
+ *  Help menu, and a command-palette command; the modal resets its filter each
+ *  time it opens. */
+export const keyboardShortcutsOpen = signal<boolean>(false);
+
 /**
  * Structured compiler diagnostics from the most recent compile (see
  * lib/diagnostics.ts). Replaced wholesale after each compile — empty until

@@ -7,9 +7,9 @@ beforeEach(() => {
 });
 
 describe("command registry", () => {
-  it("exposes commands across the five categories", () => {
+  it("exposes commands across every category", () => {
     const categories = new Set(commands.map((c) => c.category));
-    for (const name of ["File", "Sketch", "Edit", "View", "Go"]) {
+    for (const name of ["File", "Sketch", "Edit", "View", "Help"]) {
       expect(categories.has(name)).toBe(true);
     }
   });
@@ -19,8 +19,8 @@ describe("command registry", () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it("Go commands switch the activeRail signal", () => {
-    const goBoards = commands.find((c) => c.id === "go.boards")!;
+  it("rail-navigation commands switch the activeRail signal", () => {
+    const goBoards = commands.find((c) => c.id === "view.goBoards")!;
     goBoards.run();
     expect(activeRail.value).toBe("boards");
   });

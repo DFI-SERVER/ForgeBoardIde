@@ -2,11 +2,18 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/preact";
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { MenuBar } from "../../src/components/MenuBar";
 import { projectApi } from "../../src/ipc/project";
-import { bottomPanelOpen, newSketchDialogOpen } from "../../src/state/appState";
+import {
+  bottomPanelOpen,
+  newSketchDialogOpen,
+  keyboardShortcutsOpen,
+  paletteOpen,
+} from "../../src/state/appState";
 
 beforeEach(() => {
   bottomPanelOpen.value = true;
   newSketchDialogOpen.value = false;
+  keyboardShortcutsOpen.value = false;
+  paletteOpen.value = false;
   vi.spyOn(projectApi, "listRecent").mockResolvedValue([]);
 });
 
@@ -126,8 +133,15 @@ describe("MenuBar", () => {
     render(<MenuBar />);
     fireEvent.click(screen.getByText("Help"));
     fireEvent.click(screen.getByText("Keyboard Shortcuts"));
-    expect(screen.getByText("Keyboard shortcuts")).toBeInTheDocument();
-    // A representative wired shortcut is listed.
-    expect(screen.getByText("Verify / Compile")).toBeInTheDocument();
+    // The modal is the app-global, signal-driven KeyboardShortcutsModal
+    // (mounted in App.tsx) — the menu item raises its open signal.
+    expect(keyboardShortcutsOpen.value).toBe(true);
+  });
+
+  it("View → Command Palette opens the palette", () => {
+    render(<MenuBar />);
+    fireEvent.click(screen.getByText("View"));
+    fireEvent.click(screen.getByText("Command Palette"));
+    expect(paletteOpen.value).toBe(true);
   });
 });

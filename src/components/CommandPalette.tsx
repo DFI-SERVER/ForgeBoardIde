@@ -7,12 +7,16 @@ import {
   FilePlus,
   FolderOpen,
   Save,
+  X,
+  ArrowRightLeft,
   Hammer,
   ArrowUpFromLine,
   Undo2,
   Redo2,
   Replace,
   PanelBottom,
+  Command as CommandIcon,
+  Keyboard,
   Compass,
 } from "lucide-preact";
 import { paletteOpen } from "../state/appState";
@@ -20,7 +24,7 @@ import { filterCommands, type Command } from "../lib/commands";
 
 type LucideIcon = typeof Search;
 
-/** Per-command icon, looked up by command id; categories fall back by name. */
+/** Per-command icon, looked up by command id; rail "Go" commands fall back. */
 function iconFor(command: Command): LucideIcon {
   switch (command.id) {
     case "file.new":
@@ -29,6 +33,8 @@ function iconFor(command: Command): LucideIcon {
       return FolderOpen;
     case "file.save":
       return Save;
+    case "file.closeTab":
+      return X;
     case "sketch.compile":
       return Hammer;
     case "sketch.upload":
@@ -43,10 +49,17 @@ function iconFor(command: Command): LucideIcon {
       return Replace;
     case "edit.findInProject":
       return FileSearch;
+    case "view.commandPalette":
+      return CommandIcon;
+    case "view.keyboardShortcuts":
+    case "help.keyboardShortcuts":
+      return Keyboard;
     case "view.toggleBottomPanel":
       return PanelBottom;
+    case "view.nextTab":
+      return ArrowRightLeft;
     default:
-      // Every "Go" command.
+      // Every rail "Go to …" command.
       return Compass;
   }
 }

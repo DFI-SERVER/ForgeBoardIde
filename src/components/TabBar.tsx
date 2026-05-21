@@ -1,6 +1,7 @@
 import "./TabBar.css";
 import { X } from "lucide-preact";
 import { openTabs, activeTabIndex } from "../state/appState";
+import { closeTab } from "../lib/tabs";
 
 export function TabBar() {
   const tabs = openTabs.value;
@@ -10,12 +11,9 @@ export function TabBar() {
     activeTabIndex.value = i;
   }
 
-  function closeTab(i: number, e: MouseEvent) {
+  function onCloseClick(i: number, e: MouseEvent) {
     e.stopPropagation();
-    const newTabs = tabs.filter((_, idx) => idx !== i);
-    openTabs.value = newTabs;
-    if (active >= newTabs.length) activeTabIndex.value = newTabs.length - 1;
-    else if (i <= active && active > 0) activeTabIndex.value = active - 1;
+    closeTab(i);
   }
 
   return (
@@ -27,7 +25,7 @@ export function TabBar() {
         >
           <span class={`tab-dot ${tab.modified ? "modified" : "saved"}`} />
           <span class="tab-name">{tab.name}</span>
-          <span class="tab-x" onClick={(e) => closeTab(i, e as any)}>
+          <span class="tab-x" onClick={(e) => onCloseClick(i, e as any)}>
             <X size={14} strokeWidth={1.5} />
           </span>
         </button>

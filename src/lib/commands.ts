@@ -2,25 +2,13 @@
  * The command registry — every runnable IDE action, in one flat list.
  *
  * The command palette (CommandPalette.tsx) renders and fuzzy-filters this
- * array. Each command is a thin wrapper over the shared action modules, so a
- * command and its menu-bar / shortcut equivalent always do the exact same
- * thing. Adding a feature to the palette is just one entry here.
+ * array. Commands are derived from the `keybindings` single source of truth so
+ * a command, its menu-bar item and its keyboard shortcut always do the exact
+ * same thing and show the exact same combo. A handful of commands that have no
+ * keyboard shortcut (and so no keybinding) are appended afterwards.
  */
-import {
-  newSketch,
-  openSketch,
-  saveActiveFile,
-  compileSketch,
-  uploadSketch,
-  toggleBottomPanel,
-} from "./actions";
-import {
-  editorFind,
-  editorReplace,
-  editorUndo,
-  editorRedo,
-} from "./editor-actions";
-import { activeRail, searchFocusRequest, type RailIcon } from "../state/appState";
+import { keybindings, type Keybinding } from "./keybindings";
+import { keyboardShortcutsOpen } from "../state/appState";
 
 /** A single palette-runnable command. */
 export interface Command {
@@ -36,119 +24,39 @@ export interface Command {
   shortcut?: string;
 }
 
-/** Build a "Go" command that switches the activity rail to a given view. */
-function goTo(id: string, title: string, rail: RailIcon): Command {
+/** Turn a keybinding into its palette command. */
+function fromKeybinding(k: Keybinding): Command {
   return {
-    id,
-    title,
-    category: "Go",
-    run: () => {
-      activeRail.value = rail;
-    },
+    id: k.id,
+    title: k.label,
+    category: k.category,
+    run: k.run,
+    shortcut: k.combo,
   };
 }
 
 /**
- * All commands, in display order. The palette ranks matches, so this order
- * only matters as a tie-breaker for equally-good matches.
+ * All commands, in display order.
+ *
+ * The first block is every keybinding-backed command, minus `Ctrl+K` — it is
+ * a second binding for the command palette and listing it twice would be
+ * noise. The second block is shortcut-less commands. The palette ranks
+ * matches, so this order only matters as a tie-breaker.
  */
 export const commands: Command[] = [
-  /* ---------------------------------------------------------- File --- */
-  {
-    id: "file.new",
-    title: "New Sketch",
-    category: "File",
-    shortcut: "Ctrl+N",
-    run: newSketch,
-  },
-  {
-    id: "file.open",
-    title: "Open Sketch…",
-    category: "File",
-    shortcut: "Ctrl+O",
-    run: openSketch,
-  },
-  {
-    id: "file.save",
-    title: "Save",
-    category: "File",
-    shortcut: "Ctrl+S",
-    run: saveActiveFile,
-  },
+  ...keybindings
+    .filter((k) => k.id !== "view.commandPalette.k")
+    .map(fromKeybinding),
 
-  /* -------------------------------------------------------- Sketch --- */
+  /* ------------------------ commands without a keyboard shortcut --- */
   {
-    id: "sketch.compile",
-    title: "Verify / Compile",
-    category: "Sketch",
-    shortcut: "Ctrl+R",
-    run: compileSketch,
-  },
-  {
-    id: "sketch.upload",
-    title: "Upload",
-    category: "Sketch",
-    shortcut: "Ctrl+U",
-    run: uploadSketch,
-  },
-
-  /* ---------------------------------------------------------- Edit --- */
-  {
-    id: "edit.undo",
-    title: "Undo",
-    category: "Edit",
-    shortcut: "Ctrl+Z",
-    run: editorUndo,
-  },
-  {
-    id: "edit.redo",
-    title: "Redo",
-    category: "Edit",
-    shortcut: "Ctrl+Y",
-    run: editorRedo,
-  },
-  {
-    id: "edit.find",
-    title: "Find",
-    category: "Edit",
-    shortcut: "Ctrl+F",
-    run: editorFind,
-  },
-  {
-    id: "edit.replace",
-    title: "Replace",
-    category: "Edit",
-    shortcut: "Ctrl+H",
-    run: editorReplace,
-  },
-  {
-    id: "edit.findInProject",
-    title: "Find in Project",
-    category: "Edit",
-    shortcut: "Ctrl+Shift+F",
+    id: "help.keyboardShortcuts",
+    title: "Help: Keyboard Shortcuts",
+    category: "Help",
     run: () => {
-      activeRail.value = "search";
-      searchFocusRequest.value++;
+      keyboardShortcutsOpen.value = true;
     },
   },
-
-  /* ---------------------------------------------------------- View --- */
-  {
-    id: "view.toggleBottomPanel",
-    title: "Toggle Bottom Panel",
-    category: "View",
-    run: toggleBottomPanel,
-  },
-
-  /* ------------------------------------------------------------ Go --- */
-  goTo("go.home", "Go to Home", "home"),
-  goTo("go.files", "Go to Files", "files"),
-  goTo("go.boards", "Go to Boards", "boards"),
-  goTo("go.libraries", "Go to Libraries", "libraries"),
-  goTo("go.examples", "Go to Examples", "examples"),
-  goTo("go.search", "Go to Search", "search"),
-  goTo("go.walkthrough", "Go to Walkthrough", "walkthrough"),
-  goTo("go.settings", "Go to Settings", "settings"),
 ];
 
 /* -------------------------------------------------------- matching --- */
