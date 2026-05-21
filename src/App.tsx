@@ -6,6 +6,7 @@ import { EditorArea } from "./components/EditorArea";
 import { BottomPanel } from "./components/BottomPanel";
 import { StatusBar } from "./components/StatusBar";
 import { Toast } from "./components/Toast";
+import { NewSketchDialog } from "./components/NewSketchDialog";
 
 export default function App() {
   return (
@@ -20,6 +21,7 @@ export default function App() {
       <BottomPanel />
       <StatusBar />
       <Toast />
+      <NewSketchDialog />
     </div>
   );
 }

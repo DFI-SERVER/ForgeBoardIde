@@ -1,0 +1,48 @@
+/* About box */
+.about-name {
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  color: var(--fg-bright);
+}
+.about-version {
+  margin-top: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--fg-muted);
+}
+.about-line {
+  margin-top: var(--space-5);
+  font-size: var(--text-sm);
+  color: var(--fg-default);
+}
+.about-line-dim {
+  margin-top: var(--space-3);
+  color: var(--fg-subtle);
+}
+
+/* Keyboard shortcuts list */
+.shortcuts-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.shortcuts-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-6);
+  padding: var(--space-3) 0;
+}
+.shortcuts-label {
+  font-size: var(--text-sm);
+  color: var(--fg-default);
+}
+.shortcuts-keys {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--fg-muted);
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-1) var(--space-3);
+  white-space: nowrap;
+}

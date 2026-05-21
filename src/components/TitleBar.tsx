@@ -1,4 +1,5 @@
 import "./TitleBar.css";
+import { MenuBar } from "./MenuBar";
 import { WindowControls } from "./WindowControls";
 
 export function TitleBar() {
@@ -9,6 +10,9 @@ export function TitleBar() {
         <span class="brand-name">ForgeBoard</span>
         <span class="brand-sub">IDE</span>
       </div>
+      <MenuBar />
+      {/* Flexible drag strip — fills the gap so the window stays draggable. */}
+      <div class="titlebar-drag" data-tauri-drag-region />
       <WindowControls />
     </div>
   );

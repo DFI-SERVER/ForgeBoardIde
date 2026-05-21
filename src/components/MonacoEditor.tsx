@@ -8,6 +8,18 @@ import {
   saveState,
 } from "../state/appState";
 
+/**
+ * Module-level reference to the live Monaco editor instance. Set while the
+ * editor is mounted, null otherwise. Lets non-React modules (the Edit menu,
+ * the shared actions) reach the editor without prop drilling.
+ */
+let activeEditor: monaco.editor.IStandaloneCodeEditor | null = null;
+
+/** The mounted Monaco editor instance, or null when no editor is mounted. */
+export function getActiveEditor(): monaco.editor.IStandaloneCodeEditor | null {
+  return activeEditor;
+}
+
 export function MonacoEditor() {
   const hostRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
@@ -38,6 +50,7 @@ export function MonacoEditor() {
       insertSpaces: true,
     });
     editorRef.current = editor;
+    activeEditor = editor;
 
     // On content change, mark file as modified and stage save
     const disposable = editor.onDidChangeModelContent(() => {
@@ -59,6 +72,7 @@ export function MonacoEditor() {
     return () => {
       disposable.dispose();
       editor.dispose();
+      if (activeEditor === editor) activeEditor = null;
     };
   }, []);
 

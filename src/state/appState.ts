@@ -36,6 +36,10 @@ export const connectionState = computed<ConnectionState>(() => {
 export const bottomPanelOpen = signal<boolean>(true);
 export const bottomPanelTab = signal<"serial" | "output" | "plotter" | "problems">("serial");
 
+/** Whether the app-global "New sketch" dialog is open. Driven by the shared
+ *  `newSketch()` action so both the sidebar button and the File menu can open it. */
+export const newSketchDialogOpen = signal<boolean>(false);
+
 export const problemsCount = computed(() => 0);
 
 /** Currently opened sketch (metadata from disk). */

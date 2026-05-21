@@ -4,13 +4,18 @@
   border-bottom: 1px solid var(--border-subtle);
   display: flex;
   align-items: center;
-  justify-content: space-between;
   padding-left: var(--space-6);
 }
 .titlebar-brand {
   display: flex;
   align-items: center;
   gap: var(--space-4);
+  margin-right: var(--space-6);
+}
+/* Flexible draggable region between the menu bar and the window controls. */
+.titlebar-drag {
+  flex: 1;
+  align-self: stretch;
 }
 .titlebar-logo {
   height: 22px;
