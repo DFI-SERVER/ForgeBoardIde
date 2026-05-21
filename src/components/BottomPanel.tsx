@@ -11,6 +11,7 @@ import {
   FileCode2,
 } from "lucide-preact";
 import { SerialMonitor } from "./SerialMonitor";
+import { SerialPlotter } from "./SerialPlotter";
 import {
   bottomPanelTab,
   bottomPanelOpen,
@@ -175,9 +176,7 @@ export function BottomPanel() {
       <div class="bp-body">
         {bottomPanelTab.value === "output" && <OutputView />}
         {bottomPanelTab.value === "serial" && <SerialMonitor />}
-        {bottomPanelTab.value === "plotter" && (
-          <div class="bp-placeholder">Serial Plotter — arrives in Phase 11.</div>
-        )}
+        {bottomPanelTab.value === "plotter" && <SerialPlotter />}
         {bottomPanelTab.value === "problems" && <ProblemsView />}
       </div>
     </section>
