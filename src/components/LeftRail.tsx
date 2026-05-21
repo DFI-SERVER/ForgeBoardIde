@@ -1,51 +1,66 @@
 import "./LeftRail.css";
 import { activeRail, type RailIcon } from "../state/appState";
+import {
+  House,
+  Files,
+  GraduationCap,
+  Search,
+  Library,
+  CircuitBoard,
+  Compass,
+  Settings,
+} from "lucide-preact";
+
+type LucideIcon = typeof House;
 
 interface RailItem {
   id: RailIcon;
-  icon: string;
+  Icon: LucideIcon;
   label: string;
 }
 
 const MAIN_ITEMS: RailItem[] = [
-  { id: "home", icon: "⌂", label: "Home" },
-  { id: "files", icon: "⎘", label: "Files" },
-  { id: "examples", icon: "☰", label: "Examples" },
-  { id: "search", icon: "⌕", label: "Search" },
-  { id: "libraries", icon: "⬡", label: "Libraries" },
-  { id: "boards", icon: "◆", label: "Boards" },
+  { id: "home", Icon: House, label: "Home" },
+  { id: "files", Icon: Files, label: "Files" },
+  { id: "examples", Icon: GraduationCap, label: "Examples" },
+  { id: "search", Icon: Search, label: "Search" },
+  { id: "libraries", Icon: Library, label: "Libraries" },
+  { id: "boards", Icon: CircuitBoard, label: "Boards" },
 ];
 
 const HELP_ITEMS: RailItem[] = [
-  { id: "walkthrough", icon: "?", label: "Walkthrough" },
-  { id: "settings", icon: "⚙", label: "Settings" },
+  { id: "walkthrough", Icon: Compass, label: "Walkthrough" },
+  { id: "settings", Icon: Settings, label: "Settings" },
 ];
+
+function RailButton({ item }: { item: RailItem }) {
+  const { Icon } = item;
+  return (
+    <button
+      class={`rail-item ${activeRail.value === item.id ? "active" : ""}`}
+      onClick={() => (activeRail.value = item.id)}
+      title={item.label}
+    >
+      <span class="rail-icon">
+        <Icon size={17} strokeWidth={1.75} />
+      </span>
+      <span class="rail-label">{item.label}</span>
+    </button>
+  );
+}
 
 export function LeftRail() {
   return (
     <nav class="rail" aria-label="primary navigation">
       <div class="rail-section">
         {MAIN_ITEMS.map((item) => (
-          <button
-            class={`rail-item ${activeRail.value === item.id ? "active" : ""}`}
-            onClick={() => (activeRail.value = item.id)}
-            title={item.label}
-          >
-            <span class="rail-icon">{item.icon}</span>
-            <span class="rail-label">{item.label}</span>
-          </button>
+          <RailButton item={item} />
         ))}
       </div>
       <div class="rail-section rail-section-footer">
         <div class="rail-divider">HELP</div>
         {HELP_ITEMS.map((item) => (
-          <button
-            class={`rail-item ${activeRail.value === item.id ? "active" : ""}`}
-            onClick={() => (activeRail.value = item.id)}
-          >
-            <span class="rail-icon">{item.icon}</span>
-            <span class="rail-label">{item.label}</span>
-          </button>
+          <RailButton item={item} />
         ))}
       </div>
     </nav>
