@@ -2,63 +2,63 @@
   /* ============================================================
      ForgeBoard IDE — design tokens.
      Layered surfaces, a 4px spacing scale, a 7-step type scale,
-     and a disciplined colour system. Brand identity kept:
-     warm near-black + gold + sage.
+     and a disciplined colour system: a clean cool-slate dark with
+     a light-violet accent and a fresh mint for hardware state.
      ============================================================ */
 
   /* --- Surfaces — four steps; the editor is the lightest plane --- */
-  --surface-0: #100f0d;   /* deepest — title bar, status bar, activity rail */
-  --surface-1: #15140f;   /* chrome — sidebar, bottom panel, tab strip */
-  --surface-2: #1c1a16;   /* raised — dropdowns, modals, inputs, hover wells */
-  --surface-3: #232019;   /* highest raised — input-on-modal, nested wells */
-  --editor-bg: #161512;   /* the editor — lighter than chrome, advances */
+  --surface-0: #0e0f13;   /* deepest — title bar, status bar, activity rail */
+  --surface-1: #14151b;   /* chrome — sidebar, bottom panel, tab strip */
+  --surface-2: #1e2029;   /* raised — dropdowns, modals, inputs, hover wells */
+  --surface-3: #262a35;   /* highest raised — input-on-modal, nested wells */
+  --editor-bg: #181a23;   /* the editor — lighter than chrome, advances */
 
   /* --- Borders — used only between same-tone planes --- */
-  --border-strong: #322e26;
-  --border:        #262420;
-  --border-subtle: #1d1b17;
+  --border-strong: #343843;
+  --border:        #262a33;
+  --border-subtle: #1c1e25;
 
   /* --- Foreground — a five-step ramp --- */
-  --fg-bright:   #f3f1ec;   /* reserved: active tab label, primary-button label */
-  --fg-default:  #d8d5cd;   /* body text, active nav, file names */
-  --fg-muted:    #9c978c;   /* secondary text, inactive tabs/nav */
-  --fg-subtle:   #6f6b62;   /* captions, section labels, placeholders, line numbers */
-  --fg-disabled: #4e4b44;   /* disabled controls */
+  --fg-bright:   #f0f1f5;   /* reserved: active tab label, primary-button label */
+  --fg-default:  #c9ccd6;   /* body text, active nav, file names */
+  --fg-muted:    #8b909e;   /* secondary text, inactive tabs/nav */
+  --fg-subtle:   #61667a;   /* captions, section labels, placeholders, line numbers */
+  --fg-disabled: #45495a;   /* disabled controls */
 
-  /* --- Accent — gold, the primary brand spotlight --- */
-  --accent:            #d2a23f;
-  --accent-hover:      #e0b154;
-  --accent-press:      #b98a2f;
-  --accent-fg:         #19150d;                    /* text/icon on filled gold */
-  --accent-wash:       rgba(210, 162, 63, 0.10);   /* selected / active fill */
-  --accent-wash-hover: rgba(210, 162, 63, 0.06);   /* hover fill */
-  --accent-ring:       rgba(210, 162, 63, 0.55);   /* focus ring */
+  /* --- Accent — light violet, the primary brand spotlight --- */
+  --accent:            #b9a8ff;
+  --accent-hover:      #cabdff;
+  --accent-press:      #a08cf5;
+  --accent-fg:         #15101f;                     /* text/icon on filled accent */
+  --accent-wash:       rgba(185, 168, 255, 0.12);   /* selected / active fill */
+  --accent-wash-hover: rgba(185, 168, 255, 0.07);   /* hover fill */
+  --accent-ring:       rgba(185, 168, 255, 0.55);   /* focus ring */
 
-  /* --- Sage — secondary accent: hardware / connection state only --- */
-  --sage:      #82b6a4;
-  --sage-fg:   #10221c;
-  --sage-wash: rgba(130, 182, 164, 0.10);
+  /* --- Mint — secondary accent: hardware / connection state only --- */
+  --sage:      #57cfa0;
+  --sage-fg:   #0c2018;
+  --sage-wash: rgba(87, 207, 160, 0.12);
 
   /* --- Semantic — independent of the brand accent --- */
-  --info:         #6f9fc4;
-  --success:      #82b6a4;
-  --warning:      #d99a3a;
-  --error:        #d9534f;
-  --warning-wash: rgba(217, 154, 58, 0.12);
-  --error-wash:   rgba(217, 83, 79, 0.12);
+  --info:         #5cb8f0;
+  --success:      #57cfa0;
+  --warning:      #e8b24a;
+  --error:        #f0625e;
+  --warning-wash: rgba(232, 178, 74, 0.13);
+  --error-wash:   rgba(240, 98, 94, 0.13);
 
   /* --- Syntax (Monaco) --- */
-  --code-keyword:  #d2a23f;
-  --code-function: #e8c585;
-  --code-string:   #a8c479;
-  --code-number:   #d19a66;
-  --code-comment:  #6f6b62;
-  --code-type:     #82b6a4;
+  --code-keyword:  #b9a8ff;
+  --code-function: #7aa2f7;
+  --code-string:   #9ece6a;
+  --code-number:   #e0a878;
+  --code-comment:  #5e6478;
+  --code-type:     #56c8e0;
 
   /* --- Elevation — shadows on floating layers only --- */
   --shadow-dropdown: 0 6px 20px rgba(0, 0, 0, 0.45);
   --shadow-modal:    0 16px 48px rgba(0, 0, 0, 0.55);
-  --scrim:           rgba(8, 7, 6, 0.60);
+  --scrim:           rgba(6, 7, 10, 0.62);
 
   /* --- Spacing — 4px base --- */
   --space-0: 0;
@@ -85,8 +85,8 @@
   --weight-semibold: 600;
 
   /* --- Radii --- */
-  --radius-sm: 4px;   /* controls, inputs, list rows, buttons */
-  --radius-md: 6px;   /* dropdowns, modals, cards */
+  --radius-sm: 4px;
+  --radius-md: 6px;
 
   /* --- Motion --- */
   --ease:     cubic-bezier(0.2, 0, 0, 1);
@@ -97,7 +97,7 @@
   --font-ui:   "Segoe UI", system-ui, -apple-system, sans-serif;
   --font-mono: "Cascadia Code", "Cascadia Mono", "Consolas", "Courier New", monospace;
 
-  /* --- Layout (rail-w drops to 52px when the rail becomes an activity bar) --- */
+  /* --- Layout --- */
   --rail-w:        52px;
   --sidebar-w:     256px;
   --titlebar-h:    34px;
@@ -105,13 +105,10 @@
   --tabstrip-h:    36px;
   --statusbar-h:   28px;
   --bottompanel-h: 188px;
-  --row-h:         24px;   /* universal list / tree row height */
+  --row-h:         24px;
 
   /* ============================================================
-     Backwards-compat aliases — existing components still use the
-     old token names. Mapped onto the new system so every state
-     stays valid during the component migration; removed once all
-     components use the new tokens directly.
+     Backwards-compat aliases for any not-yet-migrated references.
      ============================================================ */
   --bg:                 var(--editor-bg);
   --panel:              var(--surface-1);
@@ -122,7 +119,7 @@
   --text-dim:           var(--fg-subtle);
   --accent-gold:        var(--accent);
   --accent-gold-bg:     var(--accent-wash-hover);
-  --accent-gold-border: rgba(210, 162, 63, 0.30);
+  --accent-gold-border: rgba(185, 168, 255, 0.30);
   --accent-sage:        var(--sage);
   --accent-sage-bg:     var(--sage-wash);
   --warn:               var(--warning);
