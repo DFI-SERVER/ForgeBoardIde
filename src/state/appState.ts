@@ -14,8 +14,24 @@ export type RailIcon =
 
 export const activeRail = signal<RailIcon>("files");
 
-export const connectedBoard = signal<string | null>("ForgeBoard Beginner");
-export const connectedPort = signal<string | null>("COM3");
+/**
+ * Board connection — honest state, driven entirely by real detection
+ * (see lib/connection.ts). Everything starts empty: nothing is "connected"
+ * until a board is actually found on a port.
+ */
+export const connectedPort = signal<string | null>(null);
+/** The real identified board name, e.g. "ESP32-S3 Dev Module" — null until identified. */
+export const connectedBoard = signal<string | null>(null);
+/** True while an identify probe is running on connectedPort. */
+export const identifyInProgress = signal<boolean>(false);
+
+/** Coarse connection state, derived from the signals above. */
+export type ConnectionState = "no-board" | "detecting" | "connected" | "unidentified";
+export const connectionState = computed<ConnectionState>(() => {
+  if (connectedPort.value === null) return "no-board";
+  if (identifyInProgress.value) return "detecting";
+  return connectedBoard.value !== null ? "connected" : "unidentified";
+});
 
 export const bottomPanelOpen = signal<boolean>(true);
 export const bottomPanelTab = signal<"serial" | "output" | "plotter" | "problems">("serial");
