@@ -1,0 +1,216 @@
+/* Examples — the Examples activity-rail view. Structure and tokens mirror
+   LibrariesView / SearchView: a header, a search bar, then a scrolling,
+   grouped body. Monochrome throughout — colour only from the design tokens. */
+
+.ev {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  font-family: var(--font-ui);
+  background: var(--surface-1);
+}
+
+/* --- Header --- */
+.ev-header {
+  padding: var(--space-6) var(--space-6) var(--space-5);
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.ev-title {
+  color: var(--fg-default);
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-base);
+}
+.ev-stats {
+  color: var(--fg-muted);
+  font-size: var(--text-xs);
+}
+
+/* --- Search bar --- */
+.ev-search {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-6);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.ev-search-icon {
+  color: var(--fg-subtle);
+  flex-shrink: 0;
+}
+.ev-search-input {
+  flex: 1;
+  min-width: 0;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--fg-default);
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  padding: var(--space-2) var(--space-4);
+  outline: none;
+  transition: border-color var(--dur-fast) var(--ease);
+}
+.ev-search-input::placeholder {
+  color: var(--fg-subtle);
+}
+.ev-search-input:focus-visible {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-ring);
+}
+
+/* --- Body --- */
+.ev-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-3) 0 var(--space-5);
+}
+
+/* --- Empty / no-results state --- */
+.ev-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-9) var(--space-6) var(--space-7);
+  color: var(--fg-muted);
+  font-size: var(--text-sm);
+  text-align: center;
+}
+.ev-state-icon {
+  color: var(--fg-disabled);
+  margin-bottom: var(--space-2);
+}
+.ev-state-sub {
+  color: var(--fg-subtle);
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  max-width: 200px;
+}
+
+/* --- A category / library group --- */
+.ev-group {
+  margin-bottom: var(--space-3);
+}
+
+.ev-group-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--fg-subtle);
+  letter-spacing: 0.06em;
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
+  padding: 0 var(--space-6);
+  margin: var(--space-6) 0 var(--space-3);
+}
+.ev-group:first-child .ev-group-label {
+  margin-top: var(--space-1);
+}
+/* The library name is user data — keep its casing, just truncate if long. */
+.ev-group-name {
+  text-transform: none;
+  letter-spacing: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ev-group-count {
+  margin-left: auto;
+  flex-shrink: 0;
+  color: var(--fg-subtle);
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-medium);
+  font-family: var(--font-mono);
+  letter-spacing: 0;
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  padding: 0 var(--space-3);
+}
+
+/* --- One example row --- */
+.ev-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: var(--space-3) var(--space-6);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease);
+}
+.ev-row:hover:not(:disabled) {
+  background: var(--accent-wash-hover);
+}
+.ev-row:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--accent-ring);
+}
+.ev-row:disabled {
+  cursor: default;
+}
+
+.ev-row-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 16px;
+  height: 18px;
+  color: var(--fg-muted);
+}
+.ev-row:hover:not(:disabled) .ev-row-icon {
+  color: var(--fg-default);
+}
+
+.ev-row-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  flex: 1;
+  min-width: 0;
+}
+.ev-row-name {
+  color: var(--fg-default);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ev-row-desc {
+  color: var(--fg-muted);
+  font-size: var(--text-xs);
+  line-height: 1.45;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* --- Footnote (scanning / install-a-library hint) --- */
+.ev-note {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-5) var(--space-6) var(--space-3);
+  color: var(--fg-subtle);
+  font-size: var(--text-xs);
+  font-style: italic;
+}
+
+/* --- Spinner --- */
+.ev-spin {
+  animation: ev-spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes ev-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

@@ -1,6 +1,12 @@
 import { signal, computed } from "@preact/signals";
 import type { Sketch } from "../ipc/project";
-import type { Core, Board, DetectedBoard, Library } from "../ipc/arduino";
+import type {
+  Core,
+  Board,
+  DetectedBoard,
+  Library,
+  LibraryExample,
+} from "../ipc/arduino";
 import { countDiagnostics, type Diagnostic } from "../lib/diagnostics";
 
 export type RailIcon =
@@ -130,6 +136,19 @@ export const libraryInstallProgress = signal<string[]>([]);
 
 /** Find in Project — the Search rail's query box (debounced before a search). */
 export const projectSearchQuery = signal<string>("");
+
+/**
+ * Examples — the Examples rail. The curated starter set is static frontend
+ * data (see lib/example-catalog.ts); these signals hold the dynamic,
+ * installed-library examples and the live filter text.
+ */
+export const libraryExamples = signal<LibraryExample[]>([]);
+/** Raw text in the Examples search box — filters examples by name as you type. */
+export const exampleSearchQuery = signal<string>("");
+/** True while the installed-library examples scan is in flight. */
+export const exampleScanPending = signal<boolean>(false);
+/** Name of the example currently being opened as a new sketch, or null. */
+export const exampleOpening = signal<string | null>(null);
 
 /**
  * Bumped to ask the Search view to focus (and select) its query input — used

@@ -50,6 +50,18 @@ export interface Library {
   update_available: boolean;
 }
 
+/** An example sketch discovered inside an installed library's `examples/` folder. */
+export interface LibraryExample {
+  /** The example's folder name, e.g. "Blink". */
+  name: string;
+  /** The library the example belongs to, e.g. "Adafruit NeoPixel". */
+  library: string;
+  /** Absolute path to the example's main `.ino` file. */
+  ino_path: string;
+  /** Absolute path to the example's folder. */
+  folder_path: string;
+}
+
 /** Frontend wrapper around the arduino-cli Tauri commands and streaming events. */
 export const arduinoApi = {
   listBoards: () => invoke<Board[]>("arduino_list_boards"),
@@ -85,4 +97,8 @@ export const arduinoApi = {
   /** Subscribe to streamed lib install/uninstall progress lines. */
   onLibInstallOutput: (cb: (line: string) => void) =>
     listen<string>("lib-install-output", (e) => cb(e.payload)),
+
+  /** List example sketches found in installed libraries' `examples/` folders. */
+  listLibraryExamples: () =>
+    invoke<LibraryExample[]>("arduino_list_library_examples"),
 };

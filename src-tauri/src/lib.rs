@@ -39,6 +39,7 @@ pub fn run() {
             arduino::commands::arduino_lib_install,
             arduino::commands::arduino_lib_uninstall,
             arduino::commands::arduino_lib_install_zip,
+            arduino::commands::arduino_list_library_examples,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

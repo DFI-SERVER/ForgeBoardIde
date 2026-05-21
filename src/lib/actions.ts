@@ -60,6 +60,74 @@ export async function createSketch(
   await loadSketch(created);
 }
 
+/**
+ * Open an example as a fresh, editable sketch.
+ *
+ * An example is never edited in place. Its source is copied into a brand-new
+ * sketch in the sketchbook, which is then loaded into the editor. The new
+ * sketch is named after the example; on a name collision a numeric suffix is
+ * appended (`Blink`, `Blink 2`, `Blink 3`, …) until a free name is found.
+ *
+ * `exampleName` is the display name (e.g. "Blink"); `source` is the full `.ino`
+ * to seed the sketch with. Surfaces failures as a toast.
+ */
+export async function openExample(
+  exampleName: string,
+  source: string,
+): Promise<void> {
+  // A sketch folder name must be a single, separator-free path component;
+  // a library example name can contain spaces or other characters. Keep
+  // letters, digits, spaces, '-' and '_'; collapse the rest to spaces.
+  const base =
+    exampleName
+      .replace(/[^A-Za-z0-9 _-]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim() || "Example";
+
+  try {
+    let created;
+    // project_create rejects an existing folder with AlreadyExists; retry
+    // with an incrementing suffix until a free name is found.
+    for (let attempt = 1; ; attempt++) {
+      const candidate = attempt === 1 ? base : `${base} ${attempt}`;
+      try {
+        created = await projectApi.create(candidate, null);
+        break;
+      } catch (e) {
+        if (isAlreadyExists(e) && attempt < 100) continue;
+        throw e;
+      }
+    }
+    // Seed the new sketch's main .ino with the example's source, then reload
+    // so the editor shows the example content rather than the blank stub.
+    const main = created.files.find((f) => f.is_main) ?? created.files[0];
+    if (main) {
+      await projectApi.saveFile(main.path, source);
+    }
+    const fresh = await projectApi.open(created.path);
+    await loadSketch(fresh);
+    toast.value = {
+      text: `Opened "${exampleName}" as a new sketch`,
+      kind: "success",
+    };
+  } catch (e) {
+    toast.value = {
+      text: `Couldn't open that example: ${errText(e)}`,
+      kind: "warn",
+    };
+  }
+}
+
+/** True when a thrown value is a serialized `ProjectError::AlreadyExists`. */
+function isAlreadyExists(e: unknown): boolean {
+  return (
+    !!e &&
+    typeof e === "object" &&
+    "type" in e &&
+    (e as { type: unknown }).type === "AlreadyExists"
+  );
+}
+
 /** Open an existing sketch — native folder picker, then load it. */
 export async function openSketch(): Promise<void> {
   const picked = await openNativeDialog({

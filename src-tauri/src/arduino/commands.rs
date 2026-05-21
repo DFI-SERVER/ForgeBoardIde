@@ -100,3 +100,13 @@ pub async fn arduino_lib_install_zip(
 ) -> Result<i32, String> {
     super::library::install_zip(&app, &zip_path).await
 }
+
+/// List example sketches found in the `examples/` folders of installed
+/// libraries. Synchronous filesystem work, run on a blocking thread so the
+/// scan never stalls the async runtime.
+#[tauri::command]
+pub async fn arduino_list_library_examples() -> Result<Vec<super::examples::LibraryExample>, String> {
+    tokio::task::spawn_blocking(super::examples::list_library_examples)
+        .await
+        .map_err(|e| e.to_string())
+}

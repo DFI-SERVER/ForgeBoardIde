@@ -36,6 +36,7 @@ import {
 import { NameDialog, ConfirmDeleteDialog } from "./FileDialogs";
 import { BoardsView } from "./BoardsView";
 import { LibrariesView } from "./LibrariesView";
+import { ExamplesView } from "./ExamplesView";
 import { SearchView } from "./SearchView";
 import { SettingsView } from "./SettingsView";
 
@@ -317,7 +318,7 @@ export function FileSidebar() {
     <aside class="sidebar">
       {rail === "files" && <FilesView />}
       {rail === "home" && <PlaceholderView label="Home" />}
-      {rail === "examples" && <PlaceholderView label="Examples" />}
+      {rail === "examples" && <ExamplesView />}
       {rail === "search" && <SearchView />}
       {rail === "libraries" && <LibrariesView />}
       {rail === "boards" && <BoardsView />}
