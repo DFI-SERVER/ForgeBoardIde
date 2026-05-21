@@ -178,8 +178,8 @@
 
 .bp-prob-row {
   display: flex;
-  align-items: baseline;
-  gap: var(--space-3);
+  flex-direction: column;
+  gap: var(--space-2);
   width: 100%;
   text-align: left;
   background: transparent;
@@ -194,6 +194,14 @@
 .bp-prob-row:focus-visible {
   outline: none;
   box-shadow: 0 0 0 2px var(--accent-ring);
+}
+
+/* The raw-error line: severity icon, message, location. */
+.bp-prob-line {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  width: 100%;
 }
 
 .bp-prob-icon {
@@ -223,4 +231,46 @@
   color: var(--fg-subtle);
   font-family: var(--font-mono);
   font-size: var(--text-xs);
+}
+
+/* --- Humanised hint -----------------------------------------------------
+   A plain-English explanation shown under a recognised raw error. Muted and
+   visually quiet so it reads as a helpful aside, not a second error. The
+   left rule + lightbulb tie it to the diagnostic above it. */
+.bp-prob-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  /* Align under the message text — past the severity icon's column. */
+  margin-left: calc(13px + var(--space-3));
+  padding: var(--space-2) var(--space-4);
+  border-left: 2px solid var(--border-strong);
+  background: var(--accent-wash-hover);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+.bp-prob-hint-icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--fg-subtle);
+}
+.bp-prob-hint-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+.bp-prob-hint-explanation {
+  color: var(--fg-muted);
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+.bp-prob-hint-fix {
+  color: var(--fg-subtle);
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  line-height: 1.5;
+}
+.bp-prob-row:hover .bp-prob-hint-explanation {
+  color: var(--fg-default);
 }

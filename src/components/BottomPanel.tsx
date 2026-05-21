@@ -9,6 +9,7 @@ import {
   AlertCircle,
   AlertTriangle,
   FileCode2,
+  Lightbulb,
 } from "lucide-preact";
 import { SerialMonitor } from "./SerialMonitor";
 import { SerialPlotter } from "./SerialPlotter";
@@ -22,6 +23,7 @@ import {
 } from "../state/appState";
 import { openFileAtLine } from "../lib/actions";
 import { groupDiagnostics } from "../lib/diagnostics";
+import { humanizeDiagnostic } from "../lib/humanize-errors";
 
 const TABS = [
   { id: "serial", label: "Serial Monitor" },
@@ -107,32 +109,52 @@ function ProblemsView() {
             <span class="bp-prob-file-name">{baseName(group.file)}</span>
             <span class="bp-prob-file-count">{group.diagnostics.length}</span>
           </div>
-          {group.diagnostics.map((d, i) => (
-            <button
-              class="bp-prob-row"
-              key={`${group.file}:${i}`}
-              title={`${d.file}:${d.line}:${d.column}`}
-              onClick={() => openFileAtLine(group.file, d.line)}
-            >
-              {d.severity === "error" ? (
-                <AlertCircle
-                  size={13}
-                  strokeWidth={1.5}
-                  class="bp-prob-icon bp-prob-icon-error"
-                />
-              ) : (
-                <AlertTriangle
-                  size={13}
-                  strokeWidth={1.5}
-                  class="bp-prob-icon bp-prob-icon-warning"
-                />
-              )}
-              <span class="bp-prob-msg">{d.message}</span>
-              <span class="bp-prob-loc">
-                {d.line}:{d.column}
-              </span>
-            </button>
-          ))}
+          {group.diagnostics.map((d, i) => {
+            const hint = humanizeDiagnostic(d);
+            return (
+              <button
+                class="bp-prob-row"
+                key={`${group.file}:${i}`}
+                title={`${d.file}:${d.line}:${d.column}`}
+                onClick={() => openFileAtLine(group.file, d.line)}
+              >
+                <div class="bp-prob-line">
+                  {d.severity === "error" ? (
+                    <AlertCircle
+                      size={13}
+                      strokeWidth={1.5}
+                      class="bp-prob-icon bp-prob-icon-error"
+                    />
+                  ) : (
+                    <AlertTriangle
+                      size={13}
+                      strokeWidth={1.5}
+                      class="bp-prob-icon bp-prob-icon-warning"
+                    />
+                  )}
+                  <span class="bp-prob-msg">{d.message}</span>
+                  <span class="bp-prob-loc">
+                    {d.line}:{d.column}
+                  </span>
+                </div>
+                {hint && (
+                  <div class="bp-prob-hint">
+                    <Lightbulb
+                      size={12}
+                      strokeWidth={1.5}
+                      class="bp-prob-hint-icon"
+                    />
+                    <div class="bp-prob-hint-text">
+                      <span class="bp-prob-hint-explanation">
+                        {hint.explanation}
+                      </span>
+                      <span class="bp-prob-hint-fix">{hint.fix}</span>
+                    </div>
+                  </div>
+                )}
+              </button>
+            );
+          })}
         </div>
       ))}
     </div>

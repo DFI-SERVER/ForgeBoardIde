@@ -11,26 +11,5 @@
   min-height: 0;
   position: relative;
 }
-.editor-empty {
-  position: absolute;
-  inset: 0;
-  background: var(--editor-bg);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-3);
-  text-align: center;
-  padding: var(--space-7);
-}
-.editor-empty-title {
-  color: var(--fg-default);
-  font-family: var(--font-ui);
-  font-size: var(--text-lg);
-  font-weight: var(--weight-semibold);
-}
-.editor-empty-sub {
-  color: var(--fg-muted);
-  font-family: var(--font-ui);
-  font-size: var(--text-sm);
-}
+/* The empty state — when no file tab is open — is the WelcomeScreen
+   component, which absolutely fills .editor-monaco-host. */
