@@ -10,6 +10,7 @@ import { newSketch, openSketch } from "../lib/actions";
 import { BoardsView } from "./BoardsView";
 import { LibrariesView } from "./LibrariesView";
 import { SearchView } from "./SearchView";
+import { SettingsView } from "./SettingsView";
 
 function FilesView() {
   const sketch = currentSketch.value;
@@ -73,7 +74,7 @@ export function FileSidebar() {
       {rail === "libraries" && <LibrariesView />}
       {rail === "boards" && <BoardsView />}
       {rail === "walkthrough" && <PlaceholderView label="Walkthrough" />}
-      {rail === "settings" && <PlaceholderView label="Settings" />}
+      {rail === "settings" && <SettingsView />}
     </aside>
   );
 }

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "preact/hooks";
+import { effect } from "@preact/signals";
 import * as monaco from "monaco-editor";
 import { initMonaco } from "../lib/monaco-setup";
 import {
@@ -8,6 +9,29 @@ import {
   saveState,
   cursorPosition,
 } from "../state/appState";
+import { settings } from "../lib/settings";
+
+/**
+ * Map the user's editor preferences onto Monaco's option object. Kept apart
+ * from the editor lifecycle so the same mapping seeds the initial `create`
+ * call and every later `updateOptions` call — there is one source of truth.
+ *
+ * `detectIndentation` is forced off: the user has explicitly picked a tab
+ * size in Settings, so Monaco must not silently override it from a file's
+ * existing whitespace.
+ */
+function editorOptionsFromSettings(): monaco.editor.IEditorOptions &
+  monaco.editor.IGlobalEditorOptions {
+  const s = settings.value;
+  return {
+    fontSize: s.fontSize,
+    tabSize: s.tabSize,
+    detectIndentation: false,
+    wordWrap: s.wordWrap ? "on" : "off",
+    minimap: { enabled: s.minimap },
+    lineNumbers: s.lineNumbers ? "on" : "off",
+  };
+}
 
 /**
  * Module-level reference to the live Monaco editor instance. Set while the
@@ -37,21 +61,29 @@ export function MonacoEditor() {
       language: "arduino",
       theme: "forgeboard",
       fontFamily: "Consolas, 'Courier New', monospace",
-      fontSize: 15,
       lineHeight: 24,
       fontLigatures: false,
-      minimap: { enabled: false },
       scrollBeyondLastLine: false,
       renderLineHighlight: "line",
       smoothScrolling: true,
       cursorBlinking: "smooth",
       padding: { top: 12, bottom: 12 },
       automaticLayout: true,
-      tabSize: 2,
       insertSpaces: true,
+      // Font size, tab size, word wrap, minimap and line numbers are all
+      // driven by the persisted Settings — seed them here, keep them in
+      // sync via the effect() below.
+      ...editorOptionsFromSettings(),
     });
     editorRef.current = editor;
     activeEditor = editor;
+
+    // Re-apply the editor preferences whenever Settings change. effect() runs
+    // the body once immediately (a harmless no-op — create() already seeded
+    // these) and again on every later change to the settings signal.
+    const stopSettingsSync = effect(() => {
+      editor.updateOptions(editorOptionsFromSettings());
+    });
 
     // On content change, mark file as modified and stage save
     const disposable = editor.onDidChangeModelContent(() => {
@@ -79,6 +111,7 @@ export function MonacoEditor() {
     });
 
     return () => {
+      stopSettingsSync();
       disposable.dispose();
       cursorDisposable.dispose();
       editor.dispose();

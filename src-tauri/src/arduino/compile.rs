@@ -10,18 +10,22 @@ pub struct CompileResult {
 }
 
 /// Compile a sketch for the given board, streaming progress to the `compile-output` event.
+///
+/// When `verbose` is set, arduino-cli is run with `-v` so the full compiler
+/// command lines and per-file progress reach the Output panel.
 pub async fn compile_sketch(
     app: &tauri::AppHandle,
     sketch_path: &Path,
     fqbn: &str,
+    verbose: bool,
 ) -> Result<CompileResult, String> {
     let sketch = sketch_path.to_string_lossy().into_owned();
-    let (code, stderr) = cli::run_streaming(
-        app,
-        "compile-output",
-        &["compile", "--fqbn", fqbn, "--no-color", sketch.as_str()],
-    )
-    .await?;
+    let mut args: Vec<&str> = vec!["compile", "--fqbn", fqbn, "--no-color"];
+    if verbose {
+        args.push("-v");
+    }
+    args.push(sketch.as_str());
+    let (code, stderr) = cli::run_streaming(app, "compile-output", &args).await?;
     Ok(CompileResult {
         success: code == 0,
         exit_code: code,

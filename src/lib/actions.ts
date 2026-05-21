@@ -9,6 +9,7 @@ import { projectApi } from "../ipc/project";
 import { arduinoApi } from "../ipc/arduino";
 import { loadSketch } from "./sketch";
 import { flushSave } from "./autosave";
+import { settings } from "./settings";
 import { getActiveEditor } from "../components/MonacoEditor";
 import { parseDiagnostics, type Diagnostic } from "./diagnostics";
 import {
@@ -274,7 +275,11 @@ export async function compileSketch(): Promise<void> {
   beginBuild();
   buildPhase.value = "compiling";
   try {
-    const result = await arduinoApi.compile(sketch.path, selectedFqbn.value);
+    const result = await arduinoApi.compile(
+      sketch.path,
+      selectedFqbn.value,
+      settings.value.verboseBuild,
+    );
     buildPhase.value = result.success ? "success" : "error";
     if (!result.success && result.stderr.trim()) {
       buildOutput.value = [...buildOutput.value, "", result.stderr.trimEnd()];
@@ -303,7 +308,12 @@ export async function uploadSketch(): Promise<void> {
   beginBuild();
   buildPhase.value = "uploading";
   try {
-    const result = await arduinoApi.upload(sketch.path, selectedFqbn.value, port);
+    const result = await arduinoApi.upload(
+      sketch.path,
+      selectedFqbn.value,
+      port,
+      settings.value.verboseBuild,
+    );
     buildPhase.value = result.success ? "success" : "error";
     if (!result.success && result.stderr.trim()) {
       buildOutput.value = [...buildOutput.value, "", result.stderr.trimEnd()];

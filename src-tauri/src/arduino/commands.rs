@@ -18,8 +18,9 @@ pub async fn arduino_compile(
     app: tauri::AppHandle,
     sketch: PathBuf,
     fqbn: String,
+    verbose: bool,
 ) -> Result<CompileResult, String> {
-    super::compile::compile_sketch(&app, &sketch, &fqbn).await
+    super::compile::compile_sketch(&app, &sketch, &fqbn, verbose).await
 }
 
 #[tauri::command]
@@ -28,8 +29,9 @@ pub async fn arduino_upload(
     sketch: PathBuf,
     fqbn: String,
     port: String,
+    verbose: bool,
 ) -> Result<UploadResult, String> {
-    super::upload::upload_sketch(&app, &sketch, &fqbn, &port).await
+    super::upload::upload_sketch(&app, &sketch, &fqbn, &port, verbose).await
 }
 
 #[tauri::command]

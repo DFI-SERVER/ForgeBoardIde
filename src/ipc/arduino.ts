@@ -54,10 +54,12 @@ export interface Library {
 export const arduinoApi = {
   listBoards: () => invoke<Board[]>("arduino_list_boards"),
   detectPorts: () => invoke<DetectedBoard[]>("arduino_detect_ports"),
-  compile: (sketch: string, fqbn: string) =>
-    invoke<CompileResult>("arduino_compile", { sketch, fqbn }),
-  upload: (sketch: string, fqbn: string, port: string) =>
-    invoke<UploadResult>("arduino_upload", { sketch, fqbn, port }),
+  /** Compile a sketch. `verbose` runs arduino-cli with `-v` for a full build log. */
+  compile: (sketch: string, fqbn: string, verbose: boolean) =>
+    invoke<CompileResult>("arduino_compile", { sketch, fqbn, verbose }),
+  /** Compile and flash to `port`. `verbose` runs arduino-cli with `-v`. */
+  upload: (sketch: string, fqbn: string, port: string, verbose: boolean) =>
+    invoke<UploadResult>("arduino_upload", { sketch, fqbn, port, verbose }),
   onCompileOutput: (cb: (line: string) => void) =>
     listen<string>("compile-output", (e) => cb(e.payload)),
   onUploadOutput: (cb: (line: string) => void) =>
