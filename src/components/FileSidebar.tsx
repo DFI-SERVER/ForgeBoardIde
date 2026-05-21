@@ -9,6 +9,7 @@ import {
 import { newSketch, openSketch } from "../lib/actions";
 import { BoardsView } from "./BoardsView";
 import { LibrariesView } from "./LibrariesView";
+import { SearchView } from "./SearchView";
 
 function FilesView() {
   const sketch = currentSketch.value;
@@ -68,7 +69,7 @@ export function FileSidebar() {
       {rail === "files" && <FilesView />}
       {rail === "home" && <PlaceholderView label="Home" />}
       {rail === "examples" && <PlaceholderView label="Examples" />}
-      {rail === "search" && <PlaceholderView label="Search" />}
+      {rail === "search" && <SearchView />}
       {rail === "libraries" && <LibrariesView />}
       {rail === "boards" && <BoardsView />}
       {rail === "walkthrough" && <PlaceholderView label="Walkthrough" />}

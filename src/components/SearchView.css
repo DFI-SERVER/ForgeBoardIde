@@ -1,0 +1,188 @@
+/* Find in Project — the Search activity-rail view. Structure and tokens
+   mirror LibrariesView: a header, a search bar, then a scrolling body. */
+
+.sv {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  font-family: var(--font-ui);
+  background: var(--surface-1);
+}
+
+/* --- Header --- */
+.sv-header {
+  padding: var(--space-6) var(--space-6) var(--space-5);
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.sv-title {
+  color: var(--fg-default);
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-base);
+}
+.sv-stats {
+  color: var(--fg-muted);
+  font-size: var(--text-xs);
+}
+
+/* --- Search bar --- */
+.sv-search {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-6);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.sv-search-icon {
+  color: var(--fg-subtle);
+  flex-shrink: 0;
+}
+.sv-search-input {
+  flex: 1;
+  min-width: 0;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--fg-default);
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  padding: var(--space-2) var(--space-4);
+  outline: none;
+  transition: border-color var(--dur-fast) var(--ease);
+}
+.sv-search-input::placeholder {
+  color: var(--fg-subtle);
+}
+.sv-search-input:focus-visible {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-ring);
+}
+
+/* --- Body --- */
+.sv-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-3) 0 var(--space-5);
+}
+
+/* --- Empty / initial / no-results states --- */
+.sv-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-9) var(--space-6) var(--space-7);
+  color: var(--fg-muted);
+  font-size: var(--text-sm);
+  text-align: center;
+}
+.sv-state-icon {
+  color: var(--fg-disabled);
+  margin-bottom: var(--space-2);
+}
+.sv-state-sub {
+  color: var(--fg-subtle);
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  max-width: 200px;
+}
+
+/* --- Per-file group --- */
+.sv-group {
+  margin-bottom: var(--space-3);
+}
+
+.sv-file-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-6) var(--space-2);
+  margin-top: var(--space-3);
+}
+.sv-file-header:first-of-type {
+  margin-top: var(--space-1);
+}
+.sv-file-icon {
+  color: var(--fg-muted);
+  flex-shrink: 0;
+}
+.sv-file-name {
+  flex: 1;
+  min-width: 0;
+  color: var(--fg-default);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sv-file-count {
+  flex-shrink: 0;
+  color: var(--fg-subtle);
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-medium);
+  font-family: var(--font-mono);
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  padding: 0 var(--space-3);
+}
+
+/* --- One matched line --- */
+.sv-result {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-6) var(--space-2) var(--space-7);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease);
+}
+.sv-result:hover {
+  background: var(--accent-wash-hover);
+}
+.sv-result:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--accent-ring);
+}
+
+.sv-result-glyph {
+  color: var(--fg-disabled);
+  flex-shrink: 0;
+  align-self: center;
+}
+.sv-result-line {
+  flex-shrink: 0;
+  min-width: 22px;
+  color: var(--fg-subtle);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  text-align: right;
+}
+.sv-result-text {
+  flex: 1;
+  min-width: 0;
+  color: var(--fg-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  white-space: pre;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sv-result:hover .sv-result-text {
+  color: var(--fg-default);
+}
+
+/* The matched substring — a monochrome white-alpha wash, never a hue. */
+.sv-hit {
+  background: var(--accent-wash);
+  color: var(--fg-bright);
+  border-radius: 2px;
+  padding: 1px 0;
+}

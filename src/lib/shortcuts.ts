@@ -1,4 +1,10 @@
-import { openTabs, activeTabIndex, paletteOpen } from "../state/appState";
+import {
+  openTabs,
+  activeTabIndex,
+  paletteOpen,
+  activeRail,
+  searchFocusRequest,
+} from "../state/appState";
 import { flushSave } from "./autosave";
 import {
   newSketch,
@@ -18,6 +24,17 @@ export function installShortcuts() {
     if ((key === "p" && e.shiftKey) || (key === "k" && !e.shiftKey)) {
       e.preventDefault();
       paletteOpen.value = !paletteOpen.value;
+      return;
+    }
+
+    // Ctrl+Shift+F — Find in Project: switch to the Search rail and focus its
+    // query box. Bumping searchFocusRequest re-focuses even when the Search
+    // view is already mounted. Plain Ctrl+F (no Shift) is left for Monaco's
+    // in-file find, which the editor binds itself.
+    if (key === "f" && e.shiftKey) {
+      e.preventDefault();
+      activeRail.value = "search";
+      searchFocusRequest.value++;
       return;
     }
 

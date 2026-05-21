@@ -8,6 +8,7 @@ import { projectApi } from "../ipc/project";
 import { arduinoApi } from "../ipc/arduino";
 import { loadSketch } from "./sketch";
 import { flushSave } from "./autosave";
+import { getActiveEditor } from "../components/MonacoEditor";
 import {
   currentSketch,
   connectedPort,
@@ -17,6 +18,9 @@ import {
   bottomPanelOpen,
   bottomPanelTab,
   newSketchDialogOpen,
+  openTabs,
+  activeTabIndex,
+  fileContents,
   toast,
 } from "../state/appState";
 
@@ -83,6 +87,56 @@ export async function openRecentSketch(path: string): Promise<void> {
 /** Flush any pending edits to disk immediately (the Ctrl+S path). */
 export function saveActiveFile() {
   flushSave();
+}
+
+/**
+ * Open a sketch file in the editor and, optionally, jump the cursor to a line.
+ *
+ * Reuses the Files view's open mechanism — finding the file's tab by absolute
+ * path and switching `activeTabIndex` to it. If the file belongs to the open
+ * sketch but has no tab yet (an edge case — `loadSketch` opens every file as a
+ * tab), a tab is created so the click still works. After the tab is active,
+ * the Monaco model swap is async, so the line jump is deferred a tick.
+ *
+ * Used by the Find in Project results list. `line` is 1-based.
+ */
+export function openFileAtLine(path: string, line?: number): void {
+  let idx = openTabs.value.findIndex((t) => t.path === path);
+
+  if (idx < 0) {
+    // No tab open for this file — create one if it's part of the sketch.
+    const file = currentSketch.value?.files.find((f) => f.path === path);
+    if (!file) return;
+    if (!fileContents.value.has(path)) return; // contents not loaded — bail
+    openTabs.value = [
+      ...openTabs.value,
+      { path: file.path, name: file.name, modified: false },
+    ];
+    idx = openTabs.value.length - 1;
+  }
+
+  activeTabIndex.value = idx;
+  if (line === undefined) return;
+
+  // The editor swaps its model in a useEffect after the tab change commits,
+  // so reveal/select on the next macrotask once that content is in place.
+  setTimeout(() => {
+    const editor = getActiveEditor();
+    if (!editor) return;
+    const model = editor.getModel();
+    const clamped = model
+      ? Math.min(Math.max(line, 1), model.getLineCount())
+      : Math.max(line, 1);
+    editor.revealLineInCenter(clamped);
+    editor.setSelection({
+      startLineNumber: clamped,
+      startColumn: 1,
+      endLineNumber: clamped,
+      endColumn: 1,
+    });
+    editor.setPosition({ lineNumber: clamped, column: 1 });
+    editor.focus();
+  }, 0);
 }
 
 /* --------------------------------------------------------------- Build --- */

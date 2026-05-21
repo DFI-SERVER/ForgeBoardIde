@@ -99,6 +99,16 @@ export const libraryInstalling = signal<string | null>(null);
 /** Streamed progress lines from the active library install/uninstall. */
 export const libraryInstallProgress = signal<string[]>([]);
 
+/** Find in Project — the Search rail's query box (debounced before a search). */
+export const projectSearchQuery = signal<string>("");
+
+/**
+ * Bumped to ask the Search view to focus (and select) its query input — used
+ * by the Ctrl+Shift+F shortcut, which must focus the box even when the Search
+ * rail is already the active view and so would not remount.
+ */
+export const searchFocusRequest = signal<number>(0);
+
 /** Transient bottom-right notification (board auto-detect, etc.). */
 export type ToastKind = "success" | "info" | "warn";
 export interface ToastMessage {

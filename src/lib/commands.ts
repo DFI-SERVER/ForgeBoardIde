@@ -20,7 +20,7 @@ import {
   editorUndo,
   editorRedo,
 } from "./editor-actions";
-import { activeRail, type RailIcon } from "../state/appState";
+import { activeRail, searchFocusRequest, type RailIcon } from "../state/appState";
 
 /** A single palette-runnable command. */
 export interface Command {
@@ -120,6 +120,16 @@ export const commands: Command[] = [
     category: "Edit",
     shortcut: "Ctrl+H",
     run: editorReplace,
+  },
+  {
+    id: "edit.findInProject",
+    title: "Find in Project",
+    category: "Edit",
+    shortcut: "Ctrl+Shift+F",
+    run: () => {
+      activeRail.value = "search";
+      searchFocusRequest.value++;
+    },
   },
 
   /* ---------------------------------------------------------- View --- */

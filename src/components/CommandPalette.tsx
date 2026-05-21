@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import {
   Search,
   SearchX,
+  FileSearch,
   FilePlus,
   FolderOpen,
   Save,
@@ -40,6 +41,8 @@ function iconFor(command: Command): LucideIcon {
       return Search;
     case "edit.replace":
       return Replace;
+    case "edit.findInProject":
+      return FileSearch;
     case "view.toggleBottomPanel":
       return PanelBottom;
     default:
