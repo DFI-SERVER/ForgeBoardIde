@@ -1,0 +1,84 @@
+/* Context menu — a floating layer opened at the cursor. Mirrors the menu-bar
+   dropdown's surface treatment; positioned by inline left/top, clamped to the
+   viewport by the component so it never overflows a window edge. */
+.context-menu {
+  position: fixed;
+  z-index: 320;
+  min-width: 200px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-dropdown);
+  padding: var(--space-2) 0;
+  font-family: var(--font-ui);
+}
+
+/* Menu item — a compact row */
+.context-menu-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-5);
+  font-size: var(--text-sm);
+  color: var(--fg-default);
+  background: transparent;
+  text-align: left;
+  transition: background-color var(--dur-fast) var(--ease);
+}
+.context-menu-item:hover {
+  background: rgba(255, 255, 255, 0.045);
+}
+.context-menu-item:disabled,
+.context-menu-item.disabled {
+  color: var(--fg-disabled);
+  background: transparent;
+  cursor: default;
+}
+
+/* The Delete row — the one place a colour is allowed. */
+.context-menu-item.danger {
+  color: var(--error);
+}
+.context-menu-item.danger:hover {
+  background: var(--error-wash);
+}
+.context-menu-item.danger:disabled,
+.context-menu-item.danger.disabled {
+  color: var(--fg-disabled);
+  background: transparent;
+}
+
+.context-menu-icon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  color: var(--fg-muted);
+}
+.context-menu-item:hover .context-menu-icon {
+  color: var(--fg-default);
+}
+.context-menu-item.danger .context-menu-icon {
+  color: var(--error);
+}
+.context-menu-item.disabled .context-menu-icon,
+.context-menu-item:disabled .context-menu-icon {
+  color: var(--fg-disabled);
+}
+
+.context-menu-label {
+  flex: 1;
+  white-space: nowrap;
+}
+.context-menu-shortcut {
+  color: var(--fg-subtle);
+  font-size: var(--text-xs);
+  white-space: nowrap;
+}
+
+/* Separator — a hairline between same-tone rows */
+.context-menu-separator {
+  height: 1px;
+  background: var(--border-subtle);
+  margin: var(--space-2) 0;
+}

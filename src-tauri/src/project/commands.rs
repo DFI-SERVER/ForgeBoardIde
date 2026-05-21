@@ -34,3 +34,28 @@ pub fn project_save_file(path: PathBuf, contents: String) -> Result<(), ProjectE
 pub fn project_list_recent() -> Result<Vec<RecentProject>, ProjectError> {
     recent::load_recent()
 }
+
+/// Move a file or folder to the OS recycle bin. The path must resolve inside
+/// a sketch folder; it is recoverable from the recycle bin afterwards.
+#[tauri::command]
+pub fn project_delete_path(path: PathBuf) -> Result<(), ProjectError> {
+    fs::delete_path(&path)
+}
+
+/// Rename a file or folder within its own directory. Returns the new path.
+#[tauri::command]
+pub fn project_rename_path(path: PathBuf, new_name: String) -> Result<PathBuf, ProjectError> {
+    fs::rename_path(&path, &new_name)
+}
+
+/// Create a new empty file `name` inside sketch directory `dir`.
+#[tauri::command]
+pub fn project_create_file(dir: PathBuf, name: String) -> Result<PathBuf, ProjectError> {
+    fs::create_file(&dir, &name)
+}
+
+/// Create a new folder `name` inside sketch directory `dir`.
+#[tauri::command]
+pub fn project_create_folder(dir: PathBuf, name: String) -> Result<PathBuf, ProjectError> {
+    fs::create_folder(&dir, &name)
+}

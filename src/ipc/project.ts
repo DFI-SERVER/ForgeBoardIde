@@ -25,4 +25,15 @@ export const projectApi = {
   saveFile: (path: string, contents: string) =>
     invoke<void>("project_save_file", { path, contents }),
   listRecent: () => invoke<RecentProject[]>("project_list_recent"),
+  /** Move a file or folder to the OS recycle bin (recoverable). */
+  deletePath: (path: string) => invoke<void>("project_delete_path", { path }),
+  /** Rename a file/folder in place; resolves to the new absolute path. */
+  renamePath: (path: string, newName: string) =>
+    invoke<string>("project_rename_path", { path, newName }),
+  /** Create a new empty file in `dir`; resolves to its absolute path. */
+  createFile: (dir: string, name: string) =>
+    invoke<string>("project_create_file", { dir, name }),
+  /** Create a new folder in `dir`; resolves to its absolute path. */
+  createFolder: (dir: string, name: string) =>
+    invoke<string>("project_create_folder", { dir, name }),
 };

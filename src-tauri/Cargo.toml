@@ -28,6 +28,7 @@ serialport = "4"
 dirs = "5"
 thiserror = "1"
 anyhow = "1"
+trash = "5"
 
 [dev-dependencies]
 rand = "0.8"

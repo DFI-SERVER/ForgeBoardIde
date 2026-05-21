@@ -102,6 +102,33 @@
   padding: var(--space-2) var(--space-4);
   font-size: var(--text-xs);
 }
+.dlg-btn-danger {
+  background: var(--error);
+  border-color: var(--error);
+  color: var(--accent-fg);
+  font-weight: var(--weight-semibold);
+}
+.dlg-btn-danger:hover {
+  background: var(--error);
+  border-color: var(--error);
+  filter: brightness(1.08);
+}
+.dlg-btn-danger:disabled {
+  opacity: 0.55;
+}
+
+/* Delete-confirmation copy inside a Modal body. */
+.dlg-confirm-text {
+  font-size: var(--text-base);
+  color: var(--fg-default);
+  line-height: 1.5;
+}
+.dlg-confirm-name {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--fg-bright);
+  word-break: break-all;
+}
 
 .dlg-label-spaced {
   margin-top: var(--space-5);
