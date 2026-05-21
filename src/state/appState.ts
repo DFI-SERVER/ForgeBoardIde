@@ -1,6 +1,6 @@
 import { signal, computed } from "@preact/signals";
 import type { Sketch } from "../ipc/project";
-import type { Core, Board, DetectedBoard } from "../ipc/arduino";
+import type { Core, Board, DetectedBoard, Library } from "../ipc/arduino";
 
 export type RailIcon =
   | "home"
@@ -82,6 +82,18 @@ export const installedBoards = signal<Board[]>([]);
 export const detectedPorts = signal<DetectedBoard[]>([]);
 export const coreInstallProgress = signal<string[]>([]);
 export const coreInstallRunning = signal<string | null>(null);
+
+/** Libraries — registry search + installed set (Phase 9 Library Manager). */
+export const installedLibraries = signal<Library[]>([]);
+/** Raw text in the library search box (debounced before a search fires). */
+export const librarySearchQuery = signal<string>("");
+export const librarySearchResults = signal<Library[]>([]);
+/** True while a registry search request is in flight. */
+export const librarySearchPending = signal<boolean>(false);
+/** Name of the library whose install / update / remove is currently running. */
+export const libraryInstalling = signal<string | null>(null);
+/** Streamed progress lines from the active library install/uninstall. */
+export const libraryInstallProgress = signal<string[]>([]);
 
 /** Transient bottom-right notification (board auto-detect, etc.). */
 export type ToastKind = "success" | "info" | "warn";

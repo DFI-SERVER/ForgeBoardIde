@@ -1,0 +1,277 @@
+.lv {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  font-family: var(--font-ui);
+  background: var(--surface-1);
+}
+
+/* --- Header --- */
+.lv-header {
+  padding: var(--space-6) var(--space-6) var(--space-5);
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.lv-title {
+  color: var(--fg-default);
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-base);
+}
+.lv-stats {
+  color: var(--fg-muted);
+  font-size: var(--text-xs);
+}
+
+/* --- Search bar --- */
+.lv-search {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-6);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.lv-search-icon {
+  color: var(--fg-subtle);
+  flex-shrink: 0;
+}
+.lv-search-input {
+  flex: 1;
+  min-width: 0;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--fg-default);
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  padding: var(--space-2) var(--space-4);
+  outline: none;
+  transition: border-color var(--dur-fast) var(--ease);
+}
+.lv-search-input::placeholder {
+  color: var(--fg-subtle);
+}
+.lv-search-input:focus-visible {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-ring);
+}
+
+.lv-zip-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+  color: var(--fg-muted);
+  font-size: var(--text-xs);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  padding: var(--space-2) var(--space-3);
+  transition:
+    background-color var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease);
+}
+.lv-zip-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.045);
+  color: var(--fg-default);
+}
+.lv-zip-btn:focus-visible {
+  box-shadow: 0 0 0 2px var(--accent-ring);
+}
+.lv-zip-btn:disabled {
+  color: var(--fg-disabled);
+  cursor: not-allowed;
+}
+
+/* --- Body --- */
+.lv-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-5) 0;
+}
+
+.lv-section-label {
+  color: var(--fg-subtle);
+  letter-spacing: 0.06em;
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
+  padding: 0 var(--space-6);
+  margin: var(--space-6) 0 var(--space-3);
+}
+.lv-section-label:first-child {
+  margin-top: var(--space-1);
+}
+
+.lv-empty {
+  color: var(--fg-subtle);
+  padding: var(--space-3) var(--space-6);
+  font-size: var(--text-sm);
+  font-style: italic;
+}
+
+/* --- Library row --- */
+.lv-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  min-height: var(--row-h);
+  padding: var(--space-4) var(--space-6);
+  border-radius: var(--radius-sm);
+  transition: background-color var(--dur-fast) var(--ease);
+}
+.lv-row:hover {
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.lv-dot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+.lv-dot.on {
+  color: var(--sage);
+  background: var(--sage-wash);
+}
+.lv-dot.dim {
+  color: var(--fg-subtle);
+  background: var(--surface-2);
+}
+
+.lv-row-main {
+  flex: 1;
+  min-width: 0;
+}
+.lv-row-name {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  color: var(--fg-default);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+}
+.lv-row-ver {
+  color: var(--fg-subtle);
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-normal);
+  font-family: var(--font-mono);
+}
+.lv-row-badge {
+  color: var(--sage);
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-medium);
+  font-family: var(--font-mono);
+  background: var(--sage-wash);
+  border-radius: var(--radius-sm);
+  padding: 0 var(--space-2);
+}
+.lv-row-meta {
+  color: var(--fg-muted);
+  font-size: var(--text-xs);
+  margin-top: var(--space-1);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lv-row-author {
+  color: var(--fg-subtle);
+}
+.lv-row-status {
+  color: var(--fg-subtle);
+  font-size: var(--text-xs);
+}
+
+.lv-row-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-shrink: 0;
+}
+
+/* --- Buttons --- */
+.lv-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  padding: var(--space-2) var(--space-4);
+  color: var(--fg-default);
+  transition:
+    background-color var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease);
+}
+.lv-btn:focus-visible {
+  box-shadow: 0 0 0 2px var(--accent-ring);
+}
+.lv-btn:disabled {
+  color: var(--fg-disabled);
+  cursor: not-allowed;
+}
+
+/* Install — the one primary, gold mark. */
+.lv-btn-install {
+  color: var(--accent);
+  border-color: var(--accent);
+  font-weight: var(--weight-semibold);
+}
+.lv-btn-install:hover:not(:disabled) {
+  background: var(--accent-wash);
+}
+.lv-btn-install:disabled {
+  border-color: var(--border);
+}
+
+/* Update — secondary, sage. */
+.lv-btn-update {
+  color: var(--sage);
+  border-color: rgba(130, 182, 164, 0.35);
+}
+.lv-btn-update:hover:not(:disabled) {
+  background: var(--sage-wash);
+}
+
+/* Remove — neutral until hover. */
+.lv-btn-remove {
+  color: var(--fg-muted);
+}
+.lv-btn-remove:hover:not(:disabled) {
+  color: var(--error);
+  border-color: rgba(217, 83, 79, 0.35);
+  background: var(--error-wash);
+}
+
+/* --- Spinner --- */
+.lv-spin {
+  animation: lv-spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes lv-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* --- Activity log --- */
+.lv-install-log {
+  margin-top: var(--space-6);
+  padding: var(--space-5) var(--space-6) var(--space-6);
+  background: var(--surface-2);
+  border-top: 1px solid var(--border-subtle);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--fg-muted);
+  max-height: 160px;
+  overflow-y: auto;
+}
+.lv-log-line {
+  white-space: pre-wrap;
+  word-break: break-word;
+}

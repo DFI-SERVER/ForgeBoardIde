@@ -65,3 +65,36 @@ pub async fn arduino_identify_board(
 ) -> Result<super::detect::BoardId, String> {
     super::detect::identify(&app, &port).await
 }
+
+#[tauri::command]
+pub async fn arduino_lib_search(
+    app: tauri::AppHandle,
+    query: String,
+) -> Result<Vec<super::library::Library>, String> {
+    super::library::search(&app, &query).await
+}
+
+#[tauri::command]
+pub async fn arduino_lib_list_installed(
+    app: tauri::AppHandle,
+) -> Result<Vec<super::library::Library>, String> {
+    super::library::list_installed(&app).await
+}
+
+#[tauri::command]
+pub async fn arduino_lib_install(app: tauri::AppHandle, name: String) -> Result<i32, String> {
+    super::library::install(&app, &name).await
+}
+
+#[tauri::command]
+pub async fn arduino_lib_uninstall(app: tauri::AppHandle, name: String) -> Result<i32, String> {
+    super::library::uninstall(&app, &name).await
+}
+
+#[tauri::command]
+pub async fn arduino_lib_install_zip(
+    app: tauri::AppHandle,
+    zip_path: String,
+) -> Result<i32, String> {
+    super::library::install_zip(&app, &zip_path).await
+}

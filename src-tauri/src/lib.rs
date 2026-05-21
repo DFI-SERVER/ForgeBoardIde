@@ -30,6 +30,11 @@ pub fn run() {
             arduino::commands::arduino_install_core,
             arduino::commands::arduino_update_index,
             arduino::commands::arduino_identify_board,
+            arduino::commands::arduino_lib_search,
+            arduino::commands::arduino_lib_list_installed,
+            arduino::commands::arduino_lib_install,
+            arduino::commands::arduino_lib_uninstall,
+            arduino::commands::arduino_lib_install_zip,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
