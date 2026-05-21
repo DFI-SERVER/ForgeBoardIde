@@ -25,3 +25,6 @@ dist-ssr
 
 # arduino-cli — downloaded at build time by scripts/download-arduino-cli.ps1
 src-tauri/binaries/
+
+# Superpowers visual-companion brainstorm sessions
+.superpowers/
