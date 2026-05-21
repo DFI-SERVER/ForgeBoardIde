@@ -1,0 +1,90 @@
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 7, 6, 0.62);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 300;
+}
+.modal-panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+  min-width: 340px;
+  max-width: 440px;
+  overflow: hidden;
+}
+.modal-title {
+  padding: 13px 18px;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.modal-body {
+  padding: 16px 18px 18px;
+  font-family: var(--font-ui);
+}
+
+/* Shared dialog-form bits, used inside a Modal body. */
+.dlg-label {
+  display: block;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+.dlg-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 8px 11px;
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 12.5px;
+  outline: none;
+}
+.dlg-input:focus {
+  border-color: var(--accent-gold);
+}
+.dlg-hint {
+  margin-top: 7px;
+  font-size: 10.5px;
+  color: var(--text-dim);
+}
+.dlg-error {
+  margin-top: 9px;
+  font-size: 11px;
+  color: var(--error);
+}
+.dlg-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  margin-top: 16px;
+}
+.dlg-btn {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  padding: 7px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--panel-alt);
+  color: var(--text);
+}
+.dlg-btn:hover {
+  border-color: var(--accent-gold-border);
+}
+.dlg-btn-primary {
+  background: var(--accent-gold);
+  border-color: var(--accent-gold);
+  color: #1a1410;
+  font-weight: 600;
+}
+.dlg-btn-primary:disabled {
+  opacity: 0.55;
+}

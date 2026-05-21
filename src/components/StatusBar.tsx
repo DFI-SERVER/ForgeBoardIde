@@ -4,15 +4,16 @@ import {
   connectedBoard,
   connectedPort,
   saveState,
+  toast,
 } from "../state/appState";
 import { ping } from "../ipc/ping";
 
 async function handlePing() {
   try {
     const r = await ping();
-    alert(`${r.pong} (v${r.version})`);
+    toast.value = { text: `${r.pong} (v${r.version})`, kind: "info" };
   } catch (e) {
-    alert(`Ping failed: ${e}`);
+    toast.value = { text: `Ping failed: ${e}`, kind: "warn" };
   }
 }
 
