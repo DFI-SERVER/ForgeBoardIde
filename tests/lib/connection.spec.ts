@@ -85,7 +85,8 @@ describe("connectToPort", () => {
     expect(selectedFqbn.value).toBe("esp32:esp32:esp32s3");
     expect(identifyInProgress.value).toBe(false);
     expect(connectionState.value).toBe("connected");
-    expect(toast.value).toContain("ESP32-S3 Dev Module");
+    expect(toast.value?.text).toContain("ESP32-S3 Dev Module");
+    expect(toast.value?.kind).toBe("success");
   });
 
   it("moves to the unidentified state when identification fails", async () => {
@@ -99,7 +100,8 @@ describe("connectToPort", () => {
     expect(connectedBoard.value).toBeNull();
     expect(identifyInProgress.value).toBe(false);
     expect(connectionState.value).toBe("unidentified");
-    expect(toast.value).toContain("COM7");
+    expect(toast.value?.text).toContain("COM7");
+    expect(toast.value?.kind).toBe("warn");
   });
 });
 
@@ -113,6 +115,7 @@ describe("disconnectBoard", () => {
     expect(connectedPort.value).toBeNull();
     expect(connectedBoard.value).toBeNull();
     expect(connectionState.value).toBe("no-board");
-    expect(toast.value).toBe("Board disconnected");
+    expect(toast.value?.text).toBe("Board disconnected");
+    expect(toast.value?.kind).toBe("info");
   });
 });

@@ -10,10 +10,14 @@ export function Toast() {
     return () => clearTimeout(timer);
   }, [toast.value]);
 
-  if (toast.value === null) return null;
+  const message = toast.value;
+  if (message === null) return null;
   return (
-    <div class="toast" onClick={() => (toast.value = null)}>
-      {toast.value}
+    <div
+      class={`toast toast-${message.kind}`}
+      onClick={() => (toast.value = null)}
+    >
+      {message.text}
     </div>
   );
 }

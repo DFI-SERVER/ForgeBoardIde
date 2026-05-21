@@ -62,11 +62,14 @@ export async function connectToPort(port: string): Promise<void> {
     if (connectedPort.value !== port) return; // unplugged / changed while probing
     connectedBoard.value = id.name;
     selectedFqbn.value = id.fqbn;
-    toast.value = `✓ ${id.name} connected on ${port}`;
+    toast.value = { text: `✓ ${id.name} connected on ${port}`, kind: "success" };
   } catch {
     if (connectedPort.value !== port) return;
     connectedBoard.value = null;
-    toast.value = `⚠ Couldn't identify the board on ${port} — pick it manually`;
+    toast.value = {
+      text: `⚠ Couldn't identify the board on ${port} — pick it manually`,
+      kind: "warn",
+    };
   } finally {
     if (connectedPort.value === port) identifyInProgress.value = false;
   }
@@ -78,7 +81,9 @@ export function disconnectBoard(announce = true): void {
   connectedPort.value = null;
   connectedBoard.value = null;
   identifyInProgress.value = false;
-  if (announce && wasConnected) toast.value = "Board disconnected";
+  if (announce && wasConnected) {
+    toast.value = { text: "Board disconnected", kind: "info" };
+  }
 }
 
 let watching = false;

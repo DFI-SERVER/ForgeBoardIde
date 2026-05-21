@@ -10,7 +10,7 @@ import {
 } from "../state/appState";
 import { arduinoApi } from "../ipc/arduino";
 import { BoardSelector } from "./BoardSelector";
-import { PortSelector } from "./PortSelector";
+import { ConnectionPill } from "./ConnectionPill";
 
 let listenersReady = false;
 async function ensureListeners() {
@@ -111,7 +111,7 @@ export function ActionBar() {
       <div class="actionbar-spacer" />
 
       <BoardSelector />
-      <PortSelector />
+      <ConnectionPill />
 
       {busy && <div class="actionbar-progress" />}
     </div>

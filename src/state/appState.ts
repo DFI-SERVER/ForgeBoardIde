@@ -80,4 +80,9 @@ export const coreInstallProgress = signal<string[]>([]);
 export const coreInstallRunning = signal<string | null>(null);
 
 /** Transient bottom-right notification (board auto-detect, etc.). */
-export const toast = signal<string | null>(null);
+export type ToastKind = "success" | "info" | "warn";
+export interface ToastMessage {
+  text: string;
+  kind: ToastKind;
+}
+export const toast = signal<ToastMessage | null>(null);

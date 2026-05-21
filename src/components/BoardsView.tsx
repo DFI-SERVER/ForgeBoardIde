@@ -6,9 +6,8 @@ import {
   detectedPorts,
   coreInstallProgress,
   coreInstallRunning,
-  selectedFqbn,
-  connectedPort,
 } from "../state/appState";
+import { connectToPort } from "../lib/connection";
 import "./BoardsView.css";
 
 const CURATED_CATALOG: { id: string; name: string; platform: string }[] = [
@@ -87,10 +86,7 @@ export function BoardsView() {
               </div>
               <button
                 class="bv-row-action"
-                onClick={() => {
-                  if (p.fqbn) selectedFqbn.value = p.fqbn;
-                  connectedPort.value = p.port;
-                }}
+                onClick={() => void connectToPort(p.port)}
               >
                 select
               </button>

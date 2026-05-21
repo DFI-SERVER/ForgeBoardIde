@@ -6,8 +6,8 @@
   max-width: 360px;
   padding: 11px 16px;
   background: var(--panel);
-  border: 1px solid var(--accent-gold-border);
-  border-left: 3px solid var(--accent-gold);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--text-muted);
   border-radius: var(--radius-md);
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.55);
   color: var(--text);
@@ -15,4 +15,17 @@
   font-size: 12.5px;
   line-height: 1.5;
   cursor: pointer;
+}
+
+.toast-success {
+  border-color: rgba(127, 178, 161, 0.4);
+  border-left-color: var(--accent-sage);
+}
+.toast-warn {
+  border-color: var(--accent-gold-border);
+  border-left-color: var(--accent-gold);
+}
+.toast-info {
+  border-color: var(--border);
+  border-left-color: var(--text-muted);
 }
