@@ -2,8 +2,9 @@
   /* ============================================================
      ForgeBoard IDE — design tokens.
      Layered surfaces, a 4px spacing scale, a 7-step type scale,
-     and a disciplined colour system: a clean cool-slate dark with
-     a light-violet accent and a fresh mint for hardware state.
+     and a restrained, monochrome colour system: a cool-slate dark
+     where colour appears only where it carries meaning -- code
+     syntax, diagnostics, and the hardware/connection state.
      ============================================================ */
 
   /* --- Surfaces — four steps; the editor is the lightest plane --- */
@@ -25,14 +26,16 @@
   --fg-subtle:   #61667a;   /* captions, section labels, placeholders, line numbers */
   --fg-disabled: #45495a;   /* disabled controls */
 
-  /* --- Accent — light violet, the primary brand spotlight --- */
-  --accent:            #b9a8ff;
-  --accent-hover:      #cabdff;
-  --accent-press:      #a08cf5;
-  --accent-fg:         #15101f;                     /* text/icon on filled accent */
-  --accent-wash:       rgba(185, 168, 255, 0.12);   /* selected / active fill */
-  --accent-wash-hover: rgba(185, 168, 255, 0.07);   /* hover fill */
-  --accent-ring:       rgba(185, 168, 255, 0.55);   /* focus ring */
+  /* --- Accent — monochrome: emphasis from brightness and fills,
+         not hue. A near-white for primary actions and active
+         markers; white-alpha washes for selection. --- */
+  --accent:            #e9eaef;
+  --accent-hover:      #f5f6f9;
+  --accent-press:      #cfd1da;
+  --accent-fg:         #15161c;                     /* dark text/icon on the near-white fill */
+  --accent-wash:       rgba(255, 255, 255, 0.085);  /* selected / active fill */
+  --accent-wash-hover: rgba(255, 255, 255, 0.045);  /* hover fill */
+  --accent-ring:       rgba(255, 255, 255, 0.42);   /* focus ring */
 
   /* --- Mint — secondary accent: hardware / connection state only --- */
   --sage:      #57cfa0;
@@ -119,7 +122,7 @@
   --text-dim:           var(--fg-subtle);
   --accent-gold:        var(--accent);
   --accent-gold-bg:     var(--accent-wash-hover);
-  --accent-gold-border: rgba(185, 168, 255, 0.30);
+  --accent-gold-border: rgba(255, 255, 255, 0.18);
   --accent-sage:        var(--sage);
   --accent-sage-bg:     var(--sage-wash);
   --warn:               var(--warning);
