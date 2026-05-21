@@ -1,20 +1,32 @@
 import "./FileSidebar.css";
 import { useState } from "preact/hooks";
+import { open as openNativeDialog } from "@tauri-apps/plugin-dialog";
+import { FolderOpen, FilePlus2 } from "lucide-preact";
 import {
   currentSketch,
   activeRail,
   openTabs,
   activeTabIndex,
-  fileContents,
+  toast,
 } from "../state/appState";
 import { projectApi } from "../ipc/project";
+import { loadSketch } from "../lib/sketch";
 import { BoardsView } from "./BoardsView";
 import { Modal } from "./Modal";
+
+/** Pull a readable message out of a thrown value (incl. serialized ProjectError). */
+function errText(e: unknown): string {
+  if (e && typeof e === "object" && "message" in e) {
+    return String((e as { message: unknown }).message);
+  }
+  return String(e);
+}
 
 function FilesView() {
   const sketch = currentSketch.value;
   const [dialogOpen, setDialogOpen] = useState(false);
   const [name, setName] = useState("");
+  const [location, setLocation] = useState("");
   const [error, setError] = useState("");
   const [creating, setCreating] = useState(false);
 
@@ -22,10 +34,26 @@ function FilesView() {
 
   const activeTab = openTabs.value[activeTabIndex.value];
 
-  function openDialog() {
+  async function startNewSketch() {
     setName("");
     setError("");
+    setCreating(false);
+    let root = "";
+    try {
+      root = await projectApi.sketchesRoot();
+    } catch {
+      /* leave blank — the backend falls back to the default location */
+    }
+    setLocation(root);
     setDialogOpen(true);
+  }
+
+  async function browseLocation() {
+    const picked = await openNativeDialog({
+      directory: true,
+      title: "Choose where to save the sketch",
+    });
+    if (typeof picked === "string") setLocation(picked);
   }
 
   async function createSketch() {
@@ -37,24 +65,30 @@ function FilesView() {
     setCreating(true);
     setError("");
     try {
-      const created = await projectApi.create(trimmed);
-      currentSketch.value = created;
-      const contents = new Map<string, string>();
-      for (const f of created.files) {
-        contents.set(f.path, await projectApi.readFile(f.path));
-      }
-      fileContents.value = contents;
-      openTabs.value = created.files.map((f) => ({
-        path: f.path,
-        name: f.name,
-        modified: false,
-      }));
-      activeTabIndex.value = 0;
+      const created = await projectApi.create(trimmed, location || null);
+      await loadSketch(created);
       setDialogOpen(false);
     } catch (e) {
-      setError(`Couldn't create the sketch: ${e}`);
+      setError(`Couldn't create the sketch: ${errText(e)}`);
     } finally {
       setCreating(false);
+    }
+  }
+
+  async function openExistingSketch() {
+    const picked = await openNativeDialog({
+      directory: true,
+      title: "Open a sketch folder",
+    });
+    if (typeof picked !== "string") return;
+    try {
+      const opened = await projectApi.open(picked);
+      await loadSketch(opened);
+    } catch (e) {
+      toast.value = {
+        text: `Couldn't open that folder: ${errText(e)}`,
+        kind: "warn",
+      };
     }
   }
 
@@ -62,8 +96,17 @@ function FilesView() {
     <>
       <div class="sb-header">
         <span class="sb-title">Your files</span>
-        <span class="sb-new" onClick={openDialog}>
-          + new
+        <span class="sb-actions">
+          <button
+            class="sb-action"
+            title="Open sketch…"
+            onClick={openExistingSketch}
+          >
+            <FolderOpen size={15} strokeWidth={1.75} />
+          </button>
+          <button class="sb-action" title="New sketch" onClick={startNewSketch}>
+            <FilePlus2 size={15} strokeWidth={1.75} />
+          </button>
         </span>
       </div>
       <div class="sb-body">
@@ -98,8 +141,14 @@ function FilesView() {
               if (e.key === "Enter") createSketch();
             }}
           />
-          <div class="dlg-hint">
-            Created as its own folder in Documents/ForgeBoard/sketches.
+          <label class="dlg-label dlg-label-spaced">Location</label>
+          <div class="dlg-location">
+            <span class="dlg-location-path" title={location}>
+              {location || "Default sketches folder"}
+            </span>
+            <button class="dlg-btn dlg-btn-sm" onClick={browseLocation}>
+              Browse…
+            </button>
           </div>
           {error && <div class="dlg-error">{error}</div>}
           <div class="dlg-actions">

@@ -19,7 +19,8 @@ export interface RecentProject {
 export const projectApi = {
   sketchesRoot: () => invoke<string>("project_sketches_root"),
   open: (path: string) => invoke<Sketch>("project_open", { path }),
-  create: (name: string) => invoke<Sketch>("project_create", { name }),
+  create: (name: string, location?: string | null) =>
+    invoke<Sketch>("project_create", { name, location: location ?? null }),
   readFile: (path: string) => invoke<string>("project_read_file", { path }),
   saveFile: (path: string, contents: string) =>
     invoke<void>("project_save_file", { path, contents }),

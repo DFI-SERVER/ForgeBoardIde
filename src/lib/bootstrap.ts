@@ -1,5 +1,5 @@
 import { projectApi, type Sketch } from "../ipc/project";
-import { currentSketch, fileContents, openTabs, activeTabIndex } from "../state/appState";
+import { loadSketch } from "./sketch";
 
 /** On app start, reopen the most recent sketch or create a default "hello" sketch. */
 export async function bootstrapProject() {
@@ -24,17 +24,5 @@ export async function bootstrapProject() {
   }
   if (!sketch) throw new Error("bootstrap: could not open or create a sketch");
 
-  currentSketch.value = sketch;
-
-  const contents = new Map<string, string>();
-  for (const f of sketch.files) {
-    contents.set(f.path, await projectApi.readFile(f.path));
-  }
-  fileContents.value = contents;
-  openTabs.value = sketch.files.map((f) => ({
-    path: f.path,
-    name: f.name,
-    modified: false,
-  }));
-  activeTabIndex.value = 0;
+  await loadSketch(sketch);
 }

@@ -65,9 +65,14 @@ pub fn read_sketch(path: &Path) -> Result<Sketch, ProjectError> {
     })
 }
 
-/// Create a new empty sketch folder with a blank .ino.
-pub fn create_sketch(name: &str) -> Result<Sketch, ProjectError> {
-    let root = ensure_sketches_root()?;
+/// Create a new empty sketch folder with a blank .ino. `location` is the
+/// parent directory to create it in; `None` uses the default sketches root.
+pub fn create_sketch(name: &str, location: Option<&Path>) -> Result<Sketch, ProjectError> {
+    let root = match location {
+        Some(dir) => dir.to_path_buf(),
+        None => ensure_sketches_root()?,
+    };
+    std::fs::create_dir_all(&root)?;
     let folder = root.join(name);
     if folder.exists() {
         return Err(ProjectError::AlreadyExists(name.into()));
@@ -134,6 +139,17 @@ mod tests {
         let result = read_sketch(&sketch_dir);
         assert!(matches!(result, Err(ProjectError::Invalid(_))));
 
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn create_sketch_at_explicit_location() {
+        let dir = tmpdir();
+        let s = create_sketch("blink", Some(dir.as_path())).unwrap();
+        assert_eq!(s.name, "blink");
+        assert_eq!(s.path, dir.join("blink"));
+        assert!(s.files.iter().any(|f| f.name == "blink.ino" && f.is_main));
+        assert!(dir.join("blink").join("blink.ino").is_file());
         fs::remove_dir_all(&dir).unwrap();
     }
 }

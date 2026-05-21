@@ -14,8 +14,8 @@ pub fn project_open(path: PathBuf) -> Result<Sketch, ProjectError> {
 }
 
 #[tauri::command]
-pub fn project_create(name: String) -> Result<Sketch, ProjectError> {
-    let s = fs::create_sketch(&name)?;
+pub fn project_create(name: String, location: Option<PathBuf>) -> Result<Sketch, ProjectError> {
+    let s = fs::create_sketch(&name, location.as_deref())?;
     let _ = recent::push_recent(&s.name, &s.path);
     Ok(s)
 }

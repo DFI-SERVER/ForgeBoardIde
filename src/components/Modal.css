@@ -88,3 +88,30 @@
 .dlg-btn-primary:disabled {
   opacity: 0.55;
 }
+.dlg-btn-sm {
+  padding: 6px 11px;
+  font-size: 11px;
+}
+
+.dlg-label-spaced {
+  margin-top: 14px;
+}
+.dlg-location {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.dlg-location-path {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 7px 10px;
+}
