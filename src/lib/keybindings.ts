@@ -12,7 +12,7 @@
  * follows. The `keybindings.spec.ts` suite guards the invariants (unique ids,
  * no two entries on the same combo, every entry labelled and categorised).
  */
-import { activeRail, togglePalette, keyboardShortcutsOpen } from "../state/appState";
+import { activeRail, openPalette, togglePalette, keyboardShortcutsOpen } from "../state/appState";
 import {
   newSketch,
   openSketch,
@@ -108,6 +108,14 @@ export const keybindings: Keybinding[] = [
     category: "File",
     scope: "global",
     run: openSketch,
+  },
+  {
+    id: "file.quickOpen",
+    combo: "Ctrl+P",
+    label: "Quick Open File",
+    category: "File",
+    scope: "global",
+    run: () => openPalette("file"),
   },
   {
     id: "file.save",
