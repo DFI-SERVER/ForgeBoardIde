@@ -21,6 +21,11 @@ export interface UploadResult {
   exit_code: number;
   stderr: string;
 }
+export interface BurnBootloaderResult {
+  success: boolean;
+  exit_code: number;
+  stderr: string;
+}
 export interface Core {
   id: string;
   name: string;
@@ -98,10 +103,27 @@ export const arduinoApi = {
       verbose,
       profile: profile ?? null,
     }),
+  /** Burn the bootloader onto a connected board.
+   *  `port` is optional — some programmers don't need it (USB-attached ICEs);
+   *  pass `null` to omit the `-p` flag. */
+  burnBootloader: (
+    fqbn: string,
+    port: string | null,
+    programmer: string,
+    verbose: boolean,
+  ) =>
+    invoke<BurnBootloaderResult>("arduino_burn_bootloader", {
+      fqbn,
+      port,
+      programmer,
+      verbose,
+    }),
   onCompileOutput: (cb: (line: string) => void) =>
     listen<string>("compile-output", (e) => cb(e.payload)),
   onUploadOutput: (cb: (line: string) => void) =>
     listen<string>("upload-output", (e) => cb(e.payload)),
+  onBurnBootloaderOutput: (cb: (line: string) => void) =>
+    listen<string>("burn-bootloader-output", (e) => cb(e.payload)),
   listCores: () => invoke<Core[]>("arduino_list_cores"),
   searchCores: (query: string) => invoke<Core[]>("arduino_search_cores", { query }),
   installCore: (coreId: string) => invoke<number>("arduino_install_core", { coreId }),

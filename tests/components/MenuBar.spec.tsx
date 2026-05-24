@@ -4,6 +4,7 @@ import { MenuBar } from "../../src/components/MenuBar";
 import { projectApi } from "../../src/ipc/project";
 import {
   bottomPanelOpen,
+  burnBootloaderDialogOpen,
   newSketchDialogOpen,
   keyboardShortcutsOpen,
   paletteOpen,
@@ -12,6 +13,7 @@ import {
 beforeEach(() => {
   bottomPanelOpen.value = true;
   newSketchDialogOpen.value = false;
+  burnBootloaderDialogOpen.value = false;
   keyboardShortcutsOpen.value = false;
   paletteOpen.value = false;
   vi.spyOn(projectApi, "listRecent").mockResolvedValue([]);
@@ -36,6 +38,15 @@ describe("MenuBar", () => {
     expect(screen.getByText("Archive Sketch…")).toBeInTheDocument();
     expect(screen.getByText("Serial Monitor")).toBeInTheDocument();
     expect(screen.getByText("Get Board Info")).toBeInTheDocument();
+    expect(screen.getByText("Burn Bootloader…")).toBeInTheDocument();
+  });
+
+  it("Tools → Burn Bootloader… opens the burn-bootloader dialog and closes the menu", () => {
+    render(<MenuBar />);
+    fireEvent.click(screen.getByText("Tools"));
+    fireEvent.click(screen.getByText("Burn Bootloader…"));
+    expect(burnBootloaderDialogOpen.value).toBe(true);
+    expect(screen.queryByText("Burn Bootloader…")).not.toBeInTheDocument();
   });
 
   it("opens a dropdown on click and shows its items", () => {

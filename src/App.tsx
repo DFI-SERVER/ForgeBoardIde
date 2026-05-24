@@ -7,6 +7,7 @@ import { BottomPanel } from "./components/BottomPanel";
 import { StatusBar } from "./components/StatusBar";
 import { Toast } from "./components/Toast";
 import { NewSketchDialog } from "./components/NewSketchDialog";
+import { BurnBootloaderDialog } from "./components/BurnBootloaderDialog";
 import { CommandPalette } from "./components/CommandPalette";
 import { KeyboardShortcutsModal } from "./components/KeyboardShortcutsModal";
 import { ResizeHandle } from "./components/ResizeHandle";
@@ -36,6 +37,7 @@ export default function App() {
       <StatusBar />
       <Toast />
       <NewSketchDialog />
+      <BurnBootloaderDialog />
       <CommandPalette />
       <KeyboardShortcutsModal />
     </div>

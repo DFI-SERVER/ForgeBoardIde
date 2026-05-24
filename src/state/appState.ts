@@ -47,6 +47,10 @@ export const bottomPanelTab = signal<"serial" | "output" | "plotter" | "problems
  *  `newSketch()` action so both the sidebar button and the File menu can open it. */
 export const newSketchDialogOpen = signal<boolean>(false);
 
+/** Whether the Burn Bootloader confirm dialog is open. Opened by the Tools
+ *  menu entry and the matching command-palette command. */
+export const burnBootloaderDialogOpen = signal<boolean>(false);
+
 /** Whether the fuzzy-search command palette overlay is open. The Ctrl+Shift+P
  *  / Ctrl+K shortcuts toggle this via togglePalette(); menu-click opens via
  *  openPalette(). The palette resets its query each time it opens. */

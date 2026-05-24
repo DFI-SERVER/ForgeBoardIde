@@ -9,6 +9,7 @@
  */
 import { keybindings, type Keybinding } from "./keybindings";
 import { keyboardShortcutsOpen } from "../state/appState";
+import { openBurnBootloaderDialog } from "./actions";
 
 /** A single palette-runnable command. */
 export interface Command {
@@ -56,6 +57,12 @@ export const commands: Command[] = [
     run: () => {
       keyboardShortcutsOpen.value = true;
     },
+  },
+  {
+    id: "tools.burnBootloader",
+    title: "Burn Bootloader…",
+    category: "Tools",
+    run: openBurnBootloaderDialog,
   },
 ];
 

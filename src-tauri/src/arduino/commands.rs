@@ -1,4 +1,5 @@
 use super::board::{Board, DetectedBoard};
+use super::burn_bootloader::BurnBootloaderResult;
 use super::compile::CompileResult;
 use super::upload::UploadResult;
 use std::path::PathBuf;
@@ -34,6 +35,24 @@ pub async fn arduino_upload(
     profile: Option<String>,
 ) -> Result<UploadResult, String> {
     super::upload::upload_sketch(&app, &sketch, &fqbn, &port, verbose, profile.as_deref()).await
+}
+
+#[tauri::command]
+pub async fn arduino_burn_bootloader(
+    app: tauri::AppHandle,
+    fqbn: String,
+    port: Option<String>,
+    programmer: String,
+    verbose: bool,
+) -> Result<BurnBootloaderResult, String> {
+    super::burn_bootloader::burn_bootloader(
+        &app,
+        &fqbn,
+        port.as_deref(),
+        &programmer,
+        verbose,
+    )
+    .await
 }
 
 #[tauri::command]
