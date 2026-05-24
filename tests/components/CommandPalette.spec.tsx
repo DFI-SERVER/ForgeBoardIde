@@ -1,7 +1,17 @@
 import { render, screen, fireEvent } from "@testing-library/preact";
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { CommandPalette } from "../../src/components/CommandPalette";
-import { paletteOpen, activeRail, bottomPanelOpen } from "../../src/state/appState";
+import {
+  paletteOpen,
+  activeRail,
+  bottomPanelOpen,
+  paletteMode,
+  currentSketch,
+  fileContents,
+  recentFilePaths,
+  openTabs,
+  activeTabIndex,
+} from "../../src/state/appState";
 
 beforeEach(() => {
   paletteOpen.value = true;
@@ -116,5 +126,63 @@ describe("CommandPalette", () => {
     const row = screen.getByText("Save").closest(".palette-row")!;
     expect(row.querySelector(".palette-row-category")?.textContent).toBe("File");
     expect(row.querySelector(".palette-row-shortcut")?.textContent).toBe("Ctrl+S");
+  });
+});
+
+describe("CommandPalette — file mode", () => {
+  beforeEach(() => {
+    paletteOpen.value = false;
+    paletteMode.value = "command";
+    openTabs.value = [];
+    activeTabIndex.value = 0;
+    fileContents.value = new Map();
+    recentFilePaths.value = [];
+    currentSketch.value = {
+      name: "demo",
+      path: "/s/demo",
+      files: [
+        { path: "/s/demo/blink.ino", name: "blink.ino", is_main: true },
+        { path: "/s/demo/secrets.h", name: "secrets.h", is_main: false },
+        { path: "/s/demo/util.cpp", name: "util.cpp", is_main: false },
+      ],
+    } as any;
+  });
+
+  it("renders the sketch's files when opened in file mode with empty query", () => {
+    paletteMode.value = "file";
+    paletteOpen.value = true;
+    render(<CommandPalette />);
+    expect(screen.getByText("blink.ino")).toBeInTheDocument();
+    expect(screen.getByText("secrets.h")).toBeInTheDocument();
+    expect(screen.getByText("util.cpp")).toBeInTheDocument();
+  });
+
+  it("filters files as the user types", () => {
+    paletteMode.value = "file";
+    paletteOpen.value = true;
+    render(<CommandPalette />);
+    const input = screen.getByLabelText(/search/i) as HTMLInputElement;
+    fireEvent.input(input, { target: { value: "secr" } });
+    expect(screen.getByText("secrets.h")).toBeInTheDocument();
+    expect(screen.queryByText("blink.ino")).not.toBeInTheDocument();
+  });
+
+  it("placeholder copy reflects the active mode", () => {
+    paletteMode.value = "file";
+    paletteOpen.value = true;
+    render(<CommandPalette />);
+    const input = screen.getByLabelText(/search/i) as HTMLInputElement;
+    expect(input.placeholder).toBe("Go to file…");
+    fireEvent.input(input, { target: { value: ">" } });
+    expect(input.placeholder).toBe("Type a command…");
+  });
+
+  it("shows the no-matches state when query doesn't match", () => {
+    paletteMode.value = "file";
+    paletteOpen.value = true;
+    render(<CommandPalette />);
+    const input = screen.getByLabelText(/search/i) as HTMLInputElement;
+    fireEvent.input(input, { target: { value: "xyz" } });
+    expect(screen.getByText("No matching files.")).toBeInTheDocument();
   });
 });
