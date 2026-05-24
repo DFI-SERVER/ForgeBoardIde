@@ -12,12 +12,17 @@ import { projectApi } from "../ipc/project";
 import { arduinoApi } from "../ipc/arduino";
 import { loadSketch } from "./sketch";
 import { flushSave } from "./autosave";
-import { splitEditorRight as splitEditorRightImpl } from "./editor-groups";
+import {
+  splitEditorRight as splitEditorRightImpl,
+  focusOpenFile,
+  addTabToActiveGroup,
+} from "./editor-groups";
 import { settings } from "./settings";
 import { getActiveEditor } from "../components/MonacoEditor";
 import { parseDiagnostics, type Diagnostic } from "./diagnostics";
 import { parseCompileSize } from "./size-parser";
 import { pushCompileSize } from "./compile-history";
+import { effectiveFqbn } from "./effective-fqbn";
 import {
   currentSketch,
   activeRail,
@@ -30,8 +35,6 @@ import {
   bottomPanelTab,
   newSketchDialogOpen,
   burnBootloaderDialogOpen,
-  openTabs,
-  activeTabIndex,
   fileContents,
   diagnostics,
   lastCompileSize,
@@ -213,21 +216,19 @@ export function saveActiveFile() {
  * Used by the Find in Project results list. `line` is 1-based.
  */
 export function openFileAtLine(path: string, line?: number): void {
-  let idx = openTabs.value.findIndex((t) => t.path === path);
-
-  if (idx < 0) {
-    // No tab open for this file — create one if it's part of the sketch.
+  // First check every group — if any pane already has the file open, just
+  // jump focus to it instead of duplicating the tab in the active group.
+  // Without this scan, a Find-in-Project click on a result for a file open
+  // in the OTHER pane would produce a second copy in the active pane.
+  if (!focusOpenFile(path)) {
+    // Not open anywhere yet — create a tab in the active group if the file
+    // is part of the open sketch and its contents are already in memory.
     const file = currentSketch.value?.files.find((f) => f.path === path);
     if (!file) return;
     if (!fileContents.value.has(path)) return; // contents not loaded — bail
-    openTabs.value = [
-      ...openTabs.value,
-      { path: file.path, name: file.name, modified: false },
-    ];
-    idx = openTabs.value.length - 1;
+    addTabToActiveGroup({ path: file.path, name: file.name, modified: false });
   }
 
-  activeTabIndex.value = idx;
   if (line === undefined) return;
 
   // The editor swaps its model in a useEffect after the tab change commits,
@@ -388,7 +389,11 @@ function recordCompileSize(stderr: string) {
   if (!parsed) return;
   lastCompileSize.value = parsed;
   const flashPercent = (parsed.flashUsed / parsed.flashTotal) * 100;
-  pushCompileSize(selectedFqbn.value, flashPercent);
+  // Bucket history by the FQBN we actually compiled against — when a
+  // sketch.yaml profile is active, that's the profile's board, not the
+  // global selector. Otherwise the sparkline would mix samples from two
+  // different boards into the same series.
+  pushCompileSize(effectiveFqbn(), flashPercent);
 }
 
 /** Verify / Compile the current sketch. */

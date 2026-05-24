@@ -1,9 +1,9 @@
 import { effect } from "@preact/signals";
+import * as monaco from "monaco-editor";
 import {
   saveState,
   fileContents,
   openTabs,
-  activeTabIndex,
   editorGroups,
   activeGroupIndex,
 } from "../state/appState";
@@ -44,13 +44,27 @@ export function startAutoSaveLoop() {
   });
 }
 
-/** Cancel the pending debounce and save immediately (used by Ctrl+S). */
-export function flushSave() {
+/**
+ * Cancel any pending debounce, save immediately, and resolve when the save
+ * completes (or returns straight away if nothing was unsaved). Use this
+ * before destructive state operations (sketch swap, app close) so the
+ * user's last edits land on disk before the in-memory cache is wiped.
+ */
+export async function flushSaveAsync(): Promise<void> {
   if (pendingSave) {
     clearTimeout(pendingSave);
     pendingSave = null;
   }
-  if (saveState.value === "unsaved") runSave();
+  if (saveState.value === "unsaved") {
+    await saveAllModified();
+  }
+}
+
+/** Cancel the pending debounce and save immediately (used by Ctrl+S).
+ *  Fire-and-forget: callers that need to wait for the save to finish (e.g.
+ *  before swapping the open sketch) must use `flushSaveAsync` instead. */
+export function flushSave(): void {
+  flushSaveAsync().catch((e) => console.error("save failed:", e));
 }
 
 /**
@@ -95,10 +109,31 @@ function modifiedPaths(): string[] {
 }
 
 /**
+ * Translate an absolute on-disk `path` to the `file://` URI Monaco uses for
+ * its model and look the model up. Mirrors `getOrCreateModel`'s URI scheme in
+ * `MonacoEditor.tsx` — forward slashes, lowercased Windows drive letter,
+ * leading slash — so a model created by the editor is found by this lookup.
+ *
+ * Returns null if no editor has ever opened this path yet (so no Monaco model
+ * exists for it). Exported so the same-shape lookup can be unit-tested.
+ */
+export function findModelForPath(path: string): monaco.editor.ITextModel | null {
+  const normalized = path
+    .replace(/\\/g, "/")
+    .replace(/^([a-zA-Z]):/, (_, d: string) => `/${d.toLowerCase()}:`)
+    .replace(/^\/?/, "/");
+  const uri = monaco.Uri.parse(`file://${normalized}`);
+  return monaco.editor.getModel(uri);
+}
+
+/**
  * Apply on-save transforms to every modified file in place — fileContents
- * gets the rewritten text; the live Monaco model for the (single) active
- * editor gets `executeEdits` so the user sees the rewrite and Ctrl+Z still
- * unwinds it. No-op when both settings are off.
+ * gets the rewritten text; the live Monaco model for that path (shared across
+ * any group displaying it) gets `model.applyEdits`, so a file modified in the
+ * inactive pane still has its model buffer rewritten. Cursor preservation on
+ * the active editor is best-effort: when the active editor is showing this
+ * model, its selections + undo stops are pushed too. No-op when both settings
+ * are off.
  */
 function applySaveTransforms(): void {
   const s = settings.value;
@@ -107,9 +142,10 @@ function applySaveTransforms(): void {
   const paths = modifiedPaths();
   if (paths.length === 0) return;
 
-  // The active editor instance — only one tab is in focus across all groups
-  // at any moment. We rewrite the live model via executeEdits so undo works.
-  const activeTab = openTabs.value[activeTabIndex.value];
+  // Active editor (if any) — only used to preserve cursor selections + push
+  // an undo stop when the user happens to be focused on a transformed model.
+  // The rewrite itself goes through model.applyEdits so panes that don't
+  // host the active editor still see the transform.
   const editor = getActiveEditor();
   let nextContents: Map<string, string> | null = null;
 
@@ -122,20 +158,28 @@ function applySaveTransforms(): void {
     if (!nextContents) nextContents = new Map(fileContents.value);
     nextContents.set(path, transformed);
 
-    if (activeTab && activeTab.path === path && editor) {
-      const ed = editor;
-      const model = ed.getModel();
-      if (model) {
-        const selections = ed.getSelections() ?? [];
-        ed.pushUndoStop();
-        withProgrammaticEdit(() => {
-          ed.executeEdits(
-            "on-save-transform",
-            [{ range: model.getFullModelRange(), text: transformed }],
-            selections,
-          );
-        });
-        ed.pushUndoStop();
+    const model = findModelForPath(path);
+    // No model yet (a file open in a tab but never mounted in an editor)
+    // — just rewrite fileContents and continue. The next mount will seed
+    // the model from the rewritten content.
+    if (!model) continue;
+    if (model.getValue() === transformed) continue;
+
+    // Capture cursor + push undo only when the active editor is displaying
+    // this model — undo state is editor-local, but the model edit itself
+    // propagates to every editor showing the model.
+    const isActiveModel = editor !== null && editor.getModel() === model;
+    const selections = isActiveModel ? editor!.getSelections() ?? [] : null;
+    if (isActiveModel) editor!.pushUndoStop();
+    withProgrammaticEdit(() => {
+      model.applyEdits([
+        { range: model.getFullModelRange(), text: transformed },
+      ]);
+    });
+    if (isActiveModel) {
+      editor!.pushUndoStop();
+      if (selections && selections.length > 0) {
+        editor!.setSelections(selections);
       }
     }
   }

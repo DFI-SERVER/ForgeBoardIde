@@ -5,12 +5,16 @@ import {
   lastCompileSize,
   compileSizeHistory,
   selectedFqbn,
+  activeProfile,
+  sketchProfiles,
 } from "../../src/state/appState";
 
 beforeEach(() => {
   lastCompileSize.value = null;
   compileSizeHistory.value = new Map();
   selectedFqbn.value = "esp32:esp32:esp32s3";
+  activeProfile.value = null;
+  sketchProfiles.value = [];
 });
 
 describe("formatBytes", () => {
@@ -183,5 +187,31 @@ describe("MemoryBar", () => {
     expect(fills[0].style.width).toMatch(/^25(?:\.0+)?%$/);
     // RAM → 50%.
     expect(fills[1].style.width).toMatch(/^50(?:\.0+)?%$/);
+  });
+
+  it("reads the sparkline bucket under the active profile's FQBN, not the global selector's", () => {
+    // recordCompileSize buckets history under effectiveFqbn(); MemoryBar
+    // must read the same bucket. When a profile is active, the global
+    // selector's value should be ignored — otherwise we'd plot history
+    // from the wrong board (or nothing at all).
+    lastCompileSize.value = {
+      flashUsed: 1000,
+      flashTotal: 10000,
+      ramUsed: 200,
+      ramTotal: 2000,
+    };
+    selectedFqbn.value = "arduino:avr:uno";
+    sketchProfiles.value = [
+      { name: "release", fqbn: "esp32:esp32:esp32s3" },
+    ];
+    activeProfile.value = "release";
+    compileSizeHistory.value = new Map([
+      ["arduino:avr:uno", [10, 20]],
+      ["esp32:esp32:esp32s3", [55, 60, 65, 70]],
+    ]);
+    const { container } = render(<MemoryBar />);
+    const bars = container.querySelectorAll(".memory-bar-spark-bar");
+    // The profile's bucket has 4 entries, not the Uno's 2.
+    expect(bars.length).toBe(4);
   });
 });

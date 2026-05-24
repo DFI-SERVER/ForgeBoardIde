@@ -19,6 +19,7 @@ import {
   toast,
 } from "../state/appState";
 import { newSketch, openSketch } from "../lib/actions";
+import { focusOpenFile } from "../lib/editor-groups";
 import { iconForName } from "../lib/file-icons";
 import {
   baseName,
@@ -74,10 +75,12 @@ function FilesView() {
 
   const activeTab = openTabs.value[activeTabIndex.value];
 
-  /** Open `path` in the editor by switching to its tab, if one exists. */
+  /** Open `path` in the editor by switching to its tab in whichever group
+   *  has it open. A silent no-op when no group has the file (preserves the
+   *  sidebar's pre-split behaviour: clicking before a tab exists did
+   *  nothing). */
   function openFile(path: string) {
-    const idx = openTabs.value.findIndex((t) => t.path === path);
-    if (idx >= 0) activeTabIndex.value = idx;
+    focusOpenFile(path);
   }
 
   function closeMenu() {

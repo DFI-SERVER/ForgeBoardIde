@@ -15,12 +15,16 @@ import {
   bottomPanelOpen,
   bottomPanelTab,
   toast,
+  activeProfile,
+  sketchProfiles,
 } from "../../src/state/appState";
 
 beforeEach(() => {
   burnBootloaderDialogOpen.value = false;
   connectedPort.value = "COM7";
   selectedFqbn.value = "arduino:avr:uno";
+  activeProfile.value = null;
+  sketchProfiles.value = [];
   buildOutput.value = [];
   buildPhase.value = "idle";
   bottomPanelOpen.value = false;
@@ -202,6 +206,33 @@ describe("BurnBootloaderDialog", () => {
       expect(arduinoApi.burnBootloader).toHaveBeenCalledWith(
         expect.any(String),
         null,
+        expect.any(String),
+        expect.any(Boolean),
+      );
+    });
+  });
+
+  it("uses the active sketch.yaml profile's FQBN instead of selectedFqbn", async () => {
+    // arduino-cli's burn-bootloader has no --profile flag, so the dialog
+    // must resolve the effective FQBN itself when a profile is active.
+    selectedFqbn.value = "arduino:avr:uno";
+    sketchProfiles.value = [
+      { name: "release", fqbn: "esp32:esp32:esp32s3" },
+    ];
+    activeProfile.value = "release";
+    burnBootloaderDialogOpen.value = true;
+    render(<BurnBootloaderDialog />);
+
+    // The summary row displays the profile's board, not the global picker's.
+    expect(screen.getByText("esp32:esp32:esp32s3")).toBeInTheDocument();
+    expect(screen.queryByText("arduino:avr:uno")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Burn Bootloader" }));
+
+    await waitFor(() => {
+      expect(arduinoApi.burnBootloader).toHaveBeenCalledWith(
+        "esp32:esp32:esp32s3",
+        "COM7",
         expect.any(String),
         expect.any(Boolean),
       );

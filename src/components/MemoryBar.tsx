@@ -2,8 +2,8 @@ import "./MemoryBar.css";
 import {
   lastCompileSize,
   compileSizeHistory,
-  selectedFqbn,
 } from "../state/appState";
+import { effectiveFqbn } from "../lib/effective-fqbn";
 
 /** Threshold above which a usage zone counts as "warning" (amber). */
 const WARNING_PCT = 80;
@@ -108,7 +108,10 @@ export function MemoryBar() {
   const size = lastCompileSize.value;
   if (!size) return null;
 
-  const fqbn = selectedFqbn.value;
+  // Mirror the bucket recordCompileSize wrote into — when a sketch.yaml
+  // profile is active, the history sits under the profile's FQBN, not the
+  // global selector's. Reading the wrong key shows an empty sparkline.
+  const fqbn = effectiveFqbn();
   const history = compileSizeHistory.value.get(fqbn) ?? [];
 
   return (

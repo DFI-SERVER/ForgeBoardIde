@@ -25,8 +25,6 @@ import {
   paletteMode,
   currentSketch,
   recentFilePaths,
-  openTabs,
-  activeTabIndex,
   fileContents,
   toast,
   type PaletteMode,
@@ -35,6 +33,7 @@ import { filterCommands, type Command } from "../lib/commands";
 import { rankFiles, type QuickOpenFile } from "../lib/quick-open-search";
 import { iconForName } from "../lib/file-icons";
 import { projectApi } from "../ipc/project";
+import { focusOpenFile, addTabToActiveGroup } from "../lib/editor-groups";
 
 type LucideIcon = typeof Search;
 
@@ -367,21 +366,19 @@ function fileResults(
   return recentResults.length > 0 ? recentResults : files;
 }
 
-/** Open a file in a tab — switch to its tab if open, otherwise read it and
- *  append. */
+/** Open a file in a tab — switch to its tab if ANY group already has it,
+ *  otherwise read it from disk and append to the active group. The
+ *  cross-group lookup is essential in split mode: Ctrl+P on a file already
+ *  open in the OTHER pane should reuse that tab, not duplicate it in the
+ *  active pane. */
 async function openFileInTab(path: string, name: string): Promise<void> {
-  const existingIdx = openTabs.value.findIndex((t) => t.path === path);
-  if (existingIdx >= 0) {
-    activeTabIndex.value = existingIdx;
-    return;
-  }
+  if (focusOpenFile(path)) return;
   try {
     const content = await projectApi.readFile(path);
     const newContents = new Map(fileContents.value);
     newContents.set(path, content);
     fileContents.value = newContents;
-    openTabs.value = [...openTabs.value, { path, name, modified: false }];
-    activeTabIndex.value = openTabs.value.length - 1;
+    addTabToActiveGroup({ path, name, modified: false });
   } catch (e) {
     toast.value = {
       text: `Couldn't open ${name}: ${String(e)}`,

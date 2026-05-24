@@ -6,6 +6,8 @@ import {
   updateActiveGroup,
   addTabToActiveGroup,
   markPathModifiedEverywhere,
+  findOpenFile,
+  focusOpenFile,
   MAX_GROUPS,
   _resetForTests,
 } from "../../src/lib/editor-groups";
@@ -185,5 +187,78 @@ describe("markPathModifiedEverywhere", () => {
     const before = editorGroups.value;
     markPathModifiedEverywhere("/s/nope");
     expect(editorGroups.value).toBe(before);
+  });
+});
+
+describe("findOpenFile", () => {
+  it("returns null when no group has the path", () => {
+    updateActiveGroup({ tabs: [TAB_A], activeTabIndex: 0 });
+    expect(findOpenFile("/s/never.ino")).toBeNull();
+  });
+
+  it("finds a path in the only group", () => {
+    updateActiveGroup({ tabs: [TAB_A, TAB_B], activeTabIndex: 0 });
+    expect(findOpenFile(TAB_B.path)).toEqual({
+      groupId: "g0",
+      tabIndex: 1,
+    });
+  });
+
+  it("finds a path in the right pane when only the right pane has it", () => {
+    // Set up: g0 has TAB_A; split to g1 (cloned); then close TAB_A out of
+    // g0 only by giving g0 a smaller tab list. The result: only g1 holds
+    // TAB_A, and findOpenFile must surface it from g1.
+    updateActiveGroup({ tabs: [TAB_A], activeTabIndex: 0 });
+    splitEditorRight();
+    // Replace g0's tabs so TAB_A is gone there; activeGroupIndex is g1.
+    setActiveGroup("g0");
+    updateActiveGroup({ tabs: [TAB_B], activeTabIndex: 0 });
+    const hit = findOpenFile(TAB_A.path);
+    expect(hit).not.toBeNull();
+    expect(hit!.groupId).not.toBe("g0");
+  });
+
+  it("returns the leftmost group when both panes have the same file", () => {
+    // Clone-split keeps both groups holding TAB_A — the scan must report
+    // the leftmost (g0), mirroring VS Code's "reveal on this side" rule.
+    updateActiveGroup({ tabs: [TAB_A], activeTabIndex: 0 });
+    splitEditorRight();
+    expect(findOpenFile(TAB_A.path)).toEqual({
+      groupId: "g0",
+      tabIndex: 0,
+    });
+  });
+});
+
+describe("focusOpenFile", () => {
+  it("returns false and leaves focus untouched when nothing matches", () => {
+    updateActiveGroup({ tabs: [TAB_A], activeTabIndex: 0 });
+    const beforeIdx = activeGroupIndex.value;
+    expect(focusOpenFile("/s/nope.ino")).toBe(false);
+    expect(activeGroupIndex.value).toBe(beforeIdx);
+  });
+
+  it("focuses the matching group and selects the tab", () => {
+    // Two groups, file only in g1, focus starts on g0 → must shift to g1.
+    updateActiveGroup({ tabs: [TAB_A], activeTabIndex: 0 });
+    splitEditorRight();
+    setActiveGroup("g0");
+    // g1 still has TAB_A from the clone-split; replace its tabs with
+    // [TAB_B, TAB_C] for clarity, then look up TAB_C.
+    setActiveGroup(editorGroups.value[1].id);
+    updateActiveGroup({ tabs: [TAB_B, TAB_C], activeTabIndex: 0 });
+    setActiveGroup("g0");
+    expect(activeGroupIndex.value).toBe(0);
+
+    expect(focusOpenFile(TAB_C.path)).toBe(true);
+    expect(activeGroupIndex.value).toBe(1);
+    expect(editorGroups.value[1].activeTabIndex).toBe(1);
+  });
+
+  it("is a stable no-op when the file is already focused in the active group", () => {
+    updateActiveGroup({ tabs: [TAB_A, TAB_B], activeTabIndex: 1 });
+    expect(focusOpenFile(TAB_B.path)).toBe(true);
+    expect(activeGroupIndex.value).toBe(0);
+    expect(editorGroups.value[0].activeTabIndex).toBe(1);
   });
 });

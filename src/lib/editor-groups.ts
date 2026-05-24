@@ -138,6 +138,40 @@ export function addTabToActiveGroup(tab: Tab): void {
 }
 
 /**
+ * Locate a file already open in any group. Returns the matched group's id and
+ * the tab's index within that group, or null when no group has it open. The
+ * walk is left-to-right, so a duplicate (same file open in both panes) finds
+ * the leftmost group first — matching VS Code's "next reveal in this side"
+ * behaviour.
+ */
+export function findOpenFile(
+  path: string,
+): { groupId: string; tabIndex: number } | null {
+  for (const group of editorGroups.value) {
+    const idx = group.tabs.findIndex((t) => t.path === path);
+    if (idx >= 0) return { groupId: group.id, tabIndex: idx };
+  }
+  return null;
+}
+
+/**
+ * Switch focus to an already-open file across any group. Returns true when a
+ * matching group was found and focus + the active tab were updated; returns
+ * false (no-op) when no group has the file. Callers that want
+ * `open-or-create-tab` semantics check the boolean and fall back to their
+ * own "read from disk + addTabToActiveGroup" path.
+ */
+export function focusOpenFile(path: string): boolean {
+  const hit = findOpenFile(path);
+  if (!hit) return false;
+  const idx = editorGroups.value.findIndex((g) => g.id === hit.groupId);
+  if (idx < 0) return false;
+  activeGroupIndex.value = idx;
+  updateActiveGroup({ activeTabIndex: hit.tabIndex });
+  return true;
+}
+
+/**
  * Set focus to a group by id. No-op if the id does not exist. Click anywhere
  * inside a pane (editor or tab strip) routes through here.
  */

@@ -3,10 +3,10 @@ import { Modal } from "./Modal";
 import { arduinoApi } from "../ipc/arduino";
 import { errText } from "../lib/actions";
 import { settings } from "../lib/settings";
+import { effectiveFqbn } from "../lib/effective-fqbn";
 import {
   burnBootloaderDialogOpen,
   connectedPort,
-  selectedFqbn,
   buildOutput,
   buildPhase,
   bottomPanelOpen,
@@ -63,7 +63,10 @@ export function BurnBootloaderDialog() {
 function BurnBootloaderDialogBody() {
   const [programmer, setProgrammer] = useState(DEFAULT_PROGRAMMER);
   const [busy, setBusy] = useState(false);
-  const fqbn = selectedFqbn.value;
+  // Honour the active sketch.yaml profile — burn-bootloader doesn't take a
+  // --profile flag, so we must resolve the target FQBN ourselves to match
+  // what compile/upload would build against.
+  const fqbn = effectiveFqbn();
   const port = connectedPort.value;
 
   const close = () => {

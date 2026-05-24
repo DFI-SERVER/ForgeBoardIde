@@ -1,6 +1,8 @@
 import type { Sketch } from "../ipc/project";
 import { projectApi } from "../ipc/project";
 import { batch } from "@preact/signals";
+import * as monaco from "monaco-editor";
+import { flushSaveAsync } from "./autosave";
 import {
   currentSketch,
   fileContents,
@@ -30,6 +32,12 @@ import {
  * rather than blocking the sketch from opening.
  */
 export async function loadSketch(sketch: Sketch): Promise<void> {
+  // Block until any in-flight or debounced save reaches disk — otherwise the
+  // batch below wipes fileContents and editorGroups, destroying the only
+  // copy of the user's unsaved edits. flushSaveAsync is a no-op when
+  // saveState is already "saved", so the cost on the common path is nil.
+  await flushSaveAsync();
+
   currentSketch.value = sketch;
   const contents = new Map<string, string>();
   for (const f of sketch.files) {
@@ -40,6 +48,14 @@ export async function loadSketch(sketch: Sketch): Promise<void> {
     name: f.name,
     modified: false,
   }));
+  // Dispose every Monaco model so getOrCreateModel rebuilds them lazily from
+  // the freshly-loaded fileContents instead of resurrecting a leaked model
+  // whose buffer holds stale text from the previous session. The editor
+  // components are still mounted; their next setModel call will recreate
+  // each model from the new seed contents.
+  for (const m of monaco.editor.getModels()) {
+    m.dispose();
+  }
   // Reset to a single group with the new tabs. Drop the second pane (if
   // any) so the user starts fresh on the loaded sketch. The mirror effects
   // will pick the new active group up; do everything inside a batch so
