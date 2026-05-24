@@ -12,7 +12,7 @@
  * follows. The `keybindings.spec.ts` suite guards the invariants (unique ids,
  * no two entries on the same combo, every entry labelled and categorised).
  */
-import { activeRail, openPalette, keyboardShortcutsOpen } from "../state/appState";
+import { activeRail, togglePalette, keyboardShortcutsOpen } from "../state/appState";
 import {
   newSketch,
   openSketch,
@@ -220,7 +220,7 @@ export const keybindings: Keybinding[] = [
     category: "View",
     scope: "global",
     run: () => {
-      openPalette();
+      togglePalette();
     },
   },
   {
@@ -230,7 +230,7 @@ export const keybindings: Keybinding[] = [
     category: "View",
     scope: "global",
     run: () => {
-      openPalette();
+      togglePalette();
     },
   },
   {

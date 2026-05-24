@@ -47,8 +47,9 @@ export const bottomPanelTab = signal<"serial" | "output" | "plotter" | "problems
  *  `newSketch()` action so both the sidebar button and the File menu can open it. */
 export const newSketchDialogOpen = signal<boolean>(false);
 
-/** Whether the fuzzy-search command palette overlay is open. Toggled by
- *  Ctrl+Shift+P / Ctrl+K; the palette resets its query each time it opens. */
+/** Whether the fuzzy-search command palette overlay is open. The Ctrl+Shift+P
+ *  / Ctrl+K shortcuts toggle this via togglePalette(); menu-click opens via
+ *  openPalette(). The palette resets its query each time it opens. */
 export const paletteOpen = signal<boolean>(false);
 
 /** Which palette flow is active. Set by openPalette(); read by CommandPalette
@@ -62,6 +63,19 @@ export const paletteMode = signal<PaletteMode>("command");
 export function openPalette(mode: PaletteMode = "command"): void {
   paletteMode.value = mode;
   paletteOpen.value = true;
+}
+
+/** Toggle the palette. Used by global Ctrl+Shift+P / Ctrl+K, which open the
+ *  palette if closed and close it if already open (preserves the muscle
+ *  memory from VS Code and the prior ForgeBoard behavior). The mode is only
+ *  set when opening. */
+export function togglePalette(mode: PaletteMode = "command"): void {
+  if (paletteOpen.value) {
+    paletteOpen.value = false;
+  } else {
+    paletteMode.value = mode;
+    paletteOpen.value = true;
+  }
 }
 
 /** Whether the Keyboard Shortcuts reference modal is open. Opened by F1, the
