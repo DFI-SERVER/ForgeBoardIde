@@ -15,6 +15,8 @@ import { flushSave } from "./autosave";
 import { settings } from "./settings";
 import { getActiveEditor } from "../components/MonacoEditor";
 import { parseDiagnostics, type Diagnostic } from "./diagnostics";
+import { parseCompileSize } from "./size-parser";
+import { pushCompileSize } from "./compile-history";
 import {
   currentSketch,
   activeRail,
@@ -29,6 +31,7 @@ import {
   activeTabIndex,
   fileContents,
   diagnostics,
+  lastCompileSize,
   toast,
 } from "../state/appState";
 
@@ -272,6 +275,9 @@ function beginBuild() {
   // A fresh compile invalidates the previous run's problems and squiggles.
   diagnostics.value = [];
   clearDiagnosticMarkers();
+  // …and the previous run's memory bar, so we don't pin yesterday's numbers
+  // to today's compile output while the new build is in flight.
+  lastCompileSize.value = null;
 }
 
 /* ---------------------------------------------------------- Diagnostics --- */
@@ -363,6 +369,25 @@ function recordDiagnostics(stderr: string) {
   applyDiagnosticMarkers(unique);
 }
 
+/**
+ * Parse the size summary out of a finished build's output and publish it.
+ *
+ * arduino-cli's two `Sketch uses … / Global variables use …` lines reach us on
+ * the streamed compile-output channel (already inside `buildOutput`), but they
+ * may also appear in stderr on some toolchains; feed both through the parser
+ * and keep the result on success. On a failed build (linker error, etc.) the
+ * lines are not emitted and the parser returns null — `lastCompileSize` stays
+ * null, which is exactly what `beginBuild()` reset it to.
+ */
+function recordCompileSize(stderr: string) {
+  const parsed =
+    parseCompileSize(buildOutput.value) ?? parseCompileSize(stderr);
+  if (!parsed) return;
+  lastCompileSize.value = parsed;
+  const flashPercent = (parsed.flashUsed / parsed.flashTotal) * 100;
+  pushCompileSize(selectedFqbn.value, flashPercent);
+}
+
 /** Verify / Compile the current sketch. */
 export async function compileSketch(): Promise<void> {
   const sketch = currentSketch.value;
@@ -384,6 +409,7 @@ export async function compileSketch(): Promise<void> {
       buildOutput.value = [...buildOutput.value, "", result.stderr.trimEnd()];
     }
     recordDiagnostics(result.stderr);
+    if (result.success) recordCompileSize(result.stderr);
   } catch (err) {
     buildPhase.value = "error";
     buildOutput.value = [...buildOutput.value, `Error: ${String(err)}`];
@@ -418,6 +444,7 @@ export async function uploadSketch(): Promise<void> {
       buildOutput.value = [...buildOutput.value, "", result.stderr.trimEnd()];
     }
     recordDiagnostics(result.stderr);
+    if (result.success) recordCompileSize(result.stderr);
   } catch (err) {
     buildPhase.value = "error";
     buildOutput.value = [...buildOutput.value, `Error: ${String(err)}`];
