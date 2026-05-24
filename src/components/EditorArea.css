@@ -5,6 +5,15 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  /* When inside .editor-split, the wrapping flex container sizes us. The
+     standalone (single-pane) layout falls under the app-body grid, which
+     gives the area its slot directly. */
+  flex: 1 1 0;
+  /* When two panes share the area, the inactive one is dimmed via a thin
+     top border that vanishes on the active pane. The default below is the
+     muted border; .editor-area-active swaps it for the focus accent. */
+  border-top: 1px solid transparent;
+  transition: border-color var(--dur-base) var(--ease);
 }
 .editor-monaco-host {
   flex: 1;
@@ -13,3 +22,62 @@
 }
 /* The empty state — when no file tab is open — is the WelcomeScreen
    component, which absolutely fills .editor-monaco-host. */
+
+/* --- Split editor ----------------------------------------------------- */
+
+/* Two side-by-side panes, divided by a draggable splitter. The fraction
+   variable sets the left pane's width; the right pane fills the rest.
+   Defaults to 50/50 if the wrapper has no inline override. */
+.editor-split {
+  display: flex;
+  flex-direction: row;
+  min-width: 0;
+  min-height: 0;
+  position: relative;
+  --editor-split-fraction: 0.5;
+}
+.editor-split > .editor-area:nth-of-type(1) {
+  flex: 0 0 calc(var(--editor-split-fraction) * 100%);
+  /* Subtle vertical separator between panes — looks like a thin border on
+     the left pane's right edge. The handle itself sits on top of it. */
+  border-right: 1px solid var(--border);
+}
+.editor-split > .editor-area:nth-of-type(2) {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* When two groups are shown, the active one gets the focus-accent top
+   border; the inactive one is left muted. The selector targets only the
+   split case so the single-pane editor still has no top border at all. */
+.editor-split > .editor-area-active {
+  border-top-color: var(--accent);
+}
+
+/* The splitter — a 8px-wide hit area straddling the seam between the two
+   panes. Invisible at rest; a 2px accent line fades in on hover / drag,
+   matching the sidebar resize handle pattern. */
+.editor-split-handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--editor-split-fraction) * 100% - 4px);
+  width: 8px;
+  cursor: ew-resize;
+  z-index: 5;
+  touch-action: none;
+}
+.editor-split-handle::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 3px;
+  width: 2px;
+  background: transparent;
+  transition: background-color var(--dur-base) var(--ease);
+}
+.editor-split-handle:hover::after,
+.editor-split-handle.dragging::after {
+  background: var(--accent);
+}

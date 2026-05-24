@@ -1,18 +1,27 @@
 import type { Sketch } from "../ipc/project";
 import { projectApi } from "../ipc/project";
+import { batch } from "@preact/signals";
 import {
   currentSketch,
   fileContents,
+  editorGroups,
+  activeGroupIndex,
   openTabs,
   activeTabIndex,
   sketchProfiles,
   activeProfile,
+  type Tab,
 } from "../state/appState";
 
 /**
  * Load a sketch into the editor: set the current sketch, read every file's
- * contents, and open the files as tabs. Shared by bootstrap, New Sketch and
- * Open Sketch so all three behave identically.
+ * contents, and open the files as tabs in the FIRST group. Shared by
+ * bootstrap, New Sketch and Open Sketch so all three behave identically.
+ *
+ * Sketch loading collapses any active split back to a single group — the
+ * second pane is dropped and the first pane is refilled with the new
+ * sketch's files. This matches user expectations: opening a brand-new
+ * sketch should not leave the split with stale tabs from the previous one.
  *
  * Also refreshes the `sketch.yaml` profile state — every entry point that
  * swaps the open sketch goes through this function, so a single call here
@@ -26,13 +35,24 @@ export async function loadSketch(sketch: Sketch): Promise<void> {
   for (const f of sketch.files) {
     contents.set(f.path, await projectApi.readFile(f.path));
   }
-  fileContents.value = contents;
-  openTabs.value = sketch.files.map((f) => ({
+  const newTabs: Tab[] = sketch.files.map((f) => ({
     path: f.path,
     name: f.name,
     modified: false,
   }));
-  activeTabIndex.value = 0;
+  // Reset to a single group with the new tabs. Drop the second pane (if
+  // any) so the user starts fresh on the loaded sketch. The mirror effects
+  // will pick the new active group up; do everything inside a batch so
+  // the editor only re-renders once.
+  batch(() => {
+    fileContents.value = contents;
+    editorGroups.value = [
+      { id: "g0", tabs: newTabs, activeTabIndex: 0 },
+    ];
+    activeGroupIndex.value = 0;
+    openTabs.value = newTabs;
+    activeTabIndex.value = 0;
+  });
   await refreshProfiles(sketch.path);
 }
 

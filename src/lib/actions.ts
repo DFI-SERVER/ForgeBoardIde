@@ -12,6 +12,7 @@ import { projectApi } from "../ipc/project";
 import { arduinoApi } from "../ipc/arduino";
 import { loadSketch } from "./sketch";
 import { flushSave } from "./autosave";
+import { splitEditorRight as splitEditorRightImpl } from "./editor-groups";
 import { settings } from "./settings";
 import { getActiveEditor } from "../components/MonacoEditor";
 import { parseDiagnostics, type Diagnostic } from "./diagnostics";
@@ -461,6 +462,15 @@ export async function uploadSketch(): Promise<void> {
 /** Show or hide the bottom panel. */
 export function toggleBottomPanel() {
   bottomPanelOpen.value = !bottomPanelOpen.value;
+}
+
+/**
+ * Split the editor right — clone the active group's tabs + active file into
+ * a new pane next to it. No-op when a split already exists, or when nothing
+ * is open to clone.
+ */
+export function splitEditorRight() {
+  splitEditorRightImpl();
 }
 
 /** Open the bottom panel and switch it to the Problems tab. */

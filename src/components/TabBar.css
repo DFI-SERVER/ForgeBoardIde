@@ -18,6 +18,39 @@
   overflow-x: auto;
 }
 
+/* When two panes share the editor area, the inactive pane's tab strip is
+   slightly dimmed so the user knows which pane future keystrokes will
+   land in. Single-pane layouts never get this class. */
+.tabbar-inactive {
+  background: color-mix(in oklab, var(--surface-1) 92%, var(--bg) 8%);
+  opacity: 0.78;
+}
+
+/* The trailing pane-close button in a split layout. Sits on the strip's
+   right edge and matches the per-tab X visually. */
+.tabbar-close-pane {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--space-4);
+  color: var(--fg-subtle);
+  opacity: 0.7;
+  background: transparent;
+  border: none;
+  border-left: 1px solid var(--border-subtle);
+  cursor: pointer;
+  transition:
+    opacity var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease),
+    background-color var(--dur-fast) var(--ease);
+}
+.tabbar-close-pane:hover {
+  opacity: 1;
+  color: var(--fg-default);
+  background: var(--accent-wash-hover);
+}
+
 .tab {
   display: flex;
   align-items: center;
