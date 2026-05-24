@@ -28,13 +28,13 @@ import {
   editorAutoFormat,
 } from "../lib/editor-actions";
 import { comboFor, keybindingById } from "../lib/keybindings";
-import { keyboardShortcutsOpen, paletteOpen } from "../state/appState";
+import { keyboardShortcutsOpen, openPalette } from "../state/appState";
 import { AboutDialog } from "./HelpDialogs";
 import { BoardInfoDialog } from "./BoardInfoDialog";
 
 /** Open the command palette from the View menu. */
 function openCommandPalette() {
-  paletteOpen.value = true;
+  openPalette();
 }
 
 /* ------------------------------------------------------------- model --- */
