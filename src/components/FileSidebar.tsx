@@ -3,7 +3,6 @@ import { useState } from "preact/hooks";
 import {
   FolderOpen,
   FilePlus2,
-  FileCode2,
   FilePlus,
   FolderPlus,
   Pencil,
@@ -20,6 +19,7 @@ import {
   toast,
 } from "../state/appState";
 import { newSketch, openSketch } from "../lib/actions";
+import { iconForName } from "../lib/file-icons";
 import {
   baseName,
   createFileOp,
@@ -34,6 +34,7 @@ import {
   type ContextMenuItem,
 } from "./ContextMenu";
 import { NameDialog, ConfirmDeleteDialog } from "./FileDialogs";
+import { HomeView } from "./HomeView";
 import { BoardsView } from "./BoardsView";
 import { LibrariesView } from "./LibrariesView";
 import { ExamplesView } from "./ExamplesView";
@@ -229,21 +230,48 @@ function FilesView() {
       {/* Right-clicking empty space below the list offers root-level actions. */}
       <div class="sb-body" onContextMenu={openEmptyMenu}>
         <div class="sb-section-label">SKETCH · {sketch.name}</div>
-        {sketch.files.map((f) => (
-          <div
-            key={f.path}
-            class={`sb-file ${activeTab?.path === f.path ? "active" : ""}`}
-            onClick={() => openFile(f.path)}
-            onContextMenu={(e) => openFileMenu(e, f.path)}
-          >
-            {f.is_main && (
-              <span class="sb-mod" title="Main sketch file">
-                <FileCode2 size={14} strokeWidth={1.5} />
+        {sketch.files.map((f) => {
+          const Icon = iconForName(f.name);
+          return (
+            <div
+              key={f.path}
+              class={`sb-file ${activeTab?.path === f.path ? "active" : ""}`}
+              onClick={() => openFile(f.path)}
+              onContextMenu={(e) => openFileMenu(e, f.path)}
+            >
+              <span class={`sb-file-icon ${f.is_main ? "main" : ""}`}>
+                <Icon size={14} strokeWidth={1.6} />
               </span>
-            )}
-            <span class="sb-file-name">{f.name}</span>
-          </div>
-        ))}
+              <span class="sb-file-name">{f.name}</span>
+              <span class="sb-file-actions">
+                <button
+                  type="button"
+                  class="sb-file-action"
+                  title="Rename"
+                  aria-label={`Rename ${f.name}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDialog({ kind: "rename", path: f.path });
+                  }}
+                >
+                  <Pencil size={12} strokeWidth={1.8} />
+                </button>
+                <button
+                  type="button"
+                  class="sb-file-action danger"
+                  title="Delete"
+                  aria-label={`Delete ${f.name}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDialog({ kind: "delete", path: f.path });
+                  }}
+                >
+                  <Trash2 size={12} strokeWidth={1.8} />
+                </button>
+              </span>
+            </div>
+          );
+        })}
       </div>
 
       {menu && (
@@ -317,7 +345,7 @@ export function FileSidebar() {
   return (
     <aside class="sidebar">
       {rail === "files" && <FilesView />}
-      {rail === "home" && <PlaceholderView label="Home" />}
+      {rail === "home" && <HomeView />}
       {rail === "examples" && <ExamplesView />}
       {rail === "search" && <SearchView />}
       {rail === "libraries" && <LibrariesView />}
