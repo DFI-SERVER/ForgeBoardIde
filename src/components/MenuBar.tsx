@@ -17,6 +17,7 @@ import {
   openLibraries,
   openBoardsManager,
   openBurnBootloaderDialog,
+  splitEditorRight,
 } from "../lib/actions";
 import {
   editorUndo,
@@ -273,6 +274,13 @@ export function MenuBar() {
           label: "Toggle Bottom Panel",
           shortcut: comboFor("view.toggleBottomPanel"),
           run: toggleBottomPanel,
+        },
+        sep,
+        {
+          kind: "item",
+          label: "Split Editor Right",
+          shortcut: comboFor("view.splitEditorRight"),
+          run: splitEditorRight,
         },
       ],
     },

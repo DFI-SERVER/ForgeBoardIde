@@ -43,6 +43,19 @@
 .btn-primary:hover {
   background: var(--accent-hover);
 }
+/* Icon-only square button used for view-state actions (Split Editor Right). */
+.btn-icon {
+  padding: var(--space-3);
+  color: var(--fg-default);
+  background: transparent;
+  border: 1px solid var(--border);
+  width: 30px;
+  height: 30px;
+  justify-content: center;
+}
+.btn-icon:hover {
+  background: var(--accent-wash-hover);
+}
 
 .pill {
   background: var(--surface-2);

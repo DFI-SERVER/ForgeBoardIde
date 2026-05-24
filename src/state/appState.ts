@@ -118,9 +118,47 @@ export const currentSketch = signal<Sketch | null>(null);
 /** Per-file contents, keyed by absolute file path. Source of truth for the editor. */
 export const fileContents = signal<Map<string, string>>(new Map());
 
-/** Open editor tabs, referenced by absolute file path. */
-export const openTabs = signal<{ path: string; name: string; modified: boolean }[]>([]);
+/** One open editor tab, keyed by an absolute file path. */
+export interface Tab {
+  path: string;
+  name: string;
+  modified: boolean;
+}
 
+/**
+ * One editor group — a vertical pane with its own tab strip + Monaco editor.
+ * `id` is a stable string ("g0", "g1", …) used as a Preact key and as the
+ * second dimension of the per-(group, path) Monaco view-state cache, so a
+ * group remembers each file's cursor + scroll independently of the other.
+ */
+export interface EditorGroup {
+  id: string;
+  tabs: Tab[];
+  activeTabIndex: number;
+}
+
+/**
+ * The list of editor groups, left-to-right. The MVP supports at most two
+ * groups (a single vertical split); helpers in `lib/editor-groups.ts` enforce
+ * that cap. The first group ("g0") always exists, even when empty.
+ */
+export const editorGroups = signal<EditorGroup[]>([
+  { id: "g0", tabs: [], activeTabIndex: 0 },
+]);
+
+/** Index of the focused group. Clicks inside a pane (or tab) move it here. */
+export const activeGroupIndex = signal<number>(0);
+
+/**
+ * The active group's tabs — kept in sync with `editorGroups[activeGroupIndex]`
+ * by the effect bootstrapped in `lib/editor-groups.ts`. Writable: existing
+ * consumers (`openTabs.value = [...]`) still work and their changes flow
+ * back into `editorGroups`. New code that explicitly cares about multiple
+ * groups should write through the helpers in `lib/editor-groups.ts` instead.
+ */
+export const openTabs = signal<Tab[]>([]);
+
+/** The active group's active tab index — kept in sync with `editorGroups`. */
 export const activeTabIndex = signal<number>(0);
 
 /** Maximum number of recently-focused file paths tracked. The buffer is

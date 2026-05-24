@@ -22,6 +22,7 @@ import {
   toggleBottomPanel,
   openSerialMonitor,
   openLibraries,
+  splitEditorRight,
 } from "./actions";
 import {
   editorFind,
@@ -266,6 +267,14 @@ export const keybindings: Keybinding[] = [
     category: "View",
     scope: "global",
     run: nextTab,
+  },
+  {
+    id: "view.splitEditorRight",
+    combo: "Ctrl+\\",
+    label: "Split Editor Right",
+    category: "View",
+    scope: "global",
+    run: splitEditorRight,
   },
   {
     id: "view.goHome",

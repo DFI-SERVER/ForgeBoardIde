@@ -9,11 +9,13 @@ import {
   openTabs,
   activeTabIndex,
   fileContents,
+  editorGroups,
+  activeGroupIndex,
 } from "../../src/state/appState";
+import { _resetForTests } from "../../src/lib/editor-groups";
 
 beforeEach(() => {
-  openTabs.value = [];
-  activeTabIndex.value = 0;
+  _resetForTests();
   fileContents.value = new Map();
 });
 
@@ -99,5 +101,68 @@ describe("reconcileDeletedTab", () => {
     ];
     reconcileDeletedTab("C:\\s\\b\\gone.h");
     expect(openTabs.value).toHaveLength(1);
+  });
+});
+
+describe("reconcileRenamedTab — split editor", () => {
+  it("repoints every matching tab across both groups", () => {
+    editorGroups.value = [
+      {
+        id: "g0",
+        tabs: [{ path: "/s/a.h", name: "a.h", modified: false }],
+        activeTabIndex: 0,
+      },
+      {
+        id: "g1",
+        tabs: [{ path: "/s/a.h", name: "a.h", modified: true }],
+        activeTabIndex: 0,
+      },
+    ];
+    activeGroupIndex.value = 0;
+    reconcileRenamedTab("/s/a.h", "/s/renamed.h");
+    expect(editorGroups.value[0].tabs[0].path).toBe("/s/renamed.h");
+    expect(editorGroups.value[1].tabs[0].path).toBe("/s/renamed.h");
+    expect(editorGroups.value[0].tabs[0].name).toBe("renamed.h");
+    // The second pane's modified flag survives the rename.
+    expect(editorGroups.value[1].tabs[0].modified).toBe(true);
+  });
+});
+
+describe("reconcileDeletedTab — split editor", () => {
+  it("removes the file's tab from every group", () => {
+    editorGroups.value = [
+      {
+        id: "g0",
+        tabs: [
+          { path: "/s/a.h", name: "a.h", modified: false },
+          { path: "/s/b.h", name: "b.h", modified: false },
+        ],
+        activeTabIndex: 0,
+      },
+      {
+        id: "g1",
+        tabs: [{ path: "/s/a.h", name: "a.h", modified: false }],
+        activeTabIndex: 0,
+      },
+    ];
+    activeGroupIndex.value = 0;
+    reconcileDeletedTab("/s/a.h");
+    // g0 keeps b.h. g1 had only the deleted file → collapsed away.
+    expect(editorGroups.value).toHaveLength(1);
+    expect(editorGroups.value[0].tabs.map((t) => t.path)).toEqual(["/s/b.h"]);
+  });
+
+  it("preserves the first group even when its only tab is deleted", () => {
+    editorGroups.value = [
+      {
+        id: "g0",
+        tabs: [{ path: "/s/only.h", name: "only.h", modified: false }],
+        activeTabIndex: 0,
+      },
+    ];
+    activeGroupIndex.value = 0;
+    reconcileDeletedTab("/s/only.h");
+    expect(editorGroups.value).toHaveLength(1);
+    expect(editorGroups.value[0].tabs).toEqual([]);
   });
 });

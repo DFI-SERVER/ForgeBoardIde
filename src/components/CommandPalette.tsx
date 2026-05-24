@@ -18,6 +18,7 @@ import {
   Command as CommandIcon,
   Keyboard,
   Compass,
+  Columns2,
 } from "lucide-preact";
 import {
   paletteOpen,
@@ -83,6 +84,8 @@ function iconFor(command: Command): LucideIcon {
       return PanelBottom;
     case "view.nextTab":
       return ArrowRightLeft;
+    case "view.splitEditorRight":
+      return Columns2;
     case "file.quickOpen":
       return FileSearch;
     default:

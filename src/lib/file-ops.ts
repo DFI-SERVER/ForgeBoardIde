@@ -11,11 +11,13 @@ import { projectApi } from "../ipc/project";
 import {
   currentSketch,
   fileContents,
+  editorGroups,
+  activeGroupIndex,
   openTabs,
   activeTabIndex,
 } from "../state/appState";
+import { batch } from "@preact/signals";
 import { errText } from "./actions";
-import { closeTab } from "./tabs";
 
 /** Basename of an absolute path, handling both `/` and `\` separators. */
 export function baseName(path: string): string {
@@ -45,32 +47,86 @@ export async function refreshSketchTree(): Promise<void> {
 }
 
 /**
- * Reconcile editor state for a renamed/moved file: a tab still pointing at
- * `oldPath` is repointed to `newPath` (and its label updated), and the file's
- * cached contents are re-keyed. Safe to call when the file is not open.
+ * Reconcile editor state for a renamed/moved file: every tab still pointing at
+ * `oldPath` — across both editor groups in a split layout — is repointed to
+ * `newPath` (and its label updated), and the file's cached contents are
+ * re-keyed. Safe to call when the file is not open.
  */
 export function reconcileRenamedTab(oldPath: string, newPath: string): void {
-  openTabs.value = openTabs.value.map((t) =>
-    t.path === oldPath
-      ? { ...t, path: newPath, name: baseName(newPath) }
-      : t,
-  );
-  const contents = fileContents.value;
-  if (contents.has(oldPath)) {
-    const next = new Map(contents);
-    next.set(newPath, next.get(oldPath)!);
-    next.delete(oldPath);
-    fileContents.value = next;
-  }
+  const newName = baseName(newPath);
+  const groups = editorGroups.value;
+  let anyTabChanged = false;
+  const nextGroups = groups.map((g) => {
+    let groupChanged = false;
+    const newTabs = g.tabs.map((t) => {
+      if (t.path !== oldPath) return t;
+      groupChanged = true;
+      return { ...t, path: newPath, name: newName };
+    });
+    if (!groupChanged) return g;
+    anyTabChanged = true;
+    return { ...g, tabs: newTabs };
+  });
+  batch(() => {
+    if (anyTabChanged) {
+      editorGroups.value = nextGroups;
+      const activeIdx = activeGroupIndex.value;
+      const activeGroup = nextGroups[activeIdx];
+      if (activeGroup) openTabs.value = activeGroup.tabs;
+    }
+    const contents = fileContents.value;
+    if (contents.has(oldPath)) {
+      const next = new Map(contents);
+      next.set(newPath, next.get(oldPath)!);
+      next.delete(oldPath);
+      fileContents.value = next;
+    }
+  });
 }
 
 /**
- * Reconcile editor state for a deleted file: close its tab if open and drop
- * its cached contents. Safe to call when the file is not open.
+ * Reconcile editor state for a deleted file: close every tab pointing at it —
+ * across both editor groups in a split — and drop its cached contents. Safe to
+ * call when the file is not open. If closing the last tab in a non-first group
+ * empties that group, the group itself is collapsed (see `closeTab`).
  */
 export function reconcileDeletedTab(path: string): void {
-  const idx = openTabs.value.findIndex((t) => t.path === path);
-  if (idx >= 0) closeTab(idx);
+  // Closing across groups one at a time is awkward because closeTab operates
+  // on the active group. Drop the matching tab from every group directly,
+  // then collapse any empty non-first group.
+  const groups = editorGroups.value;
+  let anyChanged = false;
+  const nextGroups = groups
+    .map((g) => {
+      const filtered = g.tabs.filter((t) => t.path !== path);
+      if (filtered.length === g.tabs.length) return g;
+      anyChanged = true;
+      const newActive =
+        filtered.length === 0
+          ? 0
+          : Math.min(g.activeTabIndex, filtered.length - 1);
+      return { ...g, tabs: filtered, activeTabIndex: newActive };
+    });
+  if (anyChanged) {
+    // Drop any non-first group that's been left empty. The first group is
+    // preserved even when empty so the WelcomeScreen has a place to land.
+    const compacted = nextGroups.filter(
+      (g, i) => g.tabs.length > 0 || i === 0,
+    );
+    const oldActiveIdx = activeGroupIndex.value;
+    const oldActiveId = groups[oldActiveIdx]?.id;
+    let newActiveIdx = compacted.findIndex((g) => g.id === oldActiveId);
+    if (newActiveIdx < 0) newActiveIdx = 0;
+    batch(() => {
+      editorGroups.value = compacted;
+      activeGroupIndex.value = newActiveIdx;
+      const activeGroup = compacted[newActiveIdx];
+      if (activeGroup) {
+        openTabs.value = activeGroup.tabs;
+        activeTabIndex.value = activeGroup.activeTabIndex;
+      }
+    });
+  }
   const contents = fileContents.value;
   if (contents.has(path)) {
     const next = new Map(contents);

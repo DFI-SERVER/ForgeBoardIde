@@ -1,5 +1,12 @@
 import { effect } from "@preact/signals";
-import { saveState, fileContents, openTabs, activeTabIndex } from "../state/appState";
+import {
+  saveState,
+  fileContents,
+  openTabs,
+  activeTabIndex,
+  editorGroups,
+  activeGroupIndex,
+} from "../state/appState";
 import { projectApi } from "../ipc/project";
 import { settings } from "./settings";
 import { formatArduino } from "./format";
@@ -73,37 +80,49 @@ export function transformContentForSave(content: string, path?: string): string 
 }
 
 /**
- * Apply on-save transforms to every modified tab in place — fileContents for
- * inactive tabs, the live Monaco model for the active tab (so the user sees
- * the rewrite and Ctrl+Z still unwinds it). No-op when both settings are off.
+ * Walk every group's tabs and yield the set of distinct modified paths.
+ * A file open in two panes counts once. Used by save-side code so a split
+ * editor never double-saves or skips a tab.
+ */
+function modifiedPaths(): string[] {
+  const seen = new Set<string>();
+  for (const group of editorGroups.value) {
+    for (const t of group.tabs) {
+      if (t.modified) seen.add(t.path);
+    }
+  }
+  return [...seen];
+}
+
+/**
+ * Apply on-save transforms to every modified file in place — fileContents
+ * gets the rewritten text; the live Monaco model for the (single) active
+ * editor gets `executeEdits` so the user sees the rewrite and Ctrl+Z still
+ * unwinds it. No-op when both settings are off.
  */
 function applySaveTransforms(): void {
   const s = settings.value;
   if (!s.formatOnSave && !s.trimTrailingWhitespaceOnSave) return;
 
-  const tabs = openTabs.value;
-  const activeTab = tabs[activeTabIndex.value];
+  const paths = modifiedPaths();
+  if (paths.length === 0) return;
+
+  // The active editor instance — only one tab is in focus across all groups
+  // at any moment. We rewrite the live model via executeEdits so undo works.
+  const activeTab = openTabs.value[activeTabIndex.value];
   const editor = getActiveEditor();
   let nextContents: Map<string, string> | null = null;
 
-  for (const t of tabs) {
-    if (!t.modified) continue;
-    const original = fileContents.value.get(t.path);
+  for (const path of paths) {
+    const original = fileContents.value.get(path);
     if (original == null) continue;
-    const transformed = transformContentForSave(original, t.path);
+    const transformed = transformContentForSave(original, path);
     if (transformed === original) continue;
 
     if (!nextContents) nextContents = new Map(fileContents.value);
-    nextContents.set(t.path, transformed);
+    nextContents.set(path, transformed);
 
-    // The active tab's Monaco model is the user-visible source of truth —
-    // rewrite via executeEdits so the change joins the same undo stack as
-    // the user's own edits. The leading pushUndoStop separates the rewrite
-    // from the user's last keystroke so Ctrl+Z unwinds them in two steps,
-    // not one. Passing the current selections as endCursorState pins the
-    // caret to (roughly) where the user was, rather than Monaco's default
-    // of dropping it at the end of the inserted text.
-    if (t === activeTab && editor) {
+    if (activeTab && activeTab.path === path && editor) {
       const ed = editor;
       const model = ed.getModel();
       if (model) {
@@ -124,6 +143,35 @@ function applySaveTransforms(): void {
   if (nextContents) fileContents.value = nextContents;
 }
 
+/** Clear the `modified` flag on every tab matching `path` in every group. */
+function clearModifiedForPath(path: string): void {
+  const groups = editorGroups.value;
+  let changed = false;
+  const nextGroups = groups.map((g) => {
+    const newTabs = g.tabs.map((t) =>
+      t.path === path && t.modified ? { ...t, modified: false } : t,
+    );
+    if (newTabs === g.tabs) return g;
+    // Reference equality check on the map fails because we always return a
+    // new array; compare each tab to decide whether anything actually flipped.
+    const flipped = newTabs.some((t, i) => t !== g.tabs[i]);
+    if (!flipped) return g;
+    changed = true;
+    return { ...g, tabs: newTabs };
+  });
+  if (!changed) return;
+  // Mirror the new tab list of the active group through the alias signals
+  // explicitly so subscribers that only watch `openTabs` notice the change
+  // without waiting for the bookkeeping effect to fire. (The effect would
+  // also catch it, but doing it here keeps the save flow synchronous.)
+  const activeIdx = activeGroupIndex.value;
+  const activeGroup = nextGroups[activeIdx];
+  editorGroups.value = nextGroups;
+  if (activeGroup && openTabs.value !== activeGroup.tabs) {
+    openTabs.value = activeGroup.tabs;
+  }
+}
+
 async function saveAllModified() {
   // Flip into "saving" BEFORE running on-save transforms — applySaveTransforms
   // writes fileContents.value, which is subscribed in startAutoSaveLoop's
@@ -140,20 +188,24 @@ async function saveAllModified() {
   } catch (e) {
     console.error("on-save transforms failed; saving original content:", e);
   }
-  const tabs = openTabs.value;
-  for (const t of tabs) {
-    if (!t.modified) continue;
-    const contents = fileContents.value.get(t.path);
+  const paths = modifiedPaths();
+  for (const path of paths) {
+    const contents = fileContents.value.get(path);
     if (contents == null) continue;
     try {
-      await projectApi.saveFile(t.path, contents);
+      await projectApi.saveFile(path, contents);
     } catch (e) {
-      console.error("save failed for", t.path, e);
+      console.error("save failed for", path, e);
       saveState.value = "unsaved";
       return;
     }
+    // Drop the modified flag on every tab that points at this path (across
+    // both groups) so a successful save reconciles split panes too.
+    clearModifiedForPath(path);
   }
-  openTabs.value = tabs.map((t) => ({ ...t, modified: false }));
+  // Belt-and-braces: clear any remaining stragglers that had no contents.
+  const remaining = modifiedPaths();
+  for (const p of remaining) clearModifiedForPath(p);
   saveState.value = "saved";
   pendingSave = null;
 }
