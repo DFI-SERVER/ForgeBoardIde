@@ -114,32 +114,17 @@ describe("loadPersisted + startRecentFilesTracking", () => {
     recent.startRecentFilesTracking();
     expect(state.recentFilePaths.value).toEqual([]);
 
-    // After boot, the user opens two tabs. The push effect reads recents,
-    // writes recents, and so re-subscribes to its own write — preact-signals
-    // throws "Cycle detected" once its 100-iteration cap is hit. This is a
-    // latent fragility in src/lib/recent-files.ts (filed separately); in the
-    // running app it is masked by Preact's render-time batching.
-    //
-    // The cycle throws *after* the signal has been mutated correctly, so
-    // the assertion below verifies the state is what the effect was supposed
-    // to produce, regardless of whether the cycle guard fired.
-    try {
-      state.openTabs.value = [
-        { path: "/s/a.ino", name: "a.ino", modified: false },
-        { path: "/s/b.h", name: "b.h", modified: false },
-      ];
-    } catch (e) {
-      // Swallow "Cycle detected" — see comment above.
-      if (!String(e).includes("Cycle detected")) throw e;
-    }
+    // After boot, the user opens two tabs. The push effect runs once and
+    // calls pushRecentFilePath inside untracked(), so it does not re-subscribe
+    // to its own write to recentFilePaths.
+    state.openTabs.value = [
+      { path: "/s/a.ino", name: "a.ino", modified: false },
+      { path: "/s/b.h", name: "b.h", modified: false },
+    ];
     expect(state.recentFilePaths.value[0]).toBe("/s/a.ino");
 
     // Switching the active tab pushes the newly active path to the front.
-    try {
-      state.activeTabIndex.value = 1;
-    } catch (e) {
-      if (!String(e).includes("Cycle detected")) throw e;
-    }
+    state.activeTabIndex.value = 1;
     expect(state.recentFilePaths.value[0]).toBe("/s/b.h");
     expect(state.recentFilePaths.value).toEqual(["/s/b.h", "/s/a.ino"]);
   });

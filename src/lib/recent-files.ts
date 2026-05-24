@@ -3,7 +3,7 @@
  * app restarts and pushes the active tab's path to the front whenever it
  * changes. Wired from main.tsx alongside the other lifecycle bootstraps.
  */
-import { effect } from "@preact/signals";
+import { effect, untracked } from "@preact/signals";
 import {
   recentFilePaths,
   pushRecentFilePath,
@@ -38,7 +38,10 @@ export function startRecentFilesTracking(): void {
     const tabs = openTabs.value;
     const i = activeTabIndex.value;
     const active = tabs[i];
-    if (active) pushRecentFilePath(active.path);
+    // pushRecentFilePath reads recentFilePaths.value to dedup-and-prepend;
+    // wrapping the call in untracked() keeps this effect from re-subscribing
+    // to its own write target, which would otherwise be a cycle.
+    if (active) untracked(() => pushRecentFilePath(active.path));
   });
 
   // Write-through to localStorage on every change.
