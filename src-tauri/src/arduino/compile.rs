@@ -14,15 +14,27 @@ pub struct CompileResult {
 ///
 /// When `verbose` is set, arduino-cli is run with `-v` so the full compiler
 /// command lines and per-file progress reach the Output panel.
+///
+/// `profile`, if `Some`, switches the compile to a `sketch.yaml` profile
+/// (`--profile <name>`). The profile owns the FQBN in that mode, so the
+/// `--fqbn` flag is omitted to avoid arduino-cli's "can't combine" rejection.
 pub async fn compile_sketch(
     app: &tauri::AppHandle,
     sketch_path: &Path,
     fqbn: &str,
     verbose: bool,
+    profile: Option<&str>,
 ) -> Result<CompileResult, String> {
     let sketch = sketch_path.to_string_lossy().into_owned();
     let fqbn = normalize_fqbn(fqbn);
-    let mut args: Vec<&str> = vec!["compile", "--fqbn", fqbn.as_str(), "--no-color"];
+    let mut args: Vec<&str> = vec!["compile", "--no-color"];
+    if let Some(p) = profile {
+        args.push("--profile");
+        args.push(p);
+    } else {
+        args.push("--fqbn");
+        args.push(fqbn.as_str());
+    }
     if verbose {
         args.push("-v");
     }

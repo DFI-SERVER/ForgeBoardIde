@@ -22,6 +22,21 @@ export interface SketchbookInfo {
   effective: string;
 }
 
+/** One reproducible-build profile, as advertised by a sketch's `sketch.yaml`. */
+export interface ProfileInfo {
+  name: string;
+  fqbn: string;
+  /** Optional free-form note from the YAML. */
+  notes?: string;
+}
+
+/** Full parsed view of a sketch's `sketch.yaml`. Null result = file absent. */
+export interface SketchProfiles {
+  profiles: ProfileInfo[];
+  /** The `default_profile` key from the YAML, if set. */
+  default_profile?: string;
+}
+
 export const projectApi = {
   sketchesRoot: () => invoke<string>("project_sketches_root"),
   open: (path: string) => invoke<Sketch>("project_open", { path }),
@@ -51,4 +66,8 @@ export const projectApi = {
   /** Zip a sketch folder to `dest` (a .zip path the user picked). */
   archiveSketch: (sketchDir: string, dest: string) =>
     invoke<void>("project_archive_sketch", { sketchDir, dest }),
+  /** Read reproducible-build profiles from a sketch's `sketch.yaml`.
+   *  Resolves to `null` when the sketch has no `sketch.yaml`. */
+  readProfiles: (sketchPath: string) =>
+    invoke<SketchProfiles | null>("project_read_profiles", { sketchPath }),
 };

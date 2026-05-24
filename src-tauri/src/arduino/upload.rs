@@ -16,18 +16,29 @@ pub struct UploadResult {
 /// matching the Arduino IDE — a plain `upload` would fail when there is no prior build.
 ///
 /// `verbose` adds `-v`, surfacing the full compiler and uploader logs.
+///
+/// `profile`, if `Some`, switches the build to a `sketch.yaml` profile
+/// (`--profile <name>`). The profile owns the FQBN in that mode, so the
+/// `--fqbn` flag is omitted; `--port` is still required because the profile
+/// does not pin a target port.
 pub async fn upload_sketch(
     app: &tauri::AppHandle,
     sketch_path: &Path,
     fqbn: &str,
     port: &str,
     verbose: bool,
+    profile: Option<&str>,
 ) -> Result<UploadResult, String> {
     let sketch = sketch_path.to_string_lossy().into_owned();
     let fqbn = normalize_fqbn(fqbn);
-    let mut args: Vec<&str> = vec![
-        "compile", "--fqbn", fqbn.as_str(), "--upload", "--port", port, "--no-color",
-    ];
+    let mut args: Vec<&str> = vec!["compile", "--upload", "--port", port, "--no-color"];
+    if let Some(p) = profile {
+        args.push("--profile");
+        args.push(p);
+    } else {
+        args.push("--fqbn");
+        args.push(fqbn.as_str());
+    }
     if verbose {
         args.push("-v");
     }

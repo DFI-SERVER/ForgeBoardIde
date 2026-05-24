@@ -24,6 +24,7 @@ pub fn run() {
             project::commands::project_sketchbook_get,
             project::commands::project_sketchbook_set,
             project::commands::project_archive_sketch,
+            project::commands::project_read_profiles,
             arduino::commands::arduino_list_boards,
             arduino::commands::arduino_detect_ports,
             arduino::commands::arduino_compile,
