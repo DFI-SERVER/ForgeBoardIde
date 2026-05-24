@@ -1,6 +1,7 @@
 import * as monaco from "monaco-editor";
 import EditorWorker from "monaco-editor/esm/vs/editor/editor.worker?worker";
 import { ARDUINO_MONACO_LANGUAGE } from "./arduino-grammar";
+import { registerArduinoSnippets } from "./snippets";
 import type { Theme, FontFamily } from "./settings";
 
 // Monaco needs a web worker for its editor services. Without this it logs
@@ -24,6 +25,8 @@ export function initMonaco() {
   defineForgeBoardDark();
   defineSolarizedDark();
   defineSolarizedLight();
+
+  registerArduinoSnippets();
 }
 
 /** The cool-slate industrial dark theme — matches tokens.css [data-theme="dark"]. */
