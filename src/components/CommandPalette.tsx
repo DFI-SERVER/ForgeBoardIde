@@ -135,28 +135,27 @@ function CommandPaletteBody() {
       ? query.slice(1)
       : query;
 
+  const recents = recentFilePaths.value;
+
   const items: PaletteItem[] = useMemo(() => {
     if (liveMode === "command") {
       return filterCommands(strippedQuery).map(commandToItem);
     }
-    return fileResults(sketch, strippedQuery).map(fileToItem);
-  }, [liveMode, strippedQuery, sketch]);
+    return fileResults(sketch, strippedQuery, recents).map(fileToItem);
+  }, [liveMode, strippedQuery, sketch, recents]);
 
-  // Initial selection: VS Code's Ctrl+P-twice pattern. When the palette
-  // opens in file mode with an empty query and 2+ recents-in-sketch, the
-  // 2nd row is pre-selected so Enter toggles to the previously-focused file.
-  const initialSelected = useMemo(() => {
+  const [selected, setSelected] = useState(() => {
+    // Ctrl+P-twice pattern (VS Code): when the palette opens in file mode
+    // with 2+ recents in the current sketch, the SECOND row is pre-selected
+    // so Enter immediately toggles to the previously-focused file.
     if (paletteMode.value !== "file") return 0;
-    if (query.length > 0) return 0;
     const recentsInSketch = sketch
       ? recentFilePaths.value.filter((p) =>
           sketch.files.some((f) => f.path === p),
         )
       : [];
     return recentsInSketch.length >= 2 ? 1 : 0;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  const [selected, setSelected] = useState(initialSelected);
+  });
 
   // Keep the selection in range as the result set shrinks/grows.
   const activeIndex = items.length === 0 ? -1 : Math.min(selected, items.length - 1);
@@ -343,6 +342,7 @@ function fileToItem(file: FileResult): PaletteItem {
 function fileResults(
   sketch: SketchSnapshot | null,
   query: string,
+  recents: readonly string[],
 ): FileResult[] {
   if (!sketch) return [];
   const files: FileResult[] = sketch.files.map((f) => ({
@@ -357,11 +357,11 @@ function fileResults(
   // Empty-query empty state: prefer recents (filtered to this sketch);
   // fall back to all files in original order.
   const pathSet = new Map(files.map((f) => [f.path, f]));
-  const recents = recentFilePaths.value
+  const recentResults = recents
     .map((p) => pathSet.get(p))
     .filter((f): f is FileResult => f !== undefined)
     .slice(0, 8);
-  return recents.length > 0 ? recents : files;
+  return recentResults.length > 0 ? recentResults : files;
 }
 
 /** Open a file in a tab — switch to its tab if open, otherwise read it and
