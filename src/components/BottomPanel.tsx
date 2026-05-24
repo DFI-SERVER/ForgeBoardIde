@@ -13,6 +13,7 @@ import {
 } from "lucide-preact";
 import { SerialMonitor } from "./SerialMonitor";
 import { SerialPlotter } from "./SerialPlotter";
+import { MemoryBar } from "./MemoryBar";
 import {
   bottomPanelTab,
   bottomPanelOpen,
@@ -20,6 +21,7 @@ import {
   buildOutput,
   buildPhase,
   diagnostics,
+  lastCompileSize,
 } from "../state/appState";
 import { openFileAtLine } from "../lib/actions";
 import { groupDiagnostics } from "../lib/diagnostics";
@@ -37,11 +39,16 @@ const TABS = [
 function OutputView() {
   const lines = buildOutput.value;
   const phase = buildPhase.value;
+  // Subscribe to lastCompileSize here so the parent scroll container also
+  // re-runs when a size summary becomes available — that re-triggers the
+  // scroll-to-bottom effect once the memory bar renders. MemoryBar itself
+  // reads the signal independently.
+  const hasSize = lastCompileSize.value !== null;
   const ref = useRef<HTMLPreElement>(null);
 
   useEffect(() => {
     if (ref.current) ref.current.scrollTop = ref.current.scrollHeight;
-  }, [lines.length, phase]);
+  }, [lines.length, phase, hasSize]);
 
   if (lines.length === 0 && phase === "idle") {
     return (
@@ -82,6 +89,7 @@ function OutputView() {
           Failed
         </div>
       )}
+      <MemoryBar />
     </pre>
   );
 }

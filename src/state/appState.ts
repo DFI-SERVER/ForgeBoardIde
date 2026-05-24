@@ -152,6 +152,27 @@ export const buildPhase = signal<BuildPhase>("idle");
 /** arduino-cli output lines for the current build, in order. */
 export const buildOutput = signal<string[]>([]);
 
+/**
+ * Most recent parsed compile sizes (flash + RAM, used + total) from arduino-cli's
+ * size summary. Null until the first successful compile produces a parseable
+ * report; reset to null at the start of every compile so the MemoryBar does
+ * not show stale numbers while a build is in flight.
+ */
+export const lastCompileSize = signal<{
+  flashUsed: number;
+  flashTotal: number;
+  ramUsed: number;
+  ramTotal: number;
+} | null>(null);
+
+/**
+ * Per-FQBN history of flash-usage percentages from the last N successful
+ * compiles. Persisted via lib/compile-history.ts; keyed by FQBN so the
+ * sparkline tracks a particular board's drift over time. Capped at 10 per
+ * FQBN — older entries fall off the front when a new one is pushed.
+ */
+export const compileSizeHistory = signal<Map<string, number[]>>(new Map());
+
 /** FQBN the IDE compiles and uploads against. Board-selector wiring lands in Phase 8. */
 export const selectedFqbn = signal<string>("esp32:esp32:esp32s3");
 
