@@ -22,11 +22,20 @@ afterEach(() => {
 });
 
 describe("MenuBar", () => {
-  it("renders the five top-level menus", () => {
+  it("renders the six top-level menus", () => {
     render(<MenuBar />);
-    for (const name of ["File", "Edit", "Sketch", "View", "Help"]) {
+    for (const name of ["File", "Edit", "Sketch", "Tools", "View", "Help"]) {
       expect(screen.getByText(name)).toBeInTheDocument();
     }
+  });
+
+  it("opens the Tools menu and shows its items", () => {
+    render(<MenuBar />);
+    fireEvent.click(screen.getByText("Tools"));
+    expect(screen.getByText("Auto Format")).toBeInTheDocument();
+    expect(screen.getByText("Archive Sketch…")).toBeInTheDocument();
+    expect(screen.getByText("Serial Monitor")).toBeInTheDocument();
+    expect(screen.getByText("Get Board Info")).toBeInTheDocument();
   });
 
   it("opens a dropdown on click and shows its items", () => {

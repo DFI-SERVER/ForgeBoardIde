@@ -20,24 +20,28 @@ import {
   compileSketch,
   uploadSketch,
   toggleBottomPanel,
+  openSerialMonitor,
+  openLibraries,
 } from "./actions";
 import {
   editorFind,
   editorReplace,
   editorUndo,
   editorRedo,
+  editorAutoFormat,
 } from "./editor-actions";
 import { searchFocusRequest, type RailIcon } from "../state/appState";
 import { closeActiveTab, nextTab } from "./tabs";
 
 /** Shortcut grouping, in the order the reference modal lists them. */
-export type KeybindingCategory = "File" | "Sketch" | "Edit" | "View";
+export type KeybindingCategory = "File" | "Sketch" | "Edit" | "Tools" | "View";
 
 /** Display order for categories in the reference modal. */
 export const CATEGORY_ORDER: KeybindingCategory[] = [
   "File",
   "Sketch",
   "Edit",
+  "Tools",
   "View",
 ];
 
@@ -180,6 +184,32 @@ export const keybindings: Keybinding[] = [
     category: "Edit",
     scope: "global",
     run: findInProject,
+  },
+
+  /* --------------------------------------------------------- Tools --- */
+  {
+    id: "tools.autoFormat",
+    combo: "Ctrl+T",
+    label: "Auto Format",
+    category: "Tools",
+    scope: "global",
+    run: editorAutoFormat,
+  },
+  {
+    id: "tools.serialMonitor",
+    combo: "Ctrl+Shift+M",
+    label: "Serial Monitor",
+    category: "Tools",
+    scope: "global",
+    run: openSerialMonitor,
+  },
+  {
+    id: "tools.manageLibraries",
+    combo: "Ctrl+Shift+I",
+    label: "Manage Libraries",
+    category: "Tools",
+    scope: "global",
+    run: openLibraries,
   },
 
   /* ---------------------------------------------------------- View --- */

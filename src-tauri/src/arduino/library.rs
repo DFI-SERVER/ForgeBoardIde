@@ -93,20 +93,37 @@ fn parse_installed_item(v: &Value) -> Option<Library> {
     })
 }
 
-/// Search the Arduino library registry (`arduino-cli lib search`).
-/// Results are capped so a broad query cannot flood the UI.
-pub async fn search(app: &tauri::AppHandle, query: &str) -> Result<Vec<Library>, String> {
-    let out = cli::run_capture(app, &["lib", "search", query, "--format", "json"]).await?;
-    let v: Value = serde_json::from_str(&out).map_err(|e| e.to_string())?;
+/// Parse the `{ "libraries": [ ... ] }` payload of a `lib search` run into
+/// `Library` values. When `cap` is `Some(n)` only the first `n` entries are
+/// kept; `None` keeps every entry (used for the full-registry listing).
+fn parse_search_payload(out: &str, cap: Option<usize>) -> Result<Vec<Library>, String> {
+    let v: Value = serde_json::from_str(out).map_err(|e| e.to_string())?;
     let mut libs = Vec::new();
     if let Some(arr) = v.get("libraries").and_then(Value::as_array) {
-        for entry in arr.iter().take(80) {
+        let take = cap.unwrap_or(arr.len());
+        for entry in arr.iter().take(take) {
             if let Some(lib) = parse_search_entry(entry) {
                 libs.push(lib);
             }
         }
     }
     Ok(libs)
+}
+
+/// Search the Arduino library registry (`arduino-cli lib search`).
+/// Results are capped so a broad query cannot flood the UI.
+pub async fn search(app: &tauri::AppHandle, query: &str) -> Result<Vec<Library>, String> {
+    let out = cli::run_capture(app, &["lib", "search", query, "--format", "json"]).await?;
+    parse_search_payload(&out, Some(80))
+}
+
+/// Fetch the **entire** Arduino library registry — `arduino-cli lib search`
+/// with no query term returns the whole index (~9000+ entries). Unlike
+/// [`search`] there is no result cap: the frontend caches this once and does
+/// all subsequent filtering in memory, so the full set is needed up front.
+pub async fn list_all(app: &tauri::AppHandle) -> Result<Vec<Library>, String> {
+    let out = cli::run_capture(app, &["lib", "search", "--format", "json"]).await?;
+    parse_search_payload(&out, None)
 }
 
 /// Libraries installed locally (`arduino-cli lib list`).
@@ -187,4 +204,79 @@ pub async fn install_zip(app: &tauri::AppHandle, zip_path: &str) -> Result<i32, 
     )
     .await?;
     Ok(code)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// A trimmed-down `lib search` payload: two entries shaped like the real
+    /// arduino-cli output (top-level `name`, metadata nested under `latest`).
+    const SEARCH_JSON: &str = r#"{
+        "libraries": [
+            {
+                "name": "Adafruit NeoPixel",
+                "latest": {
+                    "author": "Adafruit",
+                    "version": "1.12.0",
+                    "sentence": "Arduino library for controlling NeoPixels.",
+                    "paragraph": "RGB and RGBW addressable LEDs.",
+                    "website": "https://github.com/adafruit/Adafruit_NeoPixel",
+                    "category": "Display"
+                }
+            },
+            {
+                "name": "Servo",
+                "latest": { "author": "Arduino", "version": "1.2.1", "sentence": "Control servo motors." }
+            }
+        ]
+    }"#;
+
+    #[test]
+    fn parses_a_search_payload_with_no_cap() {
+        let libs = parse_search_payload(SEARCH_JSON, None).unwrap();
+        assert_eq!(libs.len(), 2);
+        assert_eq!(libs[0].name, "Adafruit NeoPixel");
+        assert_eq!(libs[0].author.as_deref(), Some("Adafruit"));
+        assert_eq!(libs[0].latest_version.as_deref(), Some("1.12.0"));
+        assert_eq!(
+            libs[0].sentence.as_deref(),
+            Some("Arduino library for controlling NeoPixels.")
+        );
+        // Registry-only entries are never marked installed.
+        assert!(libs[0].installed_version.is_none());
+        assert!(!libs[0].update_available);
+        assert_eq!(libs[1].name, "Servo");
+    }
+
+    #[test]
+    fn cap_limits_the_number_of_entries_kept() {
+        let libs = parse_search_payload(SEARCH_JSON, Some(1)).unwrap();
+        assert_eq!(libs.len(), 1);
+        assert_eq!(libs[0].name, "Adafruit NeoPixel");
+    }
+
+    #[test]
+    fn cap_larger_than_the_payload_keeps_everything() {
+        let libs = parse_search_payload(SEARCH_JSON, Some(999)).unwrap();
+        assert_eq!(libs.len(), 2);
+    }
+
+    #[test]
+    fn missing_libraries_array_yields_an_empty_list() {
+        assert!(parse_search_payload("{}", None).unwrap().is_empty());
+    }
+
+    #[test]
+    fn entries_without_a_name_are_skipped() {
+        let json = r#"{ "libraries": [ { "latest": {} }, { "name": "" }, { "name": "Keep" } ] }"#;
+        let libs = parse_search_payload(json, None).unwrap();
+        assert_eq!(libs.len(), 1);
+        assert_eq!(libs[0].name, "Keep");
+    }
+
+    #[test]
+    fn invalid_json_is_an_error() {
+        assert!(parse_search_payload("not json", None).is_err());
+    }
 }

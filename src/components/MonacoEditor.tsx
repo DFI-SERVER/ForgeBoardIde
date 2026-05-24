@@ -1,7 +1,12 @@
 import { useEffect, useRef } from "preact/hooks";
 import { effect } from "@preact/signals";
 import * as monaco from "monaco-editor";
-import { initMonaco } from "../lib/monaco-setup";
+import {
+  initMonaco,
+  monacoThemeFor,
+  fontFamilyFor,
+  applyAppTheme,
+} from "../lib/monaco-setup";
 import {
   openTabs,
   activeTabIndex,
@@ -30,6 +35,16 @@ function editorOptionsFromSettings(): monaco.editor.IEditorOptions &
     wordWrap: s.wordWrap ? "on" : "off",
     minimap: { enabled: s.minimap },
     lineNumbers: s.lineNumbers ? "on" : "off",
+    bracketPairColorization: { enabled: s.bracketColorization },
+    stickyScroll: { enabled: s.stickyScroll },
+    guides: {
+      indentation: s.indentGuides,
+      highlightActiveIndentation: s.indentGuides,
+      bracketPairs: false,
+    },
+    theme: monacoThemeFor(s.theme),
+    fontFamily: fontFamilyFor(s.fontFamily),
+    fontLigatures: s.fontLigatures,
   };
 }
 
@@ -40,9 +55,32 @@ function editorOptionsFromSettings(): monaco.editor.IEditorOptions &
  */
 let activeEditor: monaco.editor.IStandaloneCodeEditor | null = null;
 
+/**
+ * Re-entrancy depth for programmatic edits applied by non-typing code paths —
+ * format-on-save, trim-on-save, future refactor operations. While non-zero the
+ * content-change listener skips its work, so a programmatic rewrite cannot
+ * accidentally mark a tab modified or re-arm the autosave timer right in the
+ * middle of saving it.
+ */
+let programmaticEditDepth = 0;
+
 /** The mounted Monaco editor instance, or null when no editor is mounted. */
 export function getActiveEditor(): monaco.editor.IStandaloneCodeEditor | null {
   return activeEditor;
+}
+
+/**
+ * Run `fn` with programmatic-edit suppression on. Any Monaco edits issued
+ * inside the callback will not trip the change listener's modified-flag
+ * bookkeeping. Re-entrant: nested calls stack correctly.
+ */
+export function withProgrammaticEdit<T>(fn: () => T): T {
+  programmaticEditDepth++;
+  try {
+    return fn();
+  } finally {
+    programmaticEditDepth--;
+  }
 }
 
 export function MonacoEditor() {
@@ -59,10 +97,7 @@ export function MonacoEditor() {
     const editor = monaco.editor.create(hostRef.current, {
       value: "",
       language: "arduino",
-      theme: "forgeboard",
-      fontFamily: "Consolas, 'Courier New', monospace",
       lineHeight: 24,
-      fontLigatures: false,
       scrollBeyondLastLine: false,
       renderLineHighlight: "line",
       smoothScrolling: true,
@@ -79,15 +114,18 @@ export function MonacoEditor() {
     activeEditor = editor;
 
     // Re-apply the editor preferences whenever Settings change. effect() runs
-    // the body once immediately (a harmless no-op — create() already seeded
-    // these) and again on every later change to the settings signal.
+    // the body once immediately (which also seeds the app-shell theme) and
+    // again on every later change to the settings signal.
     const stopSettingsSync = effect(() => {
+      const s = settings.value;
+      applyAppTheme(s.theme);
       editor.updateOptions(editorOptionsFromSettings());
     });
 
     // On content change, mark file as modified and stage save
     const disposable = editor.onDidChangeModelContent(() => {
       if (swapping.current) return; // ignore programmatic tab-swap edits
+      if (programmaticEditDepth > 0) return; // ignore on-save / refactor edits
       const tab = openTabs.value[activeTabIndex.value];
       if (!tab) return;
       const newContents = new Map(fileContents.value);

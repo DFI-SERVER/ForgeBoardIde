@@ -75,7 +75,7 @@
   cursor: pointer;
 }
 .palette-row:hover {
-  background: rgba(255, 255, 255, 0.045);
+  background: var(--accent-wash-hover);
 }
 /* The keyboard-highlighted row — wins over hover. */
 .palette-row.active,

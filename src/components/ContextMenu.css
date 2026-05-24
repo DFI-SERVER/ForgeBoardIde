@@ -27,7 +27,7 @@
   transition: background-color var(--dur-fast) var(--ease);
 }
 .context-menu-item:hover {
-  background: rgba(255, 255, 255, 0.045);
+  background: var(--accent-wash-hover);
 }
 .context-menu-item:disabled,
 .context-menu-item.disabled {

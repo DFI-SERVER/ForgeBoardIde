@@ -1,5 +1,6 @@
 pub mod cli;
 pub mod board;
+pub mod fqbn;
 pub mod core;
 pub mod library;
 pub mod examples;

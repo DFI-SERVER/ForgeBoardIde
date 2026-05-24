@@ -3,7 +3,10 @@
  * the action bar and a future command palette all call these — so behaviour
  * stays identical no matter how an action is triggered.
  */
-import { open as openNativeDialog } from "@tauri-apps/plugin-dialog";
+import {
+  open as openNativeDialog,
+  save as saveNativeDialog,
+} from "@tauri-apps/plugin-dialog";
 import * as monaco from "monaco-editor";
 import { projectApi } from "../ipc/project";
 import { arduinoApi } from "../ipc/arduino";
@@ -14,6 +17,7 @@ import { getActiveEditor } from "../components/MonacoEditor";
 import { parseDiagnostics, type Diagnostic } from "./diagnostics";
 import {
   currentSketch,
+  activeRail,
   connectedPort,
   selectedFqbn,
   buildPhase,
@@ -154,6 +158,33 @@ export async function openRecentSketch(path: string): Promise<void> {
   } catch (e) {
     toast.value = {
       text: `Couldn't open that sketch: ${errText(e)}`,
+      kind: "warn",
+    };
+  }
+}
+
+/**
+ * Archive the current sketch — zip its folder to a `.zip` the user chooses.
+ * A no-op (with a toast) when no sketch is open.
+ */
+export async function archiveSketch(): Promise<void> {
+  const sketch = currentSketch.value;
+  if (!sketch) {
+    toast.value = { text: "No sketch open to archive.", kind: "warn" };
+    return;
+  }
+  const dest = await saveNativeDialog({
+    title: "Archive sketch",
+    defaultPath: `${sketch.name}.zip`,
+    filters: [{ name: "Zip archive", extensions: ["zip"] }],
+  });
+  if (typeof dest !== "string") return;
+  try {
+    await projectApi.archiveSketch(sketch.path, dest);
+    toast.value = { text: `Sketch archived to ${dest}`, kind: "success" };
+  } catch (e) {
+    toast.value = {
+      text: `Couldn't archive the sketch: ${errText(e)}`,
       kind: "warn",
     };
   }
@@ -405,4 +436,26 @@ export function toggleBottomPanel() {
 export function showProblems() {
   bottomPanelOpen.value = true;
   bottomPanelTab.value = "problems";
+}
+
+/** Open the bottom panel on the Serial Monitor tab. */
+export function openSerialMonitor() {
+  bottomPanelOpen.value = true;
+  bottomPanelTab.value = "serial";
+}
+
+/** Open the bottom panel on the Serial Plotter tab. */
+export function openSerialPlotter() {
+  bottomPanelOpen.value = true;
+  bottomPanelTab.value = "plotter";
+}
+
+/** Switch the activity rail to the Libraries view. */
+export function openLibraries() {
+  activeRail.value = "libraries";
+}
+
+/** Switch the activity rail to the Boards view. */
+export function openBoardsManager() {
+  activeRail.value = "boards";
 }

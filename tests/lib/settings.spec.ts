@@ -46,6 +46,21 @@ describe("settings defaults", () => {
     expect(typeof DEFAULT_SETTINGS.wordWrap).toBe("boolean");
     expect(typeof DEFAULT_SETTINGS.minimap).toBe("boolean");
     expect(typeof DEFAULT_SETTINGS.lineNumbers).toBe("boolean");
+    expect(typeof DEFAULT_SETTINGS.bracketColorization).toBe("boolean");
+    expect(typeof DEFAULT_SETTINGS.stickyScroll).toBe("boolean");
+    expect(typeof DEFAULT_SETTINGS.indentGuides).toBe("boolean");
+    expect(typeof DEFAULT_SETTINGS.formatOnSave).toBe("boolean");
+    expect(typeof DEFAULT_SETTINGS.trimTrailingWhitespaceOnSave).toBe("boolean");
+    expect(["dark", "solarized-dark", "solarized-light"]).toContain(
+      DEFAULT_SETTINGS.theme,
+    );
+    expect([
+      "consolas",
+      "cascadia-code",
+      "fira-code",
+      "jetbrains-mono",
+    ]).toContain(DEFAULT_SETTINGS.fontFamily);
+    expect(typeof DEFAULT_SETTINGS.fontLigatures).toBe("boolean");
     expect(typeof DEFAULT_SETTINGS.verboseBuild).toBe("boolean");
   });
 
@@ -70,24 +85,22 @@ describe("settings persistence round-trip", () => {
   it("re-hydrates a stored object on the next module load", async () => {
     // First module instance: change some settings.
     const first = await freshImport();
-    first.updateSettings({
+    const patch = {
       fontSize: 20,
-      tabSize: 4,
+      tabSize: 4 as const,
       wordWrap: true,
       minimap: true,
       lineNumbers: false,
       verboseBuild: true,
-    });
+    };
+    first.updateSettings(patch);
 
-    // A fresh import reads what the first instance persisted.
+    // A fresh import reads what the first instance persisted. Fields the
+    // patch didn't touch must come back as their shipped defaults.
     const second = await freshImport();
     expect(second.settings.value).toEqual({
-      fontSize: 20,
-      tabSize: 4,
-      wordWrap: true,
-      minimap: true,
-      lineNumbers: false,
-      verboseBuild: true,
+      ...second.DEFAULT_SETTINGS,
+      ...patch,
     });
   });
 
@@ -214,6 +227,46 @@ describe("settings graceful fallback on corrupt data", () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ fontSize: 500 }));
     const { settings, FONT_SIZE_MAX } = await freshImport();
     expect(settings.value.fontSize).toBe(FONT_SIZE_MAX);
+  });
+
+  it("rejects an unknown theme string and falls back to the default", async () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ theme: "warm-cream" }));
+    const { settings, DEFAULT_SETTINGS } = await freshImport();
+    expect(settings.value.theme).toBe(DEFAULT_SETTINGS.theme);
+  });
+
+  it("accepts each of the three known themes", async () => {
+    for (const theme of ["dark", "solarized-dark", "solarized-light"] as const) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ theme }));
+      const { settings } = await freshImport();
+      expect(settings.value.theme).toBe(theme);
+    }
+  });
+
+  it("rejects an unknown fontFamily and falls back to the default", async () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ fontFamily: "comic-sans" }));
+    const { settings, DEFAULT_SETTINGS } = await freshImport();
+    expect(settings.value.fontFamily).toBe(DEFAULT_SETTINGS.fontFamily);
+  });
+
+  it("accepts each known fontFamily preset", async () => {
+    const families = [
+      "consolas",
+      "cascadia-code",
+      "fira-code",
+      "jetbrains-mono",
+    ] as const;
+    for (const fontFamily of families) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ fontFamily }));
+      const { settings } = await freshImport();
+      expect(settings.value.fontFamily).toBe(fontFamily);
+    }
+  });
+
+  it("rejects a non-boolean fontLigatures and falls back", async () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ fontLigatures: "yes" }));
+    const { settings, DEFAULT_SETTINGS } = await freshImport();
+    expect(settings.value.fontLigatures).toBe(DEFAULT_SETTINGS.fontLigatures);
   });
 
   it("survives localStorage.getItem throwing", async () => {

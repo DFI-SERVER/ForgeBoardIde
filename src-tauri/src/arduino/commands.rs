@@ -76,6 +76,15 @@ pub async fn arduino_lib_search(
     super::library::search(&app, &query).await
 }
 
+/// Fetch the entire Arduino library registry (no result cap). The frontend
+/// caches this once and filters it in memory.
+#[tauri::command]
+pub async fn arduino_lib_list_all(
+    app: tauri::AppHandle,
+) -> Result<Vec<super::library::Library>, String> {
+    super::library::list_all(&app).await
+}
+
 #[tauri::command]
 pub async fn arduino_lib_list_installed(
     app: tauri::AppHandle,

@@ -18,11 +18,14 @@ describe("TabBar", () => {
     expect(screen.getByText("b.h")).toBeInTheDocument();
   });
 
-  it("marks modified tabs with a filled dot", () => {
+  it("marks modified tabs with the .modified class so CSS swaps X for the dot", () => {
     render(<TabBar />);
     const tabs = screen.getAllByRole("button");
     const aTab = tabs.find((t) => t.textContent?.includes("a.ino"))!;
-    expect(aTab.querySelector(".modified")).toBeInTheDocument();
+    expect(aTab.classList.contains("modified")).toBe(true);
+    // The dot is always rendered (its visibility is controlled purely by CSS
+    // hover state) — assert the element exists inside the modified tab.
+    expect(aTab.querySelector(".tab-dot")).toBeInTheDocument();
   });
 
   it("changes active tab on click", () => {

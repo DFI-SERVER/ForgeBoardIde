@@ -11,7 +11,7 @@
   transition: background-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
 }
 .win-btn:hover {
-  background: rgba(255, 255, 255, 0.045);
+  background: var(--accent-wash-hover);
   color: var(--fg-default);
 }
 .win-btn:focus-visible {

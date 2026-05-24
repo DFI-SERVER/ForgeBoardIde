@@ -31,7 +31,7 @@
     color var(--dur-fast) var(--ease);
 }
 .sb-action:hover {
-  background: rgba(255, 255, 255, 0.045);
+  background: var(--accent-wash-hover);
   color: var(--fg-default);
 }
 .sb-action:focus-visible {
@@ -70,39 +70,103 @@
 }
 
 .sb-file {
+  position: relative;
   color: var(--fg-muted);
   height: var(--row-h);
-  padding: 0 var(--space-3) 0 var(--space-7);
+  padding: 0 var(--space-3) 0 var(--space-5);
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-3);
   font-size: var(--text-base);
   font-family: var(--font-ui);
   border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: background-color var(--dur-fast) var(--ease),
+  transition:
+    background-color var(--dur-fast) var(--ease),
     color var(--dur-fast) var(--ease);
 }
 .sb-file:hover {
-  background: rgba(255, 255, 255, 0.045);
+  background: var(--accent-wash-hover);
   color: var(--fg-default);
 }
 .sb-file.active {
   background: var(--accent-wash);
-  border-left: 2px solid var(--accent);
-  padding-left: calc(var(--space-7) - 2px);
   color: var(--fg-default);
+}
+.sb-file.active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  width: 2px;
+  height: 16px;
+  background: var(--accent);
+  border-radius: 0 1px 1px 0;
+  margin-left: -6px;
 }
 .sb-file:focus-visible {
   outline: none;
   box-shadow: 0 0 0 2px var(--accent-ring);
 }
-.sb-file-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.sb-mod {
-  display: flex;
+.sb-file-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sb-file-icon {
+  display: inline-flex;
   align-items: center;
-  color: var(--fg-muted);
+  color: var(--fg-subtle);
   flex-shrink: 0;
+  transition: color var(--dur-fast) var(--ease);
+}
+.sb-file-icon.main { color: var(--accent); }
+.sb-file:hover .sb-file-icon { color: var(--fg-muted); }
+.sb-file.active .sb-file-icon { color: var(--fg-default); }
+.sb-file.active .sb-file-icon.main { color: var(--accent); }
+
+/* Hover-revealed inline action buttons (rename, delete). Resting state
+   is invisible so the row reads as a clean file list. */
+.sb-file-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease);
+}
+.sb-file:hover .sb-file-actions,
+.sb-file:focus-within .sb-file-actions {
+  opacity: 1;
+}
+.sb-file-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--fg-subtle);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease);
+}
+.sb-file-action:hover {
+  background: var(--accent-wash);
+  color: var(--fg-default);
+}
+.sb-file-action.danger:hover {
+  background: var(--error-wash);
+  color: var(--error);
+}
+.sb-file-action:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--accent-ring);
 }
 .sb-add {
   color: var(--fg-subtle);

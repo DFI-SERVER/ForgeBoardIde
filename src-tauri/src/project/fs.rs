@@ -1,18 +1,98 @@
+use super::config;
 use super::model::{ProjectError, Sketch, SketchFile};
 use std::path::{Path, PathBuf};
 
-/// Default sketches directory: ~/Documents/ForgeBoard/sketches
-pub fn sketches_root() -> Result<PathBuf, ProjectError> {
-    let docs = dirs::document_dir()
-        .ok_or_else(|| ProjectError::Io("no Documents folder".into()))?;
-    Ok(docs.join("ForgeBoard").join("sketches"))
+/* ---------------------------------------------------- sketchbook root --- */
+
+/// Prove we can actually create and write a file inside `dir`.
+///
+/// `create_dir_all` can succeed on a directory that then rejects writes — a
+/// read-only mount, or a redirected location that is offline — so the
+/// sketchbook resolver write-probes for real rather than trusting existence.
+fn is_writable(dir: &Path) -> bool {
+    let probe = dir.join(format!(".forgeboard-write-test-{}", std::process::id()));
+    if std::fs::write(&probe, b"ok").is_err() {
+        return false;
+    }
+    let _ = std::fs::remove_file(&probe);
+    true
 }
 
-/// Ensure the sketches root exists; create if missing.
+/// Make `dir` exist and confirm it is writable; returns it on success.
+fn prepare_dir(dir: &Path) -> Option<PathBuf> {
+    std::fs::create_dir_all(dir).ok()?;
+    is_writable(dir).then(|| dir.to_path_buf())
+}
+
+/// The automatic sketchbook locations, most-preferred first.
+///
+/// Documents is the natural home — visible, where users look for their
+/// sketches. But it can be redirected to an offline OneDrive or a
+/// disconnected network drive, where folder creation fails; the home folder
+/// and finally the always-writable per-user app-data folder are fallbacks so
+/// the IDE keeps working regardless.
+fn default_candidates() -> Vec<PathBuf> {
+    [dirs::document_dir(), dirs::home_dir(), dirs::data_local_dir()]
+        .into_iter()
+        .flatten()
+        .map(|base| base.join("ForgeBoard").join("sketches"))
+        .collect()
+}
+
+/// Resolve the sketchbook folder — create it, and guarantee the result is a
+/// directory we can actually write into.
+///
+/// A user-set override is honoured first; if it is set but currently unusable
+/// (an unplugged drive, say) the resolver falls through to the automatic
+/// candidates rather than failing outright.
 pub fn ensure_sketches_root() -> Result<PathBuf, ProjectError> {
-    let root = sketches_root()?;
-    std::fs::create_dir_all(&root)?;
-    Ok(root)
+    if let Some(custom) = config::sketchbook_override() {
+        if let Some(ready) = prepare_dir(&custom) {
+            return Ok(ready);
+        }
+    }
+    for candidate in default_candidates() {
+        if let Some(ready) = prepare_dir(&candidate) {
+            return Ok(ready);
+        }
+    }
+    Err(ProjectError::Io(
+        "could not find a writable folder for the sketchbook".into(),
+    ))
+}
+
+/// Where sketches are stored — the user's choice (if any) and the folder
+/// actually in effect. Drives the Settings UI.
+#[derive(serde::Serialize)]
+pub struct SketchbookInfo {
+    /// The user's explicit choice, or `None` when using the automatic default.
+    pub custom: Option<PathBuf>,
+    /// The folder new sketches actually go into right now.
+    pub effective: PathBuf,
+}
+
+/// The current sketchbook configuration plus the effective root.
+pub fn sketchbook_info() -> Result<SketchbookInfo, ProjectError> {
+    Ok(SketchbookInfo {
+        custom: config::sketchbook_override(),
+        effective: ensure_sketches_root()?,
+    })
+}
+
+/// Point the sketchbook at `dir`, or restore the automatic default with
+/// `None`. A chosen folder must be writable; the new effective root is
+/// returned so the caller can show it.
+pub fn set_sketchbook(dir: Option<&Path>) -> Result<PathBuf, ProjectError> {
+    if let Some(d) = dir {
+        if prepare_dir(d).is_none() {
+            return Err(ProjectError::Io(format!(
+                "that folder can't be used for sketches: {}",
+                d.to_string_lossy()
+            )));
+        }
+    }
+    config::set_sketchbook_override(dir)?;
+    ensure_sketches_root()
 }
 
 /// Read a sketch folder into a Sketch struct.
@@ -265,6 +345,47 @@ mod tests {
         let d = std::env::temp_dir().join(format!("fb-ide-test-{}", rand::random::<u32>()));
         fs::create_dir_all(&d).unwrap();
         d
+    }
+
+    /* --- sketchbook root resolution ---------------------------------- */
+
+    #[test]
+    fn is_writable_true_for_a_real_directory() {
+        let dir = tmpdir();
+        assert!(is_writable(&dir));
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn prepare_dir_creates_missing_parents() {
+        let dir = tmpdir();
+        let nested = dir.join("a").join("b").join("sketches");
+        let ready = prepare_dir(&nested).expect("a nested dir should prepare");
+        assert_eq!(ready, nested);
+        assert!(nested.is_dir());
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn prepare_dir_rejects_a_path_blocked_by_a_file() {
+        let dir = tmpdir();
+        // A file sits where a directory component is expected.
+        let blocker = dir.join("blocker");
+        fs::write(&blocker, "i am a file").unwrap();
+        assert!(prepare_dir(&blocker.join("sketches")).is_none());
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn default_candidates_is_never_empty() {
+        assert!(!default_candidates().is_empty());
+    }
+
+    #[test]
+    fn ensure_sketches_root_yields_a_writable_directory() {
+        let root = ensure_sketches_root().expect("a sketchbook root must resolve");
+        assert!(root.is_dir());
+        assert!(is_writable(&root));
     }
 
     #[test]

@@ -15,7 +15,7 @@
   font-size: var(--text-sm);
   transition: background-color var(--dur-fast) var(--ease);
 }
-.cp-btn:hover { background: rgba(255, 255, 255, 0.045); }
+.cp-btn:hover { background: var(--accent-wash-hover); }
 .cp-btn:focus-visible {
   outline: none;
   box-shadow: 0 0 0 2px var(--accent-ring);
@@ -87,7 +87,7 @@
   font-family: var(--font-ui);
   transition: background-color var(--dur-fast) var(--ease);
 }
-.cp-item:hover { background: rgba(255, 255, 255, 0.045); }
+.cp-item:hover { background: var(--accent-wash-hover); }
 .cp-item.active { background: var(--accent-wash); }
 .cp-item-port {
   color: var(--fg-default);

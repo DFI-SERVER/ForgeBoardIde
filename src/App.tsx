@@ -9,6 +9,8 @@ import { Toast } from "./components/Toast";
 import { NewSketchDialog } from "./components/NewSketchDialog";
 import { CommandPalette } from "./components/CommandPalette";
 import { KeyboardShortcutsModal } from "./components/KeyboardShortcutsModal";
+import { ResizeHandle } from "./components/ResizeHandle";
+import { SIDEBAR } from "./lib/layout";
 
 export default function App() {
   return (
@@ -19,6 +21,16 @@ export default function App() {
         <LeftRail />
         <FileSidebar />
         <EditorArea />
+        {/* Splitter on the sidebar / editor seam. It lives here, not in
+            FileSidebar, so it can straddle the seam without the sidebar's
+            overflow clipping it. */}
+        <ResizeHandle
+          spec={SIDEBAR}
+          axis="x"
+          direction={1}
+          variant="resize-handle-sidebar"
+          label="Resize the sidebar"
+        />
       </div>
       <BottomPanel />
       <StatusBar />

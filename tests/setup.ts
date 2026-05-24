@@ -39,3 +39,17 @@ if (
     writable: true,
   });
 }
+
+// jsdom does not implement ResizeObserver; the virtualized library list
+// constructs one on mount to track its viewport height. A no-op stub lets
+// such size-aware components render in tests — the windowing maths itself
+// is unit-tested directly in src/lib/library-filter.test.ts.
+if (typeof globalThis.ResizeObserver === "undefined") {
+  class ResizeObserverStub {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  }
+  globalThis.ResizeObserver =
+    ResizeObserverStub as unknown as typeof ResizeObserver;
+}

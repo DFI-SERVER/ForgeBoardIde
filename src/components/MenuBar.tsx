@@ -11,6 +11,11 @@ import {
   compileSketch,
   uploadSketch,
   toggleBottomPanel,
+  archiveSketch,
+  openSerialMonitor,
+  openSerialPlotter,
+  openLibraries,
+  openBoardsManager,
 } from "../lib/actions";
 import {
   editorUndo,
@@ -20,10 +25,12 @@ import {
   editorPaste,
   editorFind,
   editorReplace,
+  editorAutoFormat,
 } from "../lib/editor-actions";
 import { comboFor, keybindingById } from "../lib/keybindings";
 import { keyboardShortcutsOpen, paletteOpen } from "../state/appState";
 import { AboutDialog } from "./HelpDialogs";
+import { BoardInfoDialog } from "./BoardInfoDialog";
 
 /** Open the command palette from the View menu. */
 function openCommandPalette() {
@@ -163,6 +170,8 @@ export function MenuBar() {
   // Whether the About modal is open. (Keyboard Shortcuts is a global,
   // signal-driven modal — opened by setting `keyboardShortcutsOpen`.)
   const [aboutOpen, setAboutOpen] = useState(false);
+  // Whether the Get Board Info modal is open.
+  const [boardInfoOpen, setBoardInfoOpen] = useState(false);
   const barRef = useRef<HTMLDivElement>(null);
   const buttonRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
@@ -214,6 +223,39 @@ export function MenuBar() {
           run: compileSketch,
         },
         { kind: "item", label: "Upload", shortcut: comboFor("sketch.upload"), run: uploadSketch },
+      ],
+    },
+    {
+      name: "Tools",
+      entries: [
+        {
+          kind: "item",
+          label: "Auto Format",
+          shortcut: comboFor("tools.autoFormat"),
+          run: editorAutoFormat,
+        },
+        { kind: "item", label: "Archive Sketch…", run: archiveSketch },
+        sep,
+        {
+          kind: "item",
+          label: "Manage Libraries",
+          shortcut: comboFor("tools.manageLibraries"),
+          run: openLibraries,
+        },
+        {
+          kind: "item",
+          label: "Serial Monitor",
+          shortcut: comboFor("tools.serialMonitor"),
+          run: openSerialMonitor,
+        },
+        { kind: "item", label: "Serial Plotter", run: openSerialPlotter },
+        { kind: "item", label: "Boards Manager", run: openBoardsManager },
+        sep,
+        {
+          kind: "item",
+          label: "Get Board Info",
+          run: () => setBoardInfoOpen(true),
+        },
       ],
     },
     {
@@ -321,6 +363,9 @@ export function MenuBar() {
       )}
 
       {aboutOpen && <AboutDialog onClose={() => setAboutOpen(false)} />}
+      {boardInfoOpen && (
+        <BoardInfoDialog onClose={() => setBoardInfoOpen(false)} />
+      )}
     </>
   );
 }

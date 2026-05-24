@@ -20,11 +20,11 @@
     color var(--dur-fast) var(--ease);
 }
 .menubar-button:hover {
-  background: rgba(255, 255, 255, 0.045);
+  background: var(--accent-wash-hover);
   color: var(--fg-default);
 }
 .menubar-button.open {
-  background: rgba(255, 255, 255, 0.045);
+  background: var(--accent-wash-hover);
   color: var(--fg-default);
 }
 
@@ -55,7 +55,7 @@
   transition: background-color var(--dur-fast) var(--ease);
 }
 .menu-item:hover {
-  background: rgba(255, 255, 255, 0.045);
+  background: var(--accent-wash-hover);
 }
 .menu-item:disabled,
 .menu-item.disabled {

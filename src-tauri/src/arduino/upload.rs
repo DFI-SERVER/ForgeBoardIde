@@ -1,4 +1,5 @@
 use super::cli;
+use super::fqbn::normalize_fqbn;
 use std::path::Path;
 
 /// Result of an arduino-cli compile-and-upload run.
@@ -23,8 +24,9 @@ pub async fn upload_sketch(
     verbose: bool,
 ) -> Result<UploadResult, String> {
     let sketch = sketch_path.to_string_lossy().into_owned();
+    let fqbn = normalize_fqbn(fqbn);
     let mut args: Vec<&str> = vec![
-        "compile", "--fqbn", fqbn, "--upload", "--port", port, "--no-color",
+        "compile", "--fqbn", fqbn.as_str(), "--upload", "--port", port, "--no-color",
     ];
     if verbose {
         args.push("-v");

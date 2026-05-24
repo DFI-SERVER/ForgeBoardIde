@@ -1,68 +1,18 @@
+/* ============================================================
+   ForgeBoard IDE — design tokens.
+   Layered surfaces, a 4px spacing scale, a 7-step type scale,
+   and three internally-cohesive themes:
+     - dark              — cool slate (default), monochrome industrial
+     - solarized-dark    — Ethan Schoonover Solarized Dark
+     - solarized-light   — Ethan Schoonover Solarized Light
+
+   Non-color tokens (spacing, type scale, fonts, layout, radii,
+   motion, elevation) live in :root because they are theme-
+   independent. Color tokens live in [data-theme=...] blocks
+   and swap at runtime via document.documentElement.dataset.theme.
+   ============================================================ */
+
 :root {
-  /* ============================================================
-     ForgeBoard IDE — design tokens.
-     Layered surfaces, a 4px spacing scale, a 7-step type scale,
-     and a restrained, monochrome colour system: a cool-slate dark
-     where colour appears only where it carries meaning -- code
-     syntax, diagnostics, and the hardware/connection state.
-     ============================================================ */
-
-  /* --- Surfaces — four steps; the editor is the lightest plane --- */
-  --surface-0: #0e0f13;   /* deepest — title bar, status bar, activity rail */
-  --surface-1: #14151b;   /* chrome — sidebar, bottom panel, tab strip */
-  --surface-2: #1e2029;   /* raised — dropdowns, modals, inputs, hover wells */
-  --surface-3: #262a35;   /* highest raised — input-on-modal, nested wells */
-  --editor-bg: #181a23;   /* the editor — lighter than chrome, advances */
-
-  /* --- Borders — used only between same-tone planes --- */
-  --border-strong: #343843;
-  --border:        #262a33;
-  --border-subtle: #1c1e25;
-
-  /* --- Foreground — a five-step ramp --- */
-  --fg-bright:   #f0f1f5;   /* reserved: active tab label, primary-button label */
-  --fg-default:  #c9ccd6;   /* body text, active nav, file names */
-  --fg-muted:    #8b909e;   /* secondary text, inactive tabs/nav */
-  --fg-subtle:   #61667a;   /* captions, section labels, placeholders, line numbers */
-  --fg-disabled: #45495a;   /* disabled controls */
-
-  /* --- Accent — monochrome: emphasis from brightness and fills,
-         not hue. A near-white for primary actions and active
-         markers; white-alpha washes for selection. --- */
-  --accent:            #e9eaef;
-  --accent-hover:      #f5f6f9;
-  --accent-press:      #cfd1da;
-  --accent-fg:         #15161c;                     /* dark text/icon on the near-white fill */
-  --accent-wash:       rgba(255, 255, 255, 0.085);  /* selected / active fill */
-  --accent-wash-hover: rgba(255, 255, 255, 0.045);  /* hover fill */
-  --accent-ring:       rgba(255, 255, 255, 0.42);   /* focus ring */
-
-  /* --- Mint — secondary accent: hardware / connection state only --- */
-  --sage:      #57cfa0;
-  --sage-fg:   #0c2018;
-  --sage-wash: rgba(87, 207, 160, 0.12);
-
-  /* --- Semantic — independent of the brand accent --- */
-  --info:         #5cb8f0;
-  --success:      #57cfa0;
-  --warning:      #e8b24a;
-  --error:        #f0625e;
-  --warning-wash: rgba(232, 178, 74, 0.13);
-  --error-wash:   rgba(240, 98, 94, 0.13);
-
-  /* --- Syntax (Monaco) — mirrors the editor theme in lib/monaco-setup.ts --- */
-  --code-keyword:  #ab9fe0;
-  --code-function: #86a9e0;
-  --code-string:   #9ec293;
-  --code-number:   #7fbdbf;
-  --code-comment:  #5e6478;
-  --code-type:     #66bccb;
-
-  /* --- Elevation — shadows on floating layers only --- */
-  --shadow-dropdown: 0 6px 20px rgba(0, 0, 0, 0.45);
-  --shadow-modal:    0 16px 48px rgba(0, 0, 0, 0.55);
-  --scrim:           rgba(6, 7, 10, 0.62);
-
   /* --- Spacing — 4px base --- */
   --space-0: 0;
   --space-1: 2px;
@@ -96,23 +46,193 @@
   --dur-fast: 80ms;
   --dur-base: 140ms;
 
-  /* --- Fonts --- */
+  /* --- Fonts — UI is fixed; the editor font is driven by Settings.
+         Defaults here are sane fallbacks before settings hydrate. --- */
   --font-ui:   "Segoe UI", system-ui, -apple-system, sans-serif;
   --font-mono: "Cascadia Code", "Cascadia Mono", "Consolas", "Courier New", monospace;
 
   /* --- Layout --- */
   --rail-w:        52px;
-  --sidebar-w:     256px;
+  --sidebar-w:     320px;
   --titlebar-h:    34px;
   --actionbar-h:   46px;
   --tabstrip-h:    36px;
   --statusbar-h:   28px;
   --bottompanel-h: 188px;
   --row-h:         24px;
+}
 
-  /* ============================================================
-     Backwards-compat aliases for any not-yet-migrated references.
-     ============================================================ */
+/* ============================================================
+   THEME: dark (default, the existing cool-slate industrial)
+   ============================================================ */
+:root,
+[data-theme="dark"] {
+  --surface-0: #0e0f13;
+  --surface-1: #14151b;
+  --surface-2: #1e2029;
+  --surface-3: #262a35;
+  --editor-bg: #181a23;
+
+  --border-strong: #343843;
+  --border:        #262a33;
+  --border-subtle: #1c1e25;
+
+  --fg-bright:   #f0f1f5;
+  --fg-default:  #c9ccd6;
+  --fg-muted:    #8b909e;
+  --fg-subtle:   #61667a;
+  --fg-disabled: #45495a;
+
+  --accent:            #e9eaef;
+  --accent-hover:      #f5f6f9;
+  --accent-press:      #cfd1da;
+  --accent-fg:         #15161c;
+  --accent-wash:       rgba(255, 255, 255, 0.085);
+  --accent-wash-hover: rgba(255, 255, 255, 0.045);
+  --accent-ring:       rgba(255, 255, 255, 0.42);
+
+  --sage:      #57cfa0;
+  --sage-fg:   #0c2018;
+  --sage-wash: rgba(87, 207, 160, 0.12);
+
+  --info:         #5cb8f0;
+  --success:      #57cfa0;
+  --warning:      #e8b24a;
+  --error:        #f0625e;
+  --warning-wash: rgba(232, 178, 74, 0.13);
+  --error-wash:   rgba(240, 98, 94, 0.13);
+
+  --code-keyword:  #ab9fe0;
+  --code-function: #86a9e0;
+  --code-string:   #9ec293;
+  --code-number:   #7fbdbf;
+  --code-comment:  #5e6478;
+  --code-type:     #66bccb;
+
+  --shadow-dropdown: 0 6px 20px rgba(0, 0, 0, 0.45);
+  --shadow-modal:    0 16px 48px rgba(0, 0, 0, 0.55);
+  --scrim:           rgba(6, 7, 10, 0.62);
+
+  --accent-gold-border: rgba(255, 255, 255, 0.18);
+}
+
+/* ============================================================
+   THEME: solarized-dark
+   Ethan Schoonover canonical palette. base03 bg, base0 fg,
+   blue accent. Warm-cool balance, designed for long sessions.
+   ============================================================ */
+[data-theme="solarized-dark"] {
+  /* Surfaces — anchored on base03; chrome a touch darker, editor a touch lighter */
+  --surface-0: #00212b;
+  --surface-1: #002b36;
+  --surface-2: #073642;
+  --surface-3: #0c4451;
+  --editor-bg: #002b36;
+
+  --border-strong: #2a5762;
+  --border:        #11414e;
+  --border-subtle: #073642;
+
+  --fg-bright:   #fdf6e3;   /* base3 */
+  --fg-default:  #93a1a1;   /* base1 */
+  --fg-muted:    #839496;   /* base0 */
+  --fg-subtle:   #657b83;   /* base00 */
+  --fg-disabled: #586e75;   /* base01 */
+
+  --accent:            #268bd2;   /* blue */
+  --accent-hover:      #4ea3df;
+  --accent-press:      #1e6ea8;
+  --accent-fg:         #002b36;
+  --accent-wash:       rgba(38, 139, 210, 0.16);
+  --accent-wash-hover: rgba(38, 139, 210, 0.08);
+  --accent-ring:       rgba(38, 139, 210, 0.55);
+
+  --sage:      #859900;   /* green */
+  --sage-fg:   #002b36;
+  --sage-wash: rgba(133, 153, 0, 0.13);
+
+  --info:         #268bd2;
+  --success:      #859900;
+  --warning:      #b58900;
+  --error:        #dc322f;
+  --warning-wash: rgba(181, 137, 0, 0.14);
+  --error-wash:   rgba(220, 50, 47, 0.14);
+
+  /* Solarized syntax — keywords green, function blue, string cyan, type yellow */
+  --code-keyword:  #859900;
+  --code-function: #268bd2;
+  --code-string:   #2aa198;
+  --code-number:   #d33682;
+  --code-comment:  #586e75;
+  --code-type:     #b58900;
+
+  --shadow-dropdown: 0 6px 20px rgba(0, 0, 0, 0.5);
+  --shadow-modal:    0 16px 48px rgba(0, 0, 0, 0.6);
+  --scrim:           rgba(0, 21, 28, 0.7);
+
+  --accent-gold-border: rgba(38, 139, 210, 0.25);
+}
+
+/* ============================================================
+   THEME: solarized-light
+   Ethan Schoonover. base3 paper, base00 ink, blue accent.
+   Warm cream, calm contrast, daylight readability.
+   ============================================================ */
+[data-theme="solarized-light"] {
+  --surface-0: #eee8d5;   /* base2 — chrome ahead of paper */
+  --surface-1: #f5efdb;   /* between base2 and base3 */
+  --surface-2: #fdf6e3;   /* base3 — paper */
+  --surface-3: #ffffff;
+  --editor-bg: #fdf6e3;
+
+  --border-strong: #c6c0a8;
+  --border:        #d8d2b8;
+  --border-subtle: #e6dfc7;
+
+  --fg-bright:   #002b36;   /* base03 — darkest ink */
+  --fg-default:  #586e75;   /* base01 */
+  --fg-muted:    #657b83;   /* base00 */
+  --fg-subtle:   #839496;   /* base0 */
+  --fg-disabled: #93a1a1;   /* base1 */
+
+  --accent:            #268bd2;
+  --accent-hover:      #1e6ea8;
+  --accent-press:      #155c8c;
+  --accent-fg:         #fdf6e3;
+  --accent-wash:       rgba(38, 139, 210, 0.13);
+  --accent-wash-hover: rgba(38, 139, 210, 0.06);
+  --accent-ring:       rgba(38, 139, 210, 0.45);
+
+  --sage:      #859900;
+  --sage-fg:   #fdf6e3;
+  --sage-wash: rgba(133, 153, 0, 0.1);
+
+  --info:         #268bd2;
+  --success:      #859900;
+  --warning:      #b58900;
+  --error:        #dc322f;
+  --warning-wash: rgba(181, 137, 0, 0.12);
+  --error-wash:   rgba(220, 50, 47, 0.12);
+
+  --code-keyword:  #859900;
+  --code-function: #268bd2;
+  --code-string:   #2aa198;
+  --code-number:   #d33682;
+  --code-comment:  #93a1a1;
+  --code-type:     #b58900;
+
+  --shadow-dropdown: 0 6px 20px rgba(101, 123, 131, 0.25);
+  --shadow-modal:    0 16px 48px rgba(101, 123, 131, 0.32);
+  --scrim:           rgba(101, 123, 131, 0.45);
+
+  --accent-gold-border: rgba(38, 139, 210, 0.3);
+}
+
+/* ============================================================
+   Backwards-compat aliases. Resolve against whichever theme is
+   active because they reference theme-scoped tokens above.
+   ============================================================ */
+:root {
   --bg:                 var(--editor-bg);
   --panel:              var(--surface-1);
   --panel-alt:          var(--surface-0);
@@ -122,7 +242,6 @@
   --text-dim:           var(--fg-subtle);
   --accent-gold:        var(--accent);
   --accent-gold-bg:     var(--accent-wash-hover);
-  --accent-gold-border: rgba(255, 255, 255, 0.18);
   --accent-sage:        var(--sage);
   --accent-sage-bg:     var(--sage-wash);
   --warn:               var(--warning);

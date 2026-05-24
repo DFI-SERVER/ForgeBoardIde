@@ -79,7 +79,7 @@
   transition: background-color var(--dur-fast) var(--ease);
 }
 .dlg-btn:hover {
-  background: rgba(255, 255, 255, 0.045);
+  background: var(--accent-wash-hover);
 }
 .dlg-btn:focus-visible {
   outline: none;

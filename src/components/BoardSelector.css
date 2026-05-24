@@ -13,7 +13,7 @@
   font-family: var(--font-ui);
   transition: background-color var(--dur-fast) var(--ease);
 }
-.bs-btn:hover { background: rgba(255, 255, 255, 0.045); }
+.bs-btn:hover { background: var(--accent-wash-hover); }
 .bs-btn:focus-visible {
   outline: none;
   box-shadow: 0 0 0 2px var(--accent-ring);
@@ -64,7 +64,7 @@
   background: transparent;
   transition: background-color var(--dur-fast) var(--ease);
 }
-.bs-item:hover { background: rgba(255, 255, 255, 0.045); }
+.bs-item:hover { background: var(--accent-wash-hover); }
 .bs-item.active { background: var(--accent-wash); }
 .bs-item-name { color: var(--fg-default); font-size: var(--text-sm); font-weight: var(--weight-semibold); }
 .bs-item-fqbn {

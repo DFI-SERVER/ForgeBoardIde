@@ -1,3 +1,13 @@
+/* ============================================================
+   TabBar — minimal VS Code-style pills.
+
+   Active tab carries a 2px accent stripe at the top and a tone
+   brighter than the strip. Inactive tabs dim into the chrome.
+   The trailing slot toggles between an unsaved-dot (default
+   when modified, no hover) and a close X (otherwise) — they
+   share the same fixed-width corner so the layout doesn't shift.
+   ============================================================ */
+
 .tabbar {
   display: flex;
   align-items: stretch;
@@ -7,18 +17,22 @@
   font-family: var(--font-ui);
   overflow-x: auto;
 }
+
 .tab {
   display: flex;
   align-items: center;
-  gap: var(--space-4);
-  padding: 0 var(--space-5);
+  gap: var(--space-3);
+  padding: 0 var(--space-4) 0 var(--space-5);
   color: var(--fg-muted);
   background: transparent;
+  border: none;
   border-right: 1px solid var(--border-subtle);
   border-top: 2px solid transparent;
   cursor: pointer;
   white-space: nowrap;
-  transition: background-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+  transition:
+    background-color var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease);
 }
 .tab.active {
   background: var(--editor-bg);
@@ -27,31 +41,83 @@
 }
 .tab:hover:not(.active) {
   color: var(--fg-default);
-  background: rgba(255, 255, 255, 0.045);
+  background: var(--accent-wash-hover);
 }
 .tab:focus-visible {
-  box-shadow: 0 0 0 2px var(--accent-ring);
+  outline: none;
+  box-shadow: inset 0 0 0 1px var(--accent-ring);
 }
-.tab-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
+
+.tab-icon {
+  display: inline-flex;
+  align-items: center;
+  color: var(--fg-subtle);
   flex: none;
+  transition: color var(--dur-fast) var(--ease);
 }
-.tab-dot.modified { background: var(--accent); }
-.tab-dot.saved { background: var(--border); }
-.tab-name { font-size: var(--text-sm); }
+.tab.active .tab-icon { color: var(--fg-muted); }
+
+.tab-name {
+  font-size: var(--text-sm);
+  letter-spacing: 0.01em;
+}
+
+/* Trailing slot — fixed width so the row never reflows when the
+   dot/X swap happens on hover. */
+.tab-trailing {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.tab-dot,
 .tab-x {
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--fg-subtle);
-  padding: var(--space-1);
-  border-radius: var(--radius-sm);
-  line-height: 1;
-  transition: background-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+  transition: opacity var(--dur-fast) var(--ease);
 }
+
+/* Modified-dot: visible only when the tab is modified AND the tab itself
+   is not being hovered. The dot uses the foreground tone (not accent) so
+   modified-but-inactive tabs read as "something here" without shouting. */
+.tab-dot {
+  opacity: 0;
+  pointer-events: none;
+}
+.tab-dot::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--fg-muted);
+}
+.tab.active .tab-dot::before { background: var(--fg-bright); }
+.tab.modified .tab-dot { opacity: 1; }
+.tab.modified:hover .tab-dot { opacity: 0; }
+
+/* Close X: hidden by default, revealed on hover or while the tab is
+   active. When the tab is modified the dot wins until hover. */
+.tab-x {
+  color: var(--fg-subtle);
+  opacity: 0;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition:
+    opacity var(--dur-fast) var(--ease),
+    background-color var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease);
+}
+.tab:hover .tab-x,
+.tab.active .tab-x { opacity: 1; }
+.tab.modified:not(:hover) .tab-x { opacity: 0; }
+.tab.modified.active:not(:hover) .tab-x { opacity: 0; }
 .tab-x:hover {
-  background: rgba(255, 255, 255, 0.045);
+  background: var(--accent-wash);
   color: var(--fg-default);
 }

@@ -15,6 +15,12 @@ export interface RecentProject {
   path: string;
   last_opened: number;
 }
+export interface SketchbookInfo {
+  /** The user's explicit folder choice, or null when using the default. */
+  custom: string | null;
+  /** Where new sketches and opened examples actually go right now. */
+  effective: string;
+}
 
 export const projectApi = {
   sketchesRoot: () => invoke<string>("project_sketches_root"),
@@ -36,4 +42,13 @@ export const projectApi = {
   /** Create a new folder in `dir`; resolves to its absolute path. */
   createFolder: (dir: string, name: string) =>
     invoke<string>("project_create_folder", { dir, name }),
+  /** The sketchbook location — the user's choice (if any) and the effective root. */
+  sketchbookGet: () => invoke<SketchbookInfo>("project_sketchbook_get"),
+  /** Set the sketchbook folder, or pass null to restore the default;
+   *  resolves to the new effective root. */
+  sketchbookSet: (path: string | null) =>
+    invoke<string>("project_sketchbook_set", { path }),
+  /** Zip a sketch folder to `dest` (a .zip path the user picked). */
+  archiveSketch: (sketchDir: string, dest: string) =>
+    invoke<void>("project_archive_sketch", { sketchDir, dest }),
 };

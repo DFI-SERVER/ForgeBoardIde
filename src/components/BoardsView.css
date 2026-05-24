@@ -46,7 +46,7 @@
   border-radius: var(--radius-sm);
   transition: background-color var(--dur-fast) var(--ease);
 }
-.bv-row:hover { background: rgba(255, 255, 255, 0.045); }
+.bv-row:hover { background: var(--accent-wash-hover); }
 .bv-row-connected {
   background: var(--sage-wash);
   border-left: 2px solid var(--sage);
@@ -76,7 +76,7 @@
   border-radius: var(--radius-sm);
   transition: background-color var(--dur-fast) var(--ease);
 }
-.bv-row-action:hover { background: rgba(255, 255, 255, 0.045); }
+.bv-row-action:hover { background: var(--accent-wash-hover); }
 .bv-row-action:focus-visible { box-shadow: 0 0 0 2px var(--accent-ring); }
 
 .bv-row-install {
@@ -89,7 +89,7 @@
   flex-shrink: 0;
   transition: background-color var(--dur-fast) var(--ease);
 }
-.bv-row-install:hover:not(:disabled) { background: rgba(255, 255, 255, 0.045); }
+.bv-row-install:hover:not(:disabled) { background: var(--accent-wash-hover); }
 .bv-row-install:focus-visible { box-shadow: 0 0 0 2px var(--accent-ring); }
 .bv-row-install:disabled {
   color: var(--fg-disabled);

@@ -24,7 +24,7 @@
   font-weight: var(--weight-semibold);
   transition: background-color var(--dur-fast) var(--ease);
 }
-.sm-btn:hover { background: rgba(255, 255, 255, 0.045); }
+.sm-btn:hover { background: var(--accent-wash-hover); }
 .sm-btn:focus-visible { box-shadow: 0 0 0 2px var(--accent-ring); }
 .sm-btn.connected { border-color: var(--sage); color: var(--sage); }
 
@@ -47,7 +47,7 @@
   border-radius: var(--radius-sm);
   transition: background-color var(--dur-fast) var(--ease);
 }
-.sm-btn-ghost:hover { background: rgba(255, 255, 255, 0.045); }
+.sm-btn-ghost:hover { background: var(--accent-wash-hover); }
 .sm-btn-ghost:focus-visible { box-shadow: 0 0 0 2px var(--accent-ring); }
 .sm-select {
   background: var(--surface-2);

@@ -28,7 +28,7 @@
     color var(--dur-fast) var(--ease);
 }
 .rail-item:hover {
-  background: rgba(255, 255, 255, 0.045);
+  background: var(--accent-wash-hover);
   color: var(--fg-default);
 }
 .rail-item.active {

@@ -33,7 +33,7 @@
   background: transparent;
 }
 .btn-ghost:hover {
-  background: rgba(255, 255, 255, 0.045);
+  background: var(--accent-wash-hover);
 }
 .btn-primary {
   background: var(--accent);

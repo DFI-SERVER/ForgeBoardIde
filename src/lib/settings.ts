@@ -16,6 +16,18 @@ import { signal } from "@preact/signals";
 /** Tab width, in spaces. The editor only offers these two. */
 export type TabSize = 2 | 4;
 
+/** The three internally-cohesive theme identities the IDE ships. */
+export type Theme = "dark" | "solarized-dark" | "solarized-light";
+
+/** The editor font family options — keys map to a CSS font-family stack in
+ *  monaco-setup.ts. The chosen face MUST already be installed on the user's
+ *  system; we don't ship web fonts (the IDE is offline-friendly). */
+export type FontFamily =
+  | "consolas"
+  | "cascadia-code"
+  | "fira-code"
+  | "jetbrains-mono";
+
 /** Every user-tunable preference, in one flat, serialisable object. */
 export interface Settings {
   /** Editor font size in CSS pixels. Clamped to [FONT_SIZE_MIN, FONT_SIZE_MAX]. */
@@ -28,6 +40,25 @@ export interface Settings {
   minimap: boolean;
   /** Show the line-number gutter. */
   lineNumbers: boolean;
+  /** Tint matching bracket pairs so nested scopes are easy to scan. */
+  bracketColorization: boolean;
+  /** Pin the enclosing function / scope header at the top of the editor. */
+  stickyScroll: boolean;
+  /** Render vertical indentation guides in the gutter. */
+  indentGuides: boolean;
+  /** Run Auto Format over each modified file on save. */
+  formatOnSave: boolean;
+  /** Strip trailing spaces and tabs from every line on save. */
+  trimTrailingWhitespaceOnSave: boolean;
+  /** Active theme — drives both the app shell tokens (via data-theme) and
+   *  the Monaco editor theme. */
+  theme: Theme;
+  /** Editor font face. */
+  fontFamily: FontFamily;
+  /** Enable programming ligatures (e.g. `!=` → ≠) in the editor. Only
+   *  visible with fonts that ship contextual ligature OpenType features
+   *  (Fira Code, JetBrains Mono, Cascadia Code — not Consolas). */
+  fontLigatures: boolean;
   /** Pass `-v` to arduino-cli so the Output panel shows the full build log. */
   verboseBuild: boolean;
 }
@@ -36,6 +67,17 @@ export interface Settings {
 export const FONT_SIZE_MIN = 10;
 export const FONT_SIZE_MAX = 22;
 
+/** The valid Theme values, kept as a tuple so coerce can validate strings. */
+const THEMES: readonly Theme[] = ["dark", "solarized-dark", "solarized-light"];
+
+/** The valid FontFamily values, used by coerce to validate stored strings. */
+const FONT_FAMILIES: readonly FontFamily[] = [
+  "consolas",
+  "cascadia-code",
+  "fira-code",
+  "jetbrains-mono",
+];
+
 /** The shipped defaults — also the fallback for any corrupt/missing field. */
 export const DEFAULT_SETTINGS: Settings = {
   fontSize: 15,
@@ -43,6 +85,14 @@ export const DEFAULT_SETTINGS: Settings = {
   wordWrap: false,
   minimap: false,
   lineNumbers: true,
+  bracketColorization: true,
+  stickyScroll: true,
+  indentGuides: true,
+  formatOnSave: false,
+  trimTrailingWhitespaceOnSave: false,
+  theme: "dark",
+  fontFamily: "cascadia-code",
+  fontLigatures: false,
   verboseBuild: false,
 };
 
@@ -71,6 +121,21 @@ function coerce(raw: unknown): Settings {
     wordWrap: bool(o.wordWrap, DEFAULT_SETTINGS.wordWrap),
     minimap: bool(o.minimap, DEFAULT_SETTINGS.minimap),
     lineNumbers: bool(o.lineNumbers, DEFAULT_SETTINGS.lineNumbers),
+    bracketColorization: bool(o.bracketColorization, DEFAULT_SETTINGS.bracketColorization),
+    stickyScroll: bool(o.stickyScroll, DEFAULT_SETTINGS.stickyScroll),
+    indentGuides: bool(o.indentGuides, DEFAULT_SETTINGS.indentGuides),
+    formatOnSave: bool(o.formatOnSave, DEFAULT_SETTINGS.formatOnSave),
+    trimTrailingWhitespaceOnSave: bool(
+      o.trimTrailingWhitespaceOnSave,
+      DEFAULT_SETTINGS.trimTrailingWhitespaceOnSave,
+    ),
+    theme: THEMES.includes(o.theme as Theme)
+      ? (o.theme as Theme)
+      : DEFAULT_SETTINGS.theme,
+    fontFamily: FONT_FAMILIES.includes(o.fontFamily as FontFamily)
+      ? (o.fontFamily as FontFamily)
+      : DEFAULT_SETTINGS.fontFamily,
+    fontLigatures: bool(o.fontLigatures, DEFAULT_SETTINGS.fontLigatures),
     verboseBuild: bool(o.verboseBuild, DEFAULT_SETTINGS.verboseBuild),
   };
 }

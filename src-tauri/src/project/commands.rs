@@ -1,4 +1,4 @@
-use super::{fs, model::*, recent};
+use super::{archive, fs, model::*, recent};
 use std::path::PathBuf;
 
 #[tauri::command]
@@ -58,4 +58,26 @@ pub fn project_create_file(dir: PathBuf, name: String) -> Result<PathBuf, Projec
 #[tauri::command]
 pub fn project_create_folder(dir: PathBuf, name: String) -> Result<PathBuf, ProjectError> {
     fs::create_folder(&dir, &name)
+}
+
+/// Where sketches are stored: the user's choice (if any) and the effective root.
+#[tauri::command]
+pub fn project_sketchbook_get() -> Result<fs::SketchbookInfo, ProjectError> {
+    fs::sketchbook_info()
+}
+
+/// Set the sketchbook folder, or restore the default with `null`. Returns the
+/// new effective root.
+#[tauri::command]
+pub fn project_sketchbook_set(path: Option<PathBuf>) -> Result<PathBuf, ProjectError> {
+    fs::set_sketchbook(path.as_deref())
+}
+
+/// Archive a sketch folder into a `.zip` at `dest`.
+#[tauri::command]
+pub fn project_archive_sketch(
+    sketch_dir: PathBuf,
+    dest: PathBuf,
+) -> Result<(), ProjectError> {
+    archive::archive_sketch(&sketch_dir, &dest)
 }

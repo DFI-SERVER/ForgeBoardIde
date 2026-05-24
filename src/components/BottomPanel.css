@@ -4,6 +4,8 @@
   height: var(--bottompanel-h);
   display: flex;
   flex-direction: column;
+  /* Positioning context for the resize handle on the top edge. */
+  position: relative;
 }
 .bp-collapsed {
   background: var(--surface-1);
@@ -25,36 +27,63 @@
   border-radius: var(--radius-sm);
   transition: background-color var(--dur-fast) var(--ease);
 }
-.bp-expand:hover { background: rgba(255, 255, 255, 0.045); }
+.bp-expand:hover { background: var(--accent-wash-hover); }
 .bp-expand:focus-visible { box-shadow: 0 0 0 2px var(--accent-ring); }
 
 .bp-tabs {
   display: flex;
-  padding: 0 var(--space-6);
-  gap: var(--space-2);
-  align-items: center;
+  padding: 0 var(--space-5);
+  gap: 0;
+  align-items: stretch;
   font-family: var(--font-ui);
   font-size: var(--text-sm);
+  border-bottom: 1px solid var(--border-subtle);
+  min-height: 30px;
 }
 .bp-tab {
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  color: var(--fg-muted);
-  padding: var(--space-3) var(--space-4);
-  border-bottom: 2px solid transparent;
+  color: var(--fg-subtle);
+  background: transparent;
+  border: none;
+  padding: 0 var(--space-4);
   font-weight: var(--weight-medium);
-  font-size: var(--text-sm);
-  transition: background-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+  font-size: var(--text-xs);
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition:
+    color var(--dur-fast) var(--ease),
+    background-color var(--dur-fast) var(--ease);
+}
+.bp-tab::after {
+  /* Active-tab indicator — a thin accent line at the bottom edge.
+     A pseudo-element (not a border) keeps the tab's height stable. */
+  content: "";
+  position: absolute;
+  left: var(--space-3);
+  right: var(--space-3);
+  bottom: -1px;
+  height: 2px;
+  background: transparent;
+  border-radius: 2px 2px 0 0;
+  transition: background-color var(--dur-base) var(--ease);
 }
 .bp-tab.active {
-  color: var(--fg-default);
-  border-bottom-color: var(--accent);
-  font-weight: var(--weight-semibold);
+  color: var(--fg-bright);
 }
-.bp-tab:hover { background: rgba(255, 255, 255, 0.045); }
-.bp-tab:focus-visible { box-shadow: 0 0 0 2px var(--accent-ring); }
-.bp-tab-badge { color: var(--fg-subtle); font-size: var(--text-xs); }
+.bp-tab.active::after { background: var(--accent); }
+.bp-tab:hover:not(.active) { color: var(--fg-default); }
+.bp-tab:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 1px var(--accent-ring);
+}
+.bp-tab-badge {
+  color: var(--fg-subtle);
+  font-size: var(--text-2xs);
+  font-family: var(--font-mono);
+}
 
 .bp-spacer { flex: 1; }
 .bp-action {
@@ -65,7 +94,7 @@
   border-radius: var(--radius-sm);
   transition: background-color var(--dur-fast) var(--ease);
 }
-.bp-action:hover { background: rgba(255, 255, 255, 0.045); }
+.bp-action:hover { background: var(--accent-wash-hover); }
 .bp-action:focus-visible { box-shadow: 0 0 0 2px var(--accent-ring); }
 
 .bp-body { flex: 1; overflow: hidden; padding: var(--space-5) var(--space-6); }

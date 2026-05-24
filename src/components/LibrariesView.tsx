@@ -1,49 +1,77 @@
-import { useEffect, useRef, useState } from "preact/hooks";
+import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import {
   Search,
   Download,
   Trash2,
-  Package,
   FileArchive,
   LoaderCircle,
   RefreshCw,
+  WifiOff,
 } from "lucide-preact";
 import { open as openNativeDialog } from "@tauri-apps/plugin-dialog";
 import { arduinoApi, type Library } from "../ipc/arduino";
 import {
   installedLibraries,
   librarySearchQuery,
+  libraryRegistry,
+  libraryRegistryStatus,
   librarySearchResults,
   librarySearchPending,
+  libraryFilterMode,
   libraryInstalling,
   libraryInstallProgress,
   toast,
 } from "../state/appState";
+import { filterLibraries, computeWindow } from "../lib/library-filter";
 import "./LibrariesView.css";
 
-/** Debounce window for the registry search, in milliseconds. */
-const SEARCH_DEBOUNCE_MS = 350;
+/**
+ * Debounce window for the search box, in milliseconds. Filtering is now an
+ * in-memory pass over the cached registry, so this only exists to avoid
+ * re-deriving the (large) filtered list on literally every keystroke — it is
+ * deliberately short.
+ */
+const SEARCH_DEBOUNCE_MS = 90;
+
+/**
+ * Debounce window for the offline-fallback registry search. When the full
+ * registry could not be fetched we fall back to per-query backend searches,
+ * which are real round-trips and want a longer settle time.
+ */
+const FALLBACK_SEARCH_DEBOUNCE_MS = 350;
+
+/** Fixed height of one virtualized registry row, in pixels — must match `.lv-row` in CSS. */
+const ROW_HEIGHT = 100;
+
+/** Rows mounted beyond each edge of the viewport, so fast scrolls don't flash blank. */
+const OVERSCAN = 8;
 
 export function LibrariesView() {
-  // Local mirror of the debounced query — the signal holds the raw keystrokes.
+  // Local mirror of the debounced query — the signal holds raw keystrokes.
   const [debounced, setDebounced] = useState("");
-  // Monotonic token so a slow search response cannot overwrite a newer one.
+  // Monotonic token so a slow fallback search cannot overwrite a newer one.
   const searchSeq = useRef(0);
 
-  // Load the installed set once on mount.
+  // --- Load the installed set + the full registry once on mount. ---
   useEffect(() => {
     void refreshInstalled();
+    void loadRegistry();
   }, []);
 
-  // Debounce keystrokes in the search box.
+  // Debounce keystrokes in the search box. The window is short when filtering
+  // locally, longer when we've fallen back to per-query backend searches.
   useEffect(() => {
     const q = librarySearchQuery.value;
-    const t = setTimeout(() => setDebounced(q.trim()), SEARCH_DEBOUNCE_MS);
+    const offline = libraryRegistryStatus.value === "error";
+    const wait = offline ? FALLBACK_SEARCH_DEBOUNCE_MS : SEARCH_DEBOUNCE_MS;
+    const t = setTimeout(() => setDebounced(q.trim()), wait);
     return () => clearTimeout(t);
-  }, [librarySearchQuery.value]);
+  }, [librarySearchQuery.value, libraryRegistryStatus.value]);
 
-  // Run a registry search whenever the debounced query settles.
+  // Offline fallback: when the registry failed to load, the debounced query
+  // drives a real backend search (the old search-only behaviour).
   useEffect(() => {
+    if (libraryRegistryStatus.value !== "error") return;
     if (!debounced) {
       librarySearchResults.value = [];
       librarySearchPending.value = false;
@@ -65,13 +93,28 @@ export function LibrariesView() {
       .finally(() => {
         if (seq === searchSeq.current) librarySearchPending.value = false;
       });
-  }, [debounced]);
+  }, [debounced, libraryRegistryStatus.value]);
 
   async function refreshInstalled() {
     try {
       installedLibraries.value = await arduinoApi.libListInstalled();
     } catch (e) {
       console.error("LibrariesView: list installed failed:", e);
+    }
+  }
+
+  /** Fetch the entire registry once and cache it. Failure is non-fatal —
+   *  the view falls back to per-query backend searches. */
+  async function loadRegistry() {
+    if (libraryRegistryStatus.value === "loading") return;
+    libraryRegistryStatus.value = "loading";
+    try {
+      libraryRegistry.value = await arduinoApi.libListAll();
+      libraryRegistryStatus.value = "ready";
+    } catch (e) {
+      console.error("LibrariesView: registry load failed:", e);
+      libraryRegistry.value = null;
+      libraryRegistryStatus.value = "error";
     }
   }
 
@@ -147,11 +190,31 @@ export function LibrariesView() {
     await runOp(zipName, "Installing", () => arduinoApi.libInstallZip(picked as string));
   }
 
-  const results = librarySearchResults.value;
   const installed = installedLibraries.value;
-  const installedNames = new Set(installed.map((l) => l.name.toLowerCase()));
+  const installedNames = useMemo(
+    () => new Set(installed.map((l) => l.name.toLowerCase())),
+    [installed],
+  );
   const busy = libraryInstalling.value;
   const updatableCount = installed.filter((l) => l.update_available).length;
+  const status = libraryRegistryStatus.value;
+  const registry = libraryRegistry.value;
+  const mode = libraryFilterMode.value;
+  const offline = status === "error";
+
+  // The list shown when browsing "All" — the cached registry filtered in
+  // memory. Recomputed only when the registry or the debounced query changes.
+  const filteredRegistry = useMemo(
+    () => (registry ? filterLibraries(registry, debounced) : []),
+    [registry, debounced],
+  );
+
+  // The list shown when browsing "Installed" — the installed set, filtered in
+  // memory by the same query.
+  const filteredInstalled = useMemo(
+    () => filterLibraries(installed, debounced),
+    [installed, debounced],
+  );
 
   return (
     <div class="lv">
@@ -164,74 +227,102 @@ export function LibrariesView() {
       </div>
 
       <div class="lv-search">
-        <Search class="lv-search-icon" size={14} strokeWidth={1.5} />
-        <input
-          class="lv-search-input"
-          type="text"
-          placeholder="Search the Arduino library registry…"
-          value={librarySearchQuery.value}
-          onInput={(e) => {
-            librarySearchQuery.value = (e.target as HTMLInputElement).value;
-          }}
-          spellcheck={false}
-        />
-        {librarySearchPending.value && (
-          <LoaderCircle class="lv-spin" size={14} strokeWidth={1.75} />
-        )}
+        <div class="lv-search-field">
+          <Search class="lv-search-icon" size={15} strokeWidth={1.75} />
+          <input
+            class="lv-search-input"
+            type="text"
+            placeholder={
+              offline
+                ? "Search the Arduino library registry…"
+                : "Filter the Arduino library registry…"
+            }
+            value={librarySearchQuery.value}
+            onInput={(e) => {
+              librarySearchQuery.value = (e.target as HTMLInputElement).value;
+            }}
+            spellcheck={false}
+            autocomplete="off"
+          />
+          {(librarySearchPending.value || status === "loading") && (
+            <LoaderCircle
+              class="lv-spin lv-search-spin"
+              size={14}
+              strokeWidth={1.75}
+            />
+          )}
+        </div>
         <button
           class="lv-zip-btn"
           title="Install a library from a local .zip archive"
           disabled={!!busy}
           onClick={() => void installFromZip()}
         >
-          <FileArchive size={13} strokeWidth={1.5} />
-          <span>Install from ZIP…</span>
+          <FileArchive size={15} strokeWidth={1.5} />
         </button>
       </div>
 
-      <div class="lv-body">
-        {debounced && (
-          <>
-            <div class="lv-section-label">
-              Search results{results.length > 0 ? ` · ${results.length}` : ""}
-            </div>
-            {librarySearchPending.value && results.length === 0 ? (
-              <div class="lv-empty">Searching the registry…</div>
-            ) : results.length === 0 ? (
-              <div class="lv-empty">No libraries match “{debounced}”.</div>
-            ) : (
-              results.map((lib) => {
-                const installedHere = installedNames.has(lib.name.toLowerCase());
-                return (
-                  <LibraryRow
-                    key={`r-${lib.name}`}
-                    lib={lib}
-                    installed={installedHere}
-                    busy={busy}
-                    onInstall={() => void install(lib)}
-                  />
-                );
-              })
-            )}
-          </>
-        )}
+      {/* All / Installed scope toggle — hidden in the offline fallback,
+          where there is no cached registry to browse. */}
+      {!offline && (
+        <div class="lv-tabs" role="tablist">
+          <button
+            class={`lv-tab ${mode === "all" ? "active" : ""}`}
+            role="tab"
+            aria-selected={mode === "all"}
+            onClick={() => {
+              libraryFilterMode.value = "all";
+            }}
+          >
+            All
+            {registry && <span class="lv-tab-count">{registry.length}</span>}
+          </button>
+          <button
+            class={`lv-tab ${mode === "installed" ? "active" : ""}`}
+            role="tab"
+            aria-selected={mode === "installed"}
+            onClick={() => {
+              libraryFilterMode.value = "installed";
+            }}
+          >
+            Installed
+            <span class="lv-tab-count">{installed.length}</span>
+          </button>
+        </div>
+      )}
 
-        <div class="lv-section-label">Installed · {installed.length}</div>
-        {installed.length === 0 ? (
-          <div class="lv-empty">
-            No libraries installed. Search above to add one from the registry.
-          </div>
+      <div class="lv-body">
+        {offline ? (
+          <OfflineBody
+            debounced={debounced}
+            installed={installed}
+            installedNames={installedNames}
+            busy={busy}
+            pending={librarySearchPending.value}
+            onInstall={install}
+            onUpdate={update}
+            onRemove={uninstall}
+            onRetry={() => void loadRegistry()}
+          />
+        ) : mode === "installed" ? (
+          <InstalledBody
+            installed={installed}
+            filtered={filteredInstalled}
+            debounced={debounced}
+            busy={busy}
+            onUpdate={update}
+            onRemove={uninstall}
+          />
         ) : (
-          installed.map((lib) => (
-            <LibraryRow
-              key={`i-${lib.name}`}
-              lib={lib}
-              installed
-              busy={busy}
-              onUpdate={() => void update(lib)}
-              onRemove={() => void uninstall(lib)}
-            />
-          ))
+          <RegistryBody
+            status={status}
+            registry={registry}
+            filtered={filteredRegistry}
+            debounced={debounced}
+            installedNames={installedNames}
+            busy={busy}
+            onInstall={install}
+          />
         )}
 
         {libraryInstallProgress.value.length > 0 && (
@@ -248,6 +339,276 @@ export function LibrariesView() {
     </div>
   );
 }
+
+/* ------------------------------------------------------------------ */
+/* "All" — the virtualized full-registry browser                       */
+/* ------------------------------------------------------------------ */
+
+function RegistryBody({
+  status,
+  registry,
+  filtered,
+  debounced,
+  installedNames,
+  busy,
+  onInstall,
+}: {
+  status: string;
+  registry: Library[] | null;
+  filtered: Library[];
+  debounced: string;
+  installedNames: Set<string>;
+  busy: string | null;
+  onInstall: (lib: Library) => void;
+}) {
+  if (status === "loading" || (status === "idle" && registry === null)) {
+    return (
+      <div class="lv-state">
+        <LoaderCircle class="lv-spin lv-state-icon" size={22} strokeWidth={1.75} />
+        <span>Loading the Arduino library registry…</span>
+        <span class="lv-state-sub">This is fetched once, then filtered instantly.</span>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div class="lv-section-label">
+        Registry · {filtered.length.toLocaleString()}
+        {debounced ? ` of ${(registry?.length ?? 0).toLocaleString()}` : ""}
+      </div>
+      {filtered.length === 0 ? (
+        <div class="lv-empty">
+          {debounced
+            ? `No libraries match “${debounced}”.`
+            : "The registry is empty."}
+        </div>
+      ) : (
+        <VirtualLibraryList
+          libraries={filtered}
+          installedNames={installedNames}
+          busy={busy}
+          onInstall={onInstall}
+        />
+      )}
+    </>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* "Installed" — the installed set (small; not virtualized)            */
+/* ------------------------------------------------------------------ */
+
+function InstalledBody({
+  installed,
+  filtered,
+  debounced,
+  busy,
+  onUpdate,
+  onRemove,
+}: {
+  installed: Library[];
+  filtered: Library[];
+  debounced: string;
+  busy: string | null;
+  onUpdate: (lib: Library) => void;
+  onRemove: (lib: Library) => void;
+}) {
+  return (
+    <>
+      <div class="lv-section-label">Installed · {filtered.length}</div>
+      {installed.length === 0 ? (
+        <div class="lv-empty">
+          No libraries installed. Switch to All to add one from the registry.
+        </div>
+      ) : filtered.length === 0 ? (
+        <div class="lv-empty">No installed libraries match “{debounced}”.</div>
+      ) : (
+        filtered.map((lib) => (
+          <LibraryRow
+            key={`i-${lib.name}`}
+            lib={lib}
+            installed
+            busy={busy}
+            onUpdate={() => onUpdate(lib)}
+            onRemove={() => onRemove(lib)}
+          />
+        ))
+      )}
+    </>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Offline fallback — per-query backend search (the old behaviour)     */
+/* ------------------------------------------------------------------ */
+
+function OfflineBody({
+  debounced,
+  installed,
+  installedNames,
+  busy,
+  pending,
+  onInstall,
+  onUpdate,
+  onRemove,
+  onRetry,
+}: {
+  debounced: string;
+  installed: Library[];
+  installedNames: Set<string>;
+  busy: string | null;
+  pending: boolean;
+  onInstall: (lib: Library) => void;
+  onUpdate: (lib: Library) => void;
+  onRemove: (lib: Library) => void;
+  onRetry: () => void;
+}) {
+  const results = librarySearchResults.value;
+  return (
+    <>
+      <div class="lv-offline-note">
+        <WifiOff size={13} strokeWidth={1.75} />
+        <span>
+          Couldn't load the full registry. Searching it directly instead.
+        </span>
+        <button class="lv-retry-btn" onClick={onRetry}>
+          <RefreshCw size={11} strokeWidth={1.75} />
+          <span>Retry</span>
+        </button>
+      </div>
+
+      {debounced && (
+        <>
+          <div class="lv-section-label">
+            Search results{results.length > 0 ? ` · ${results.length}` : ""}
+          </div>
+          {pending && results.length === 0 ? (
+            <div class="lv-empty">Searching the registry…</div>
+          ) : results.length === 0 ? (
+            <div class="lv-empty">No libraries match “{debounced}”.</div>
+          ) : (
+            results.map((lib) => (
+              <LibraryRow
+                key={`r-${lib.name}`}
+                lib={lib}
+                installed={installedNames.has(lib.name.toLowerCase())}
+                busy={busy}
+                onInstall={() => onInstall(lib)}
+              />
+            ))
+          )}
+        </>
+      )}
+
+      <div class="lv-section-label">Installed · {installed.length}</div>
+      {installed.length === 0 ? (
+        <div class="lv-empty">
+          No libraries installed. Search above to add one from the registry.
+        </div>
+      ) : (
+        installed.map((lib) => (
+          <LibraryRow
+            key={`i-${lib.name}`}
+            lib={lib}
+            installed
+            busy={busy}
+            onUpdate={() => onUpdate(lib)}
+            onRemove={() => onRemove(lib)}
+          />
+        ))
+      )}
+    </>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Virtualized list                                                    */
+/* ------------------------------------------------------------------ */
+
+/**
+ * A virtualized scrolling list of `LibraryRow`s. Only the rows in (and a small
+ * overscan margin around) the viewport are mounted; spacer divs above and
+ * below stand in for the off-screen rows so the scrollbar stays correct.
+ *
+ * The windowing maths lives in `lib/library-filter.ts` (`computeWindow`) and
+ * is unit-tested there.
+ */
+function VirtualLibraryList({
+  libraries,
+  installedNames,
+  busy,
+  onInstall,
+}: {
+  libraries: Library[];
+  installedNames: Set<string>;
+  busy: string | null;
+  onInstall: (lib: Library) => void;
+}) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [scrollTop, setScrollTop] = useState(0);
+  const [viewportH, setViewportH] = useState(0);
+
+  // Measure the scroll viewport, and keep the measurement current as the
+  // window (and so the panel) resizes.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const measure = () => setViewportH(el.clientHeight);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  // When the filtered list shrinks under the current scroll offset (e.g. the
+  // user types and far fewer rows remain), pull the scroll position back into
+  // range so the list isn't stuck showing blank space.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const maxScroll = Math.max(0, libraries.length * ROW_HEIGHT - el.clientHeight);
+    if (el.scrollTop > maxScroll) {
+      el.scrollTop = maxScroll;
+      setScrollTop(maxScroll);
+    }
+  }, [libraries.length]);
+
+  const win = computeWindow(
+    libraries.length,
+    ROW_HEIGHT,
+    scrollTop,
+    viewportH,
+    OVERSCAN,
+  );
+  const visible = libraries.slice(win.startIndex, win.endIndex);
+
+  return (
+    <div
+      class="lv-virt"
+      ref={scrollRef}
+      onScroll={(e) => setScrollTop((e.target as HTMLDivElement).scrollTop)}
+    >
+      {/* Top spacer — reserves the height of the rows scrolled off the top. */}
+      <div style={{ height: `${win.topPad}px` }} />
+      {visible.map((lib) => (
+        <LibraryRow
+          key={`r-${lib.name}`}
+          lib={lib}
+          installed={installedNames.has(lib.name.toLowerCase())}
+          busy={busy}
+          onInstall={() => onInstall(lib)}
+        />
+      ))}
+      {/* Bottom spacer — reserves the height of the rows below the viewport. */}
+      <div style={{ height: `${win.bottomPad}px` }} />
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Library row                                                         */
+/* ------------------------------------------------------------------ */
 
 /** One library row — used for both registry results and the installed list. */
 function LibraryRow({
@@ -272,21 +633,13 @@ function LibraryRow({
 
   return (
     <div class={`lv-row ${installed ? "lv-row-installed" : ""}`}>
-      <span class={`lv-dot ${installed ? "on" : "dim"}`}>
-        <Package size={11} strokeWidth={1.75} />
-      </span>
       <div class="lv-row-main">
-        <div class="lv-row-name">
-          {lib.name}
+        <div class="lv-row-head">
+          <span class="lv-row-name">{lib.name}</span>
           {version && <span class="lv-row-ver">{version}</span>}
-          {lib.update_available && lib.latest_version && (
-            <span class="lv-row-badge">update → {lib.latest_version}</span>
-          )}
         </div>
-        <div class="lv-row-meta">
-          {desc}
-          {lib.author && <span class="lv-row-author"> · {lib.author}</span>}
-        </div>
+        <div class="lv-row-desc">{desc}</div>
+        {lib.author && <div class="lv-row-by">by {lib.author}</div>}
       </div>
 
       <div class="lv-row-actions">

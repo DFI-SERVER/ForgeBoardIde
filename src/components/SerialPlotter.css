@@ -29,7 +29,7 @@
   font-weight: var(--weight-semibold);
   transition: background-color var(--dur-fast) var(--ease);
 }
-.spl-btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.045); }
+.spl-btn:hover:not(:disabled) { background: var(--accent-wash-hover); }
 .spl-btn:focus-visible { box-shadow: 0 0 0 2px var(--accent-ring); }
 .spl-btn:disabled {
   color: var(--fg-disabled);

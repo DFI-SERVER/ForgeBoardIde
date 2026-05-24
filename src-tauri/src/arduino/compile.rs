@@ -1,4 +1,5 @@
 use super::cli;
+use super::fqbn::normalize_fqbn;
 use std::path::Path;
 
 /// Result of an arduino-cli compile run.
@@ -20,7 +21,8 @@ pub async fn compile_sketch(
     verbose: bool,
 ) -> Result<CompileResult, String> {
     let sketch = sketch_path.to_string_lossy().into_owned();
-    let mut args: Vec<&str> = vec!["compile", "--fqbn", fqbn, "--no-color"];
+    let fqbn = normalize_fqbn(fqbn);
+    let mut args: Vec<&str> = vec!["compile", "--fqbn", fqbn.as_str(), "--no-color"];
     if verbose {
         args.push("-v");
     }

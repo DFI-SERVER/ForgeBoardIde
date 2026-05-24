@@ -84,8 +84,10 @@ export const arduinoApi = {
   onCoreInstallOutput: (cb: (line: string) => void) =>
     listen<string>("core-install-output", (e) => cb(e.payload)),
 
-  /** Search the Arduino library registry. */
+  /** Search the Arduino library registry (capped result set). */
   libSearch: (query: string) => invoke<Library[]>("arduino_lib_search", { query }),
+  /** Fetch the entire Arduino library registry — uncapped, ~9000+ entries. */
+  libListAll: () => invoke<Library[]>("arduino_lib_list_all"),
   /** List libraries installed locally, with update info merged in. */
   libListInstalled: () => invoke<Library[]>("arduino_lib_list_installed"),
   /** Install (or, with an `@version` suffix, upgrade) a registry library. */

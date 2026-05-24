@@ -62,7 +62,7 @@
 }
 .sb-button:hover,
 .sb-problems:hover {
-  background: rgba(255, 255, 255, 0.045);
+  background: var(--accent-wash-hover);
   color: var(--fg-default);
 }
 .sb-button:focus-visible,

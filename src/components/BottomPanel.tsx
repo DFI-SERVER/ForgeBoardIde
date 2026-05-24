@@ -24,6 +24,8 @@ import {
 import { openFileAtLine } from "../lib/actions";
 import { groupDiagnostics } from "../lib/diagnostics";
 import { humanizeDiagnostic } from "../lib/humanize-errors";
+import { ResizeHandle } from "./ResizeHandle";
+import { BOTTOM_PANEL } from "../lib/layout";
 
 const TABS = [
   { id: "serial", label: "Serial Monitor" },
@@ -174,6 +176,13 @@ export function BottomPanel() {
   }
   return (
     <section class="bp">
+      <ResizeHandle
+        spec={BOTTOM_PANEL}
+        axis="y"
+        direction={-1}
+        variant="resize-handle-bottom"
+        label="Resize the bottom panel"
+      />
       <div class="bp-tabs">
         {TABS.map((tab) => (
           <button

@@ -29,6 +29,7 @@ dirs = "5"
 thiserror = "1"
 anyhow = "1"
 trash = "5"
+zip = { version = "2", default-features = false }
 
 [dev-dependencies]
 rand = "0.8"
