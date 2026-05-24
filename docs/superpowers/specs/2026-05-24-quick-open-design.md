@@ -104,6 +104,15 @@ When the query is empty:
 2. Otherwise show all sketch files in their `currentSketch.files` order
    (with the main `.ino` first, matching the existing sidebar order).
 
+**Initial selection on open.** Mirrors VS Code's `workbench.action.quick
+OpenPreviousEditor` muscle memory ([VS Code tips & tricks](https://code.visualstudio.com/docs/getstarted/tips-and-tricks)):
+when the palette opens with an empty query AND the recent-files list has at
+least two entries belonging to the current sketch, the **second** result is
+pre-selected (i.e. the previously-focused file, since the currently-focused
+one sits at index 0). With fewer than two recents, index 0 is selected as
+usual. This makes "Ctrl+P, Enter" toggle to the last file in one motion —
+the most common navigation pattern in VS Code workflows.
+
 **Recent-files tracking.** A new `recentFilePaths: Signal<string[]>` in
 `state/appState.ts`. Updated on every `activeTabIndex` change to push the
 focused tab's path to the front of the list (dedup) and trim to 16 entries.
@@ -113,6 +122,24 @@ sketch) — when the palette opens, entries are filtered to the current
 sketch's `files[]` membership. The 16-entry buffer (vs. 8 shown) means that
 even when several recents belong to other sketches, the current sketch
 usually still has 8 to show.
+
+## No-matches state
+
+When the user has typed a non-empty query that matches zero files, the result
+list renders a two-line quiet message in place of rows:
+
+```
+No matching files.
+Try a different query or `>` for commands.
+```
+
+- First line in `--fg-muted`, second in `--fg-subtle`.
+- No icon, no illustration — consistent with ForgeBoard's monochrome restraint
+  and matching the Linear / Notion empty-state convention of "blend into the
+  interface, don't shout"
+  ([Eleken empty-state UX](https://www.eleken.co/blog-posts/empty-state-ux)).
+- Implemented via the same DOM hook as the existing
+  `.palette-empty` block so we don't duplicate the empty-state pattern.
 
 ## Result row
 
