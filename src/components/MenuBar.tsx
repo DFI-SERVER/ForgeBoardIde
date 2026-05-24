@@ -16,6 +16,7 @@ import {
   openSerialPlotter,
   openLibraries,
   openBoardsManager,
+  openBurnBootloaderDialog,
 } from "../lib/actions";
 import {
   editorUndo,
@@ -255,6 +256,11 @@ export function MenuBar() {
           kind: "item",
           label: "Get Board Info",
           run: () => setBoardInfoOpen(true),
+        },
+        {
+          kind: "item",
+          label: "Burn Bootloader…",
+          run: openBurnBootloaderDialog,
         },
       ],
     },

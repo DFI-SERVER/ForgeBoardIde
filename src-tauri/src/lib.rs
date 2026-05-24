@@ -28,6 +28,7 @@ pub fn run() {
             arduino::commands::arduino_detect_ports,
             arduino::commands::arduino_compile,
             arduino::commands::arduino_upload,
+            arduino::commands::arduino_burn_bootloader,
             serial::commands::serial_open,
             serial::commands::serial_close,
             serial::commands::serial_write,

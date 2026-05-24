@@ -7,4 +7,5 @@ pub mod examples;
 pub mod detect;
 pub mod compile;
 pub mod upload;
+pub mod burn_bootloader;
 pub mod commands;

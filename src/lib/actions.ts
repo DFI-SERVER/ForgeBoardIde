@@ -25,6 +25,7 @@ import {
   bottomPanelOpen,
   bottomPanelTab,
   newSketchDialogOpen,
+  burnBootloaderDialogOpen,
   openTabs,
   activeTabIndex,
   fileContents,
@@ -458,4 +459,13 @@ export function openLibraries() {
 /** Switch the activity rail to the Boards view. */
 export function openBoardsManager() {
   activeRail.value = "boards";
+}
+
+/* --------------------------------------------------------------- Tools --- */
+
+/** Open the Burn Bootloader confirm dialog. The dialog itself collects the
+ *  programmer selection and invokes the backend on confirm — see
+ *  `BurnBootloaderDialog.tsx`. */
+export function openBurnBootloaderDialog() {
+  burnBootloaderDialogOpen.value = true;
 }
