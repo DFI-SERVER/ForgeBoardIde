@@ -7,5 +7,13 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: ["./tests/setup.ts"],
     globals: true,
+    // Exclude isolated agent worktrees — each is a full repo copy and would
+    // run every test 3+ times otherwise. Standard vitest excludes already
+    // handle node_modules/dist/.git.
+    exclude: [
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/.claude/worktrees/**",
+    ],
   },
 });
