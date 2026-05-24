@@ -92,6 +92,30 @@ export const openTabs = signal<{ path: string; name: string; modified: boolean }
 
 export const activeTabIndex = signal<number>(0);
 
+/** Maximum number of recently-focused file paths tracked. The buffer is
+ *  larger than the Quick Open empty-state list (8) so that filtering to
+ *  the current sketch's membership still leaves a useful number of recents
+ *  to show after other sketches' entries are excluded. */
+export const MAX_RECENT_FILE_PATHS = 16;
+
+/** Most-recently-focused file paths, newest first. Persisted to localStorage
+ *  via the same `forgeboard.recent-files` key the tracking module rehydrates
+ *  from on boot. Source of truth for Quick Open's empty state. */
+export const recentFilePaths = signal<string[]>([]);
+
+/** Push `path` to the front of the recents list, dedup, and trim to
+ *  MAX_RECENT_FILE_PATHS. No-op on empty input. */
+export function pushRecentFilePath(path: string): void {
+  if (!path) return;
+  const cur = recentFilePaths.value;
+  const filtered = cur.filter((p) => p !== path);
+  filtered.unshift(path);
+  if (filtered.length > MAX_RECENT_FILE_PATHS) {
+    filtered.length = MAX_RECENT_FILE_PATHS;
+  }
+  recentFilePaths.value = filtered;
+}
+
 export const saveState = signal<"saved" | "saving" | "unsaved">("saved");
 
 /** Compile / upload lifecycle phase — drives the ActionBar buttons and Output panel. */

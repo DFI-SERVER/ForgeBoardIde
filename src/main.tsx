@@ -4,6 +4,7 @@ import { startAutoSaveLoop } from "./lib/autosave";
 import { installShortcuts } from "./lib/shortcuts";
 import { bootstrapProject } from "./lib/bootstrap";
 import { startBoardWatch } from "./lib/connection";
+import { startRecentFilesTracking } from "./lib/recent-files";
 import { initLayout } from "./lib/layout";
 import { settings } from "./lib/settings";
 import { applyAppTheme } from "./lib/monaco-setup";
@@ -23,5 +24,6 @@ installShortcuts();
 bootstrapProject().catch(console.error);
 startAutoSaveLoop();
 startBoardWatch();
+startRecentFilesTracking();
 
 render(<App />, document.getElementById("root")!);
