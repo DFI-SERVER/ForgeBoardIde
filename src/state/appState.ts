@@ -1,4 +1,4 @@
-import { signal, computed } from "@preact/signals";
+import { signal, computed, type Signal } from "@preact/signals";
 import type { Sketch } from "../ipc/project";
 import type {
   Core,
@@ -154,6 +154,33 @@ export const buildOutput = signal<string[]>([]);
 
 /** FQBN the IDE compiles and uploads against. Board-selector wiring lands in Phase 8. */
 export const selectedFqbn = signal<string>("esp32:esp32:esp32s3");
+
+/**
+ * One reproducible-build profile, as advertised by a sketch's `sketch.yaml`.
+ * Mirrors the `ProfileInfo` returned by the `project_read_profiles` IPC.
+ */
+export interface SketchProfile {
+  name: string;
+  fqbn: string;
+  notes?: string;
+}
+
+/**
+ * Profiles loaded from the open sketch's `sketch.yaml`. An empty array means
+ * either "no `sketch.yaml`" or "yaml exists but declares no profiles" — the
+ * UI hides the profile pill in either case.
+ *
+ * Repopulated by `bootstrap` / `loadSketch` whenever the open sketch changes.
+ */
+export const sketchProfiles: Signal<SketchProfile[]> = signal([]);
+
+/**
+ * The currently-active profile name, or `null` when the user is using the
+ * global board selector instead. When non-null, compile/upload IPCs pass it
+ * as `--profile <name>` to arduino-cli; FQBN comes from the profile in that
+ * mode. The pill displays a check next to the active entry in its dropdown.
+ */
+export const activeProfile: Signal<string | null> = signal(null);
 
 /** Serial Monitor log — received lines, sent lines, and info notices. */
 export interface SerialLogEntry {

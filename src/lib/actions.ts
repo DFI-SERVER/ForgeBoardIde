@@ -20,6 +20,7 @@ import {
   activeRail,
   connectedPort,
   selectedFqbn,
+  activeProfile,
   buildPhase,
   buildOutput,
   bottomPanelOpen,
@@ -378,6 +379,7 @@ export async function compileSketch(): Promise<void> {
       sketch.path,
       selectedFqbn.value,
       settings.value.verboseBuild,
+      activeProfile.value,
     );
     buildPhase.value = result.success ? "success" : "error";
     if (!result.success && result.stderr.trim()) {
@@ -412,6 +414,7 @@ export async function uploadSketch(): Promise<void> {
       selectedFqbn.value,
       port,
       settings.value.verboseBuild,
+      activeProfile.value,
     );
     buildPhase.value = result.success ? "success" : "error";
     if (!result.success && result.stderr.trim()) {

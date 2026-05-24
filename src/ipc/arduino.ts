@@ -66,12 +66,38 @@ export interface LibraryExample {
 export const arduinoApi = {
   listBoards: () => invoke<Board[]>("arduino_list_boards"),
   detectPorts: () => invoke<DetectedBoard[]>("arduino_detect_ports"),
-  /** Compile a sketch. `verbose` runs arduino-cli with `-v` for a full build log. */
-  compile: (sketch: string, fqbn: string, verbose: boolean) =>
-    invoke<CompileResult>("arduino_compile", { sketch, fqbn, verbose }),
-  /** Compile and flash to `port`. `verbose` runs arduino-cli with `-v`. */
-  upload: (sketch: string, fqbn: string, port: string, verbose: boolean) =>
-    invoke<UploadResult>("arduino_upload", { sketch, fqbn, port, verbose }),
+  /** Compile a sketch. `verbose` runs arduino-cli with `-v` for a full build log.
+   *  `profile`, when set, runs the build under a named `sketch.yaml` profile
+   *  via `--profile <name>` — the profile owns the FQBN in that mode. */
+  compile: (
+    sketch: string,
+    fqbn: string,
+    verbose: boolean,
+    profile?: string | null,
+  ) =>
+    invoke<CompileResult>("arduino_compile", {
+      sketch,
+      fqbn,
+      verbose,
+      profile: profile ?? null,
+    }),
+  /** Compile and flash to `port`. `verbose` runs arduino-cli with `-v`.
+   *  `profile`, when set, runs the build under a named `sketch.yaml` profile
+   *  via `--profile <name>` — the profile owns the FQBN in that mode. */
+  upload: (
+    sketch: string,
+    fqbn: string,
+    port: string,
+    verbose: boolean,
+    profile?: string | null,
+  ) =>
+    invoke<UploadResult>("arduino_upload", {
+      sketch,
+      fqbn,
+      port,
+      verbose,
+      profile: profile ?? null,
+    }),
   onCompileOutput: (cb: (line: string) => void) =>
     listen<string>("compile-output", (e) => cb(e.payload)),
   onUploadOutput: (cb: (line: string) => void) =>

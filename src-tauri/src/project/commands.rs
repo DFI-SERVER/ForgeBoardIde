@@ -1,4 +1,4 @@
-use super::{archive, fs, model::*, recent};
+use super::{archive, fs, model::*, profiles, recent};
 use std::path::PathBuf;
 
 #[tauri::command]
@@ -80,4 +80,16 @@ pub fn project_archive_sketch(
     dest: PathBuf,
 ) -> Result<(), ProjectError> {
     archive::archive_sketch(&sketch_dir, &dest)
+}
+
+/// Read reproducible-build profiles from a sketch's `sketch.yaml`.
+///
+/// Returns `None` when the file is absent — the UI hides the profile pill in
+/// that case. The argument may be either a sketch directory or a file inside
+/// it; the parser locates `sketch.yaml` at the sketch root.
+#[tauri::command]
+pub fn project_read_profiles(
+    sketch_path: PathBuf,
+) -> Result<Option<profiles::SketchProfiles>, String> {
+    profiles::read_profiles(&sketch_path)
 }
