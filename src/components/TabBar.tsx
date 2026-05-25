@@ -42,7 +42,10 @@ export function TabBar({ groupId }: TabBarProps) {
     // Closing a tab in a non-focused group: focus that group first so
     // `closeTab` (which operates on the active group) targets it.
     if (!isActive) setActiveGroup(groupId);
-    closeTab(i);
+    // closeTab is async (it flushes any pending autosave before discarding
+    // a modified tab) — fire-and-forget, the resulting state writes are
+    // already picked up by the signals layer.
+    void closeTab(i);
   }
 
   // The whole strip's pointerdown also routes to setActiveGroup so a click

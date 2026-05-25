@@ -1,6 +1,7 @@
 import { render } from "preact";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import App from "./App";
-import { startAutoSaveLoop } from "./lib/autosave";
+import { startAutoSaveLoop, flushSaveAsync } from "./lib/autosave";
 import { installShortcuts } from "./lib/shortcuts";
 import { bootstrapProject } from "./lib/bootstrap";
 import { startBoardWatch } from "./lib/connection";
@@ -33,5 +34,19 @@ startAutoSaveLoop();
 startBoardWatch();
 startRecentFilesTracking();
 startCompileHistoryTracking();
+
+// Flush any pending autosave before the window closes. Without this, the
+// 2-second autosave debounce can silently drop the user's last edits when
+// they close the app mid-typing.
+const appWindow = getCurrentWindow();
+appWindow.onCloseRequested(async (event) => {
+  event.preventDefault();
+  try {
+    await flushSaveAsync();
+  } catch (e) {
+    console.error("autosave flush before close failed:", e);
+  }
+  await appWindow.destroy();
+});
 
 render(<App />, document.getElementById("root")!);

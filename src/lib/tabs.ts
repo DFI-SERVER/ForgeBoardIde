@@ -13,6 +13,7 @@ import {
   activeTabIndex,
 } from "../state/appState";
 import { closeGroup, updateActiveGroup } from "./editor-groups";
+import { flushSaveAsync } from "./autosave";
 
 /**
  * Close the tab at index `i` in the ACTIVE group, keeping `activeTabIndex`
@@ -20,12 +21,29 @@ import { closeGroup, updateActiveGroup } from "./editor-groups";
  * to the left or the active tab itself closes, and never run off the end of
  * the list. If the close empties a non-first group, the group is collapsed
  * away so the user is dropped back into a single-pane layout.
+ *
+ * Async because we flush any pending autosave BEFORE removing a modified tab
+ * — discarding a modified tab without saving would strand the unsaved edits
+ * in fileContents only, losing the last debounce window's worth of typing.
  */
-export function closeTab(i: number): void {
+export async function closeTab(i: number): Promise<void> {
   const tabs = openTabs.value;
   if (i < 0 || i >= tabs.length) return;
+  const tab = tabs[i];
+
+  // Flush BEFORE removing — discarding a modified tab without saving would
+  // strand the unsaved edits in fileContents only.
+  if (tab.modified) {
+    await flushSaveAsync();
+  }
+
+  // Re-read the active tab list — flushSaveAsync may have re-rendered or
+  // changed `modified` flags. Bail if the index is no longer valid.
+  const freshTabs = openTabs.value;
+  if (i >= freshTabs.length) return;
+
   const active = activeTabIndex.value;
-  const newTabs = tabs.filter((_, idx) => idx !== i);
+  const newTabs = freshTabs.filter((_, idx) => idx !== i);
   let nextActive = active;
   if (active >= newTabs.length) {
     nextActive = Math.max(0, newTabs.length - 1);
@@ -48,8 +66,8 @@ export function closeTab(i: number): void {
 }
 
 /** Close the currently active tab (the Ctrl+W path). No-op when none are open. */
-export function closeActiveTab(): void {
-  closeTab(activeTabIndex.value);
+export async function closeActiveTab(): Promise<void> {
+  await closeTab(activeTabIndex.value);
 }
 
 /** Activate the next tab in the active group, wrapping past the last (the

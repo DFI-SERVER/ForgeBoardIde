@@ -217,3 +217,129 @@ describe("applySaveTransforms — split-pane safety", () => {
     expect(modelB.getValue()).toBe(trimmed);
   });
 });
+
+/* ----------------------------- saveAllModified — failure toast & dedup --- */
+
+describe("saveAllModified — failure toast & dedup", () => {
+  // Each scenario builds its own tab + content state; the module-level
+  // `failingPaths` set is process-shared, so we reset state in each test
+  // by running a successful save first or by using a fresh path.
+  afterEach(() => {
+    for (const m of monaco.editor.getModels()) m.dispose();
+  });
+
+  it("toasts on the first save failure for a path", async () => {
+    const { saveState, fileContents, editorGroups, activeGroupIndex, openTabs, activeTabIndex, toast } =
+      await import("../../src/state/appState");
+    const { flushSaveAsync } = await import("../../src/lib/autosave");
+    const { projectApi } = await import("../../src/ipc/project");
+
+    // Don't transform the contents (avoid noise from format-on-save).
+    updateSettings({ formatOnSave: false, trimTrailingWhitespaceOnSave: false });
+
+    // saveFile rejects — simulate a "permission denied" style failure.
+    vi.spyOn(projectApi, "saveFile").mockRejectedValue(
+      new Error("EACCES: permission denied"),
+    );
+
+    // Use a fresh unique path so this test's failingPaths bookkeeping does
+    // not interact with the module-level set carrying over from prior tests.
+    const pathA = "/s/toast-fail-1.ino";
+    editorGroups.value = [
+      { id: "g0", tabs: [{ path: pathA, name: "toast-fail-1.ino", modified: true }], activeTabIndex: 0 },
+    ];
+    activeGroupIndex.value = 0;
+    openTabs.value = editorGroups.value[0].tabs;
+    activeTabIndex.value = 0;
+    fileContents.value = new Map([[pathA, "void setup(){}"]]);
+    toast.value = null;
+    saveState.value = "unsaved";
+
+    await flushSaveAsync();
+    expect(toast.value).not.toBeNull();
+    expect(toast.value!.kind).toBe("warn");
+    expect(toast.value!.text).toContain("toast-fail-1.ino");
+    expect(toast.value!.text).toContain("EACCES");
+  });
+
+  it("suppresses the toast on a repeat failure for the same path", async () => {
+    const { saveState, fileContents, editorGroups, activeGroupIndex, openTabs, activeTabIndex, toast } =
+      await import("../../src/state/appState");
+    const { flushSaveAsync } = await import("../../src/lib/autosave");
+    const { projectApi } = await import("../../src/ipc/project");
+
+    updateSettings({ formatOnSave: false, trimTrailingWhitespaceOnSave: false });
+    vi.spyOn(projectApi, "saveFile").mockRejectedValue(new Error("EACCES"));
+
+    const pathA = "/s/toast-fail-2.ino";
+    editorGroups.value = [
+      { id: "g0", tabs: [{ path: pathA, name: "toast-fail-2.ino", modified: true }], activeTabIndex: 0 },
+    ];
+    activeGroupIndex.value = 0;
+    openTabs.value = editorGroups.value[0].tabs;
+    activeTabIndex.value = 0;
+    fileContents.value = new Map([[pathA, "x"]]);
+
+    // First failure — should toast.
+    toast.value = null;
+    saveState.value = "unsaved";
+    await flushSaveAsync();
+    expect(toast.value).not.toBeNull();
+
+    // Second failure for same path — clear the toast slot and re-run; the
+    // dedup set in autosave.ts should swallow the notification.
+    toast.value = null;
+    saveState.value = "unsaved";
+    await flushSaveAsync();
+    expect(toast.value).toBeNull();
+  });
+
+  it("re-toasts after a successful save resets the failing state", async () => {
+    const { saveState, fileContents, editorGroups, activeGroupIndex, openTabs, activeTabIndex, toast } =
+      await import("../../src/state/appState");
+    const { flushSaveAsync } = await import("../../src/lib/autosave");
+    const { projectApi } = await import("../../src/ipc/project");
+
+    updateSettings({ formatOnSave: false, trimTrailingWhitespaceOnSave: false });
+
+    const pathA = "/s/toast-fail-3.ino";
+    editorGroups.value = [
+      { id: "g0", tabs: [{ path: pathA, name: "toast-fail-3.ino", modified: true }], activeTabIndex: 0 },
+    ];
+    activeGroupIndex.value = 0;
+    openTabs.value = editorGroups.value[0].tabs;
+    activeTabIndex.value = 0;
+    fileContents.value = new Map([[pathA, "x"]]);
+
+    // Fail → toast.
+    const spy = vi
+      .spyOn(projectApi, "saveFile")
+      .mockRejectedValueOnce(new Error("transient"));
+    toast.value = null;
+    saveState.value = "unsaved";
+    await flushSaveAsync();
+    expect(toast.value).not.toBeNull();
+
+    // Now the save succeeds; this should reset the dedup entry.
+    spy.mockResolvedValueOnce(undefined);
+    // Re-mark the tab modified so saveAllModified actually runs again.
+    editorGroups.value = [
+      { id: "g0", tabs: [{ path: pathA, name: "toast-fail-3.ino", modified: true }], activeTabIndex: 0 },
+    ];
+    openTabs.value = editorGroups.value[0].tabs;
+    saveState.value = "unsaved";
+    await flushSaveAsync();
+
+    // Subsequent failure on the same path toasts again because the prior
+    // success cleared the failingPaths entry.
+    spy.mockRejectedValueOnce(new Error("transient2"));
+    editorGroups.value = [
+      { id: "g0", tabs: [{ path: pathA, name: "toast-fail-3.ino", modified: true }], activeTabIndex: 0 },
+    ];
+    openTabs.value = editorGroups.value[0].tabs;
+    toast.value = null;
+    saveState.value = "unsaved";
+    await flushSaveAsync();
+    expect(toast.value).not.toBeNull();
+  });
+});

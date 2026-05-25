@@ -1,16 +1,23 @@
 import { render, screen, fireEvent } from "@testing-library/preact";
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { TabBar } from "../../src/components/TabBar";
 import {
   openTabs,
   activeTabIndex,
   editorGroups,
   activeGroupIndex,
+  saveState,
 } from "../../src/state/appState";
 import { _resetForTests } from "../../src/lib/editor-groups";
+import { projectApi } from "../../src/ipc/project";
 
 beforeEach(() => {
   _resetForTests();
+  // closeTab now awaits flushSaveAsync() when removing a modified tab so the
+  // last unsaved edits don't vanish; the autosave path calls projectApi.saveFile,
+  // which the jsdom env can't satisfy. Mock it to a resolved no-op so the
+  // tests that exercise close-on-modified don't hang on a real IPC call.
+  vi.spyOn(projectApi, "saveFile").mockResolvedValue(undefined);
   // Seed via the mirror — the bookkeeping effect propagates this into
   // editorGroups[0].tabs so the TabBar (which reads from editorGroups)
   // sees the same data the legacy tests assumed.
@@ -19,6 +26,9 @@ beforeEach(() => {
     { path: "/sketches/demo/b.h", name: "b.h", modified: false },
   ];
   activeTabIndex.value = 0;
+  // Reset saveState so flushSaveAsync sees nothing to flush by default;
+  // tests that need the dirty path opt in explicitly.
+  saveState.value = "saved";
 });
 
 describe("TabBar — single group (g0)", () => {
@@ -46,10 +56,15 @@ describe("TabBar — single group (g0)", () => {
     expect(editorGroups.value[0].activeTabIndex).toBe(1);
   });
 
-  it("closes tab on × click", () => {
+  it("closes tab on × click", async () => {
     render(<TabBar groupId="g0" />);
     const xs = document.querySelectorAll(".tab-x");
     fireEvent.click(xs[0]);
+    // closeTab is async (awaits flushSaveAsync before discarding a modified
+    // tab) — yield a microtask so the void-wrapped promise settles before
+    // we read openTabs.
+    await Promise.resolve();
+    await Promise.resolve();
     expect(openTabs.value).toHaveLength(1);
     expect(openTabs.value[0].name).toBe("b.h");
   });

@@ -6,6 +6,7 @@ import {
   openTabs,
   editorGroups,
   activeGroupIndex,
+  toast,
 } from "../state/appState";
 import { projectApi } from "../ipc/project";
 import { settings } from "./settings";
@@ -14,6 +15,30 @@ import { getActiveEditor, withProgrammaticEdit } from "../components/MonacoEdito
 
 const AUTOSAVE_MS = 2000;
 let pendingSave: number | null = null;
+
+/** Paths whose last save attempt failed. Cleared on the next successful save
+ *  of the same path. Used to suppress duplicate failure toasts so a permanent
+ *  permission error (read-only file, full disk, antivirus lock) doesn't spam
+ *  the user every 2 seconds. */
+const failingPaths = new Set<string>();
+
+/** Bare-name of an absolute path, for short user-facing messages. */
+function baseName(path: string): string {
+  const parts = path.split(/[\\/]/);
+  return parts[parts.length - 1] || path;
+}
+
+/** Pull a readable message out of a thrown value. Local copy rather than
+ *  importing `errText` from actions.ts — actions.ts already imports from
+ *  this module, so the reverse would build a circular import. */
+function shortError(e: unknown): string {
+  if (e instanceof Error) return e.message;
+  if (typeof e === "string") return e;
+  if (e && typeof e === "object" && "message" in e) {
+    return String((e as { message: unknown }).message);
+  }
+  return String(e);
+}
 
 /** Extensions whose contents the C-brace re-indenter is safe to apply to.
  *  Anything else (README.md, library.properties, keywords.txt, JSON, YAML…)
@@ -238,8 +263,21 @@ async function saveAllModified() {
     if (contents == null) continue;
     try {
       await projectApi.saveFile(path, contents);
+      // Successful save resets the failing flag so a future failure on the
+      // same path will toast again rather than being silently swallowed.
+      if (failingPaths.has(path)) failingPaths.delete(path);
     } catch (e) {
       console.error("save failed for", path, e);
+      // Toast only the FIRST time this path starts failing, so a persistent
+      // failure (read-only file, full disk, antivirus lock) doesn't fire a
+      // notification every 2 seconds when the autosave loop retries.
+      if (!failingPaths.has(path)) {
+        failingPaths.add(path);
+        toast.value = {
+          text: `Couldn't save ${baseName(path)}: ${shortError(e)}`,
+          kind: "warn",
+        };
+      }
       saveState.value = "unsaved";
       return;
     }

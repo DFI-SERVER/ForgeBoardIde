@@ -11,7 +11,7 @@ import * as monaco from "monaco-editor";
 import { projectApi } from "../ipc/project";
 import { arduinoApi } from "../ipc/arduino";
 import { loadSketch } from "./sketch";
-import { flushSave } from "./autosave";
+import { flushSave, flushSaveAsync } from "./autosave";
 import {
   splitEditorRight as splitEditorRightImpl,
   focusOpenFile,
@@ -39,7 +39,10 @@ import {
   diagnostics,
   lastCompileSize,
   toast,
+  serialConnected,
+  serialBaud,
 } from "../state/appState";
+import { serialApi } from "../ipc/serial";
 
 /** The owner string under which the IDE's compiler markers are registered. */
 const MARKER_OWNER = "arduino";
@@ -398,6 +401,10 @@ function recordCompileSize(stderr: string) {
 
 /** Verify / Compile the current sketch. */
 export async function compileSketch(): Promise<void> {
+  // Flush any pending autosave so the build sees the latest content on disk.
+  // Without this, a student typing a fix and immediately hitting Verify/Upload
+  // would compile the 2-second-old version and chase a phantom bug.
+  await flushSaveAsync();
   const sketch = currentSketch.value;
   if (!sketch) {
     reportPrecheck("No sketch open — open or create a sketch first.");
@@ -428,6 +435,10 @@ export async function compileSketch(): Promise<void> {
 
 /** Compile and upload the current sketch to the connected board. */
 export async function uploadSketch(): Promise<void> {
+  // Flush any pending autosave so the build sees the latest content on disk.
+  // Without this, a student typing a fix and immediately hitting Verify/Upload
+  // would compile the 2-second-old version and chase a phantom bug.
+  await flushSaveAsync();
   const sketch = currentSketch.value;
   if (!sketch) {
     reportPrecheck("No sketch open — open or create a sketch first.");
@@ -441,6 +452,24 @@ export async function uploadSketch(): Promise<void> {
   await ensureBuildListeners();
   beginBuild();
   buildPhase.value = "uploading";
+
+  // Close the serial monitor before upload — Windows COM ports are exclusive
+  // (CreateFile FILE_SHARE_NONE), so esptool/avrdude will get ACCESS_DENIED
+  // if Serial Monitor is holding the port. Reopen after the upload completes.
+  const wasSerialOpen = serialConnected.value;
+  const savedPort = connectedPort.value;
+  const savedBaud = serialBaud.value;
+  if (wasSerialOpen) {
+    try {
+      await serialApi.close();
+      serialConnected.value = false;
+    } catch (e) {
+      console.error("couldn't close serial before upload:", e);
+      // Continue anyway — upload may still succeed if the port isn't
+      // actually held (some platforms allow concurrent reads).
+    }
+  }
+
   try {
     const result = await arduinoApi.upload(
       sketch.path,
@@ -459,6 +488,17 @@ export async function uploadSketch(): Promise<void> {
     buildPhase.value = "error";
     buildOutput.value = [...buildOutput.value, `Error: ${String(err)}`];
     recordDiagnostics("");
+  } finally {
+    if (wasSerialOpen && savedPort) {
+      try {
+        await serialApi.open(savedPort, savedBaud);
+        serialConnected.value = true;
+      } catch (e) {
+        // Quietly fall back to disconnected state. The user can reopen
+        // manually from the Serial Monitor button.
+        console.error("couldn't reopen serial after upload:", e);
+      }
+    }
   }
 }
 

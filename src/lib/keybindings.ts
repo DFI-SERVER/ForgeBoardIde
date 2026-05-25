@@ -132,7 +132,11 @@ export const keybindings: Keybinding[] = [
     label: "Close Tab",
     category: "File",
     scope: "global",
-    run: closeActiveTab,
+    // closeActiveTab is async (flushes autosave first); fire-and-forget so the
+    // keybinding `run` signature stays sync.
+    run: () => {
+      void closeActiveTab();
+    },
   },
 
   /* -------------------------------------------------------- Sketch --- */
