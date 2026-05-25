@@ -156,7 +156,9 @@ function ResultRow({ match }: { match: SearchMatch }) {
     <button
       class="sv-result"
       title={`${match.fileName}:${match.line}`}
-      onClick={() => openFileAtLine(match.filePath, match.line)}
+      onClick={() =>
+        openFileAtLine(match.filePath, match.line, match.matchStart + 1)
+      }
     >
       <CornerDownRight size={11} strokeWidth={1.5} class="sv-result-glyph" />
       <span class="sv-result-line">{match.line}</span>

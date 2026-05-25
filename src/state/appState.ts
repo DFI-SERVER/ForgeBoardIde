@@ -16,10 +16,11 @@ export type RailIcon =
   | "search"
   | "libraries"
   | "boards"
-  | "walkthrough"
   | "settings";
 
-export const activeRail = signal<RailIcon>("files");
+// HomeView is the friendliest landing — Recent sketches + cards beat dropping
+// a first-time user straight into an empty Files tree.
+export const activeRail = signal<RailIcon>("home");
 
 /**
  * Board connection — honest state, driven entirely by real detection

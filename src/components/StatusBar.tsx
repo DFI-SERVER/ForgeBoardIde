@@ -7,20 +7,13 @@ import {
   saveState,
   cursorPosition,
   diagnosticCounts,
-  toast,
+  openTabs,
+  activeTabIndex,
 } from "../state/appState";
+import { settings } from "../lib/settings";
+import { languageLabelForName } from "../lib/file-icons";
 import { getActiveEditor } from "./MonacoEditor";
 import { showProblems } from "../lib/actions";
-import { ping } from "../ipc/ping";
-
-async function handlePing() {
-  try {
-    const r = await ping();
-    toast.value = { text: `${r.pong} (v${r.version})`, kind: "info" };
-  } catch (e) {
-    toast.value = { text: `Ping failed: ${e}`, kind: "warn" };
-  }
-}
 
 /** Open Monaco's Go to Line widget — the clickable cursor segment. */
 function gotoLine() {
@@ -78,6 +71,12 @@ function ProblemsSummary() {
 export function StatusBar() {
   const state = connectionState.value;
   const pos = cursorPosition.value;
+  // The language label tracks the active tab's extension. Without a tab open
+  // the label falls back to "Plain" — same handling the helper gives any
+  // unrecognised file. The tab-size segment reads the live setting so a
+  // user changing tab size from Settings sees the bar update without restart.
+  const activeTab = openTabs.value[activeTabIndex.value];
+  const langLabel = activeTab ? languageLabelForName(activeTab.name) : "Plain";
   return (
     <footer class="statusbar">
       <span class={`sb-item sb-conn sb-conn-${state}`} title="Board connection">
@@ -93,13 +92,10 @@ export function StatusBar() {
       >
         Ln {pos.line}, Col {pos.column}
       </button>
-      <span class="sb-item">Spaces: 2</span>
-      <button class="sb-item sb-button" onClick={handlePing}>
-        ping
-      </button>
+      <span class="sb-item">Spaces: {settings.value.tabSize}</span>
       <span class="sb-item">UTF-8</span>
       <span class="sb-item">LF</span>
-      <span class="sb-item">C++</span>
+      <span class="sb-item">{langLabel}</span>
       <span class={`sb-item save-state ${saveState.value}`}>
         {saveState.value === "saved" && (
           <>

@@ -28,6 +28,7 @@ import { groupDiagnostics } from "../lib/diagnostics";
 import { humanizeDiagnostic } from "../lib/humanize-errors";
 import { ResizeHandle } from "./ResizeHandle";
 import { BOTTOM_PANEL } from "../lib/layout";
+import { keybindings } from "../lib/keybindings";
 
 const TABS = [
   { id: "serial", label: "Serial Monitor" },
@@ -126,7 +127,7 @@ function ProblemsView() {
                 class="bp-prob-row"
                 key={`${group.file}:${i}`}
                 title={`${d.file}:${d.line}:${d.column}`}
-                onClick={() => openFileAtLine(group.file, d.line)}
+                onClick={() => openFileAtLine(group.file, d.line, d.column)}
               >
                 <div class="bp-prob-line">
                   {d.severity === "error" ? (
@@ -173,11 +174,19 @@ function ProblemsView() {
 
 export function BottomPanel() {
   if (!bottomPanelOpen.value) {
+    // Derive the hint from the keybindings registry so a rebind to e.g.
+    // Ctrl+J updates the prompt without anyone editing this string.
+    const toggleBinding = keybindings.find(
+      (k) => k.id === "view.toggleBottomPanel",
+    );
+    const hint = toggleBinding
+      ? `Show panel (${toggleBinding.combo})`
+      : "Show panel";
     return (
       <div class="bp-collapsed">
         <button class="bp-expand" onClick={() => (bottomPanelOpen.value = true)}>
           <ChevronUp size={14} strokeWidth={1.5} />
-          Show panel (Ctrl+`)
+          {hint}
         </button>
       </div>
     );

@@ -66,6 +66,16 @@ export function TabBar({ groupId }: TabBarProps) {
             key={tab.path}
             class={`tab ${i === active ? "active" : ""} ${tab.modified ? "modified" : ""}`}
             onClick={() => setActive(i)}
+            onAuxClick={(e) => {
+              // Middle-click (button === 1) closes the tab, matching VS Code
+              // and every browser tab strip. Prevent the default so a stray
+              // browser-style middle-click never tries to "open in new tab".
+              if (e.button === 1) {
+                e.preventDefault();
+                if (!isActive) setActiveGroup(groupId);
+                void closeTab(i);
+              }
+            }}
           >
             <span class="tab-icon">
               <Icon size={13} strokeWidth={1.6} />

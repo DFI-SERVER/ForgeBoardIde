@@ -7,6 +7,7 @@ import { bootstrapProject } from "./lib/bootstrap";
 import { startBoardWatch } from "./lib/connection";
 import { startRecentFilesTracking } from "./lib/recent-files";
 import { startCompileHistoryTracking } from "./lib/compile-history";
+import { startPersistedBoardTracking } from "./lib/persisted-board";
 import { initLayout } from "./lib/layout";
 import { settings } from "./lib/settings";
 import { applyAppTheme } from "./lib/monaco-setup";
@@ -34,6 +35,7 @@ startAutoSaveLoop();
 startBoardWatch();
 startRecentFilesTracking();
 startCompileHistoryTracking();
+startPersistedBoardTracking();
 
 // Flush any pending autosave before the window closes. Without this, the
 // 2-second autosave debounce can silently drop the user's last edits when

@@ -335,14 +335,6 @@ function FilesView() {
   );
 }
 
-function PlaceholderView({ label }: { label: string }) {
-  return (
-    <div class="sb-body">
-      <div class="sb-placeholder">{label} — coming soon.</div>
-    </div>
-  );
-}
-
 export function FileSidebar() {
   const rail = activeRail.value;
   return (
@@ -353,7 +345,6 @@ export function FileSidebar() {
       {rail === "search" && <SearchView />}
       {rail === "libraries" && <LibrariesView />}
       {rail === "boards" && <BoardsView />}
-      {rail === "walkthrough" && <PlaceholderView label="Walkthrough" />}
       {rail === "settings" && <SettingsView />}
     </aside>
   );

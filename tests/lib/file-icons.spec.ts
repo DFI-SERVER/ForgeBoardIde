@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { FileCode2, FileText } from "lucide-preact";
-import { iconForName } from "../../src/lib/file-icons";
+import { iconForName, languageLabelForName } from "../../src/lib/file-icons";
 
 describe("iconForName", () => {
   it("returns FileCode2 for Arduino sketch extensions", () => {
@@ -37,5 +37,45 @@ describe("iconForName", () => {
   it("works on full paths, not just basenames", () => {
     expect(iconForName("C:/sketches/blink/blink.ino")).toBe(FileCode2);
     expect(iconForName("/home/u/blink/README.md")).toBe(FileText);
+  });
+});
+
+describe("languageLabelForName", () => {
+  it("labels .ino and .pde as Arduino", () => {
+    expect(languageLabelForName("blink.ino")).toBe("Arduino");
+    expect(languageLabelForName("legacy.pde")).toBe("Arduino");
+  });
+
+  it("labels the C-family extensions as C++", () => {
+    expect(languageLabelForName("driver.cpp")).toBe("C++");
+    expect(languageLabelForName("util.cxx")).toBe("C++");
+    expect(languageLabelForName("legacy.cc")).toBe("C++");
+    expect(languageLabelForName("plain.c")).toBe("C++");
+    expect(languageLabelForName("pins.h")).toBe("C++");
+    expect(languageLabelForName("config.hpp")).toBe("C++");
+    expect(languageLabelForName("alt.hxx")).toBe("C++");
+  });
+
+  it("labels structured text formats by name", () => {
+    expect(languageLabelForName("settings.json")).toBe("JSON");
+    expect(languageLabelForName("README.md")).toBe("Markdown");
+    expect(languageLabelForName("notes.txt")).toBe("Plain");
+  });
+
+  it("returns Plain for anything else", () => {
+    expect(languageLabelForName("library.properties")).toBe("Plain");
+    expect(languageLabelForName("keywords.txt")).toBe("Plain");
+    expect(languageLabelForName("noext")).toBe("Plain");
+    expect(languageLabelForName("data.yaml")).toBe("Plain");
+  });
+
+  it("is case-insensitive on the extension", () => {
+    expect(languageLabelForName("Sketch.INO")).toBe("Arduino");
+    expect(languageLabelForName("Pins.H")).toBe("C++");
+  });
+
+  it("works on full paths, not just basenames", () => {
+    expect(languageLabelForName("C:/sketches/blink/blink.ino")).toBe("Arduino");
+    expect(languageLabelForName("/home/u/blink/README.md")).toBe("Markdown");
   });
 });

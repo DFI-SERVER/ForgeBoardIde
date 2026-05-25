@@ -5,6 +5,8 @@
 import { getActiveEditor } from "../components/MonacoEditor";
 import { formatArduino } from "./format";
 import { settings } from "./settings";
+import { isFormattableSketchFile } from "./autosave";
+import { openTabs, activeTabIndex, toast } from "../state/appState";
 
 export function editorUndo() {
   getActiveEditor()?.trigger("menu", "undo", null);
@@ -38,6 +40,14 @@ export function editorFind() {
   editor?.getAction("actions.find")?.run();
 }
 
+/** Open Monaco's "Go to Line" widget on the active editor. No-op when none
+ *  is mounted (the keybinding is harmless when the welcome screen is up). */
+export function editorGoToLine() {
+  const editor = getActiveEditor();
+  editor?.focus();
+  editor?.getAction("editor.action.gotoLine")?.run();
+}
+
 export function editorReplace() {
   const editor = getActiveEditor();
   editor?.focus();
@@ -47,8 +57,20 @@ export function editorReplace() {
 /**
  * Auto Format — re-indent the active file to its brace depth. Applied as a
  * single, undoable edit so Ctrl+Z restores the previous layout in one step.
+ *
+ * Refuses to run on non-C-family files — the formatter is a brace-aware
+ * re-indenter and would happily mangle JSON, YAML, Markdown, etc. A toast
+ * tells the user why the keystroke did nothing.
  */
 export function editorAutoFormat() {
+  const active = openTabs.value[activeTabIndex.value];
+  if (!active || !isFormattableSketchFile(active.path)) {
+    toast.value = {
+      text: "Auto Format only runs on C/C++ files.",
+      kind: "info",
+    };
+    return;
+  }
   const editor = getActiveEditor();
   if (!editor) return;
   const model = editor.getModel();

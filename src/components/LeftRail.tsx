@@ -7,7 +7,6 @@ import {
   Search,
   Library,
   CircuitBoard,
-  Compass,
   Settings,
 } from "lucide-preact";
 
@@ -29,7 +28,6 @@ const MAIN_ITEMS: RailItem[] = [
 ];
 
 const HELP_ITEMS: RailItem[] = [
-  { id: "walkthrough", Icon: Compass, label: "Walkthrough" },
   { id: "settings", Icon: Settings, label: "Settings" },
 ];
 

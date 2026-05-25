@@ -208,7 +208,8 @@ export function saveActiveFile() {
 }
 
 /**
- * Open a sketch file in the editor and, optionally, jump the cursor to a line.
+ * Open a sketch file in the editor and, optionally, jump the cursor to a line
+ * (and column).
  *
  * Reuses the Files view's open mechanism — finding the file's tab by absolute
  * path and switching `activeTabIndex` to it. If the file belongs to the open
@@ -216,9 +217,15 @@ export function saveActiveFile() {
  * tab), a tab is created so the click still works. After the tab is active,
  * the Monaco model swap is async, so the line jump is deferred a tick.
  *
- * Used by the Find in Project results list. `line` is 1-based.
+ * Used by the Find in Project results list and the Problems panel. Both
+ * `line` and `column` are 1-based; `column` defaults to 1 so callers that
+ * only know the line still land at the start of it.
  */
-export function openFileAtLine(path: string, line?: number): void {
+export function openFileAtLine(
+  path: string,
+  line?: number,
+  column?: number,
+): void {
   // First check every group — if any pane already has the file open, just
   // jump focus to it instead of duplicating the tab in the active group.
   // Without this scan, a Find-in-Project click on a result for a file open
@@ -240,17 +247,21 @@ export function openFileAtLine(path: string, line?: number): void {
     const editor = getActiveEditor();
     if (!editor) return;
     const model = editor.getModel();
-    const clamped = model
+    const clampedLine = model
       ? Math.min(Math.max(line, 1), model.getLineCount())
       : Math.max(line, 1);
-    editor.revealLineInCenter(clamped);
-    editor.setSelection({
-      startLineNumber: clamped,
-      startColumn: 1,
-      endLineNumber: clamped,
-      endColumn: 1,
-    });
-    editor.setPosition({ lineNumber: clamped, column: 1 });
+    const col = column ?? 1;
+    const lineMaxCol = model ? model.getLineMaxColumn(clampedLine) : col;
+    const clampedCol = Math.min(Math.max(col, 1), lineMaxCol);
+    const sel = {
+      startLineNumber: clampedLine,
+      startColumn: clampedCol,
+      endLineNumber: clampedLine,
+      endColumn: clampedCol,
+    };
+    editor.revealLineInCenter(clampedLine);
+    editor.setSelection(sel);
+    editor.setPosition({ lineNumber: clampedLine, column: clampedCol });
     editor.focus();
   }, 0);
 }
@@ -258,14 +269,35 @@ export function openFileAtLine(path: string, line?: number): void {
 /* --------------------------------------------------------------- Build --- */
 
 let listenersReady = false;
+
+/**
+ * Hard cap on lines retained in `buildOutput`. A verbose `-v` arduino-cli
+ * compile of a heavy framework (ESP-IDF, RP2040 SDK) can emit tens of
+ * thousands of lines; without a cap the array grows until the Output panel's
+ * DOM count makes the IDE unusable. The oldest lines are dropped (the user
+ * cares about the most recent errors and the final size summary) and a
+ * single replacement marker takes their slot so the array stays at MAX.
+ */
+const MAX_BUILD_OUTPUT_LINES = 5000;
+
+/** Append `line` to `buildOutput`, dropping the oldest lines + inserting a
+ *  truncation marker if the cap would be exceeded. The marker counts toward
+ *  the cap so the visible length is stable at MAX. */
+function appendBuildOutputLine(line: string): void {
+  const next = [...buildOutput.value, line];
+  if (next.length > MAX_BUILD_OUTPUT_LINES) {
+    // Drop the oldest lines, keeping the last MAX-1, prepended with a marker.
+    const overflow = next.length - MAX_BUILD_OUTPUT_LINES;
+    next.splice(0, overflow + 1, `… (${overflow + 1} earlier lines truncated)`);
+  }
+  buildOutput.value = next;
+}
+
 async function ensureBuildListeners() {
   if (listenersReady) return;
   listenersReady = true;
-  const append = (line: string) => {
-    buildOutput.value = [...buildOutput.value, line];
-  };
-  await arduinoApi.onCompileOutput(append);
-  await arduinoApi.onUploadOutput(append);
+  await arduinoApi.onCompileOutput(appendBuildOutputLine);
+  await arduinoApi.onUploadOutput(appendBuildOutputLine);
 }
 
 function reportPrecheck(message: string) {
@@ -556,6 +588,24 @@ export function openLibraries() {
 /** Switch the activity rail to the Boards view. */
 export function openBoardsManager() {
   activeRail.value = "boards";
+}
+
+/**
+ * Toggle the OS-level fullscreen state on the IDE's main window. The Tauri
+ * window API is dynamically imported so this module can still be unit-tested
+ * in the jsdom env where `@tauri-apps/api/window` isn't usable. Failures
+ * (no IPC available, window already detached) are swallowed — fullscreen is
+ * a convenience, not a hard requirement.
+ */
+export async function toggleFullscreen(): Promise<void> {
+  try {
+    const { getCurrentWindow } = await import("@tauri-apps/api/window");
+    const w = getCurrentWindow();
+    const isFs = await w.isFullscreen();
+    await w.setFullscreen(!isFs);
+  } catch (e) {
+    console.error("toggle fullscreen failed:", e);
+  }
 }
 
 /* --------------------------------------------------------------- Tools --- */

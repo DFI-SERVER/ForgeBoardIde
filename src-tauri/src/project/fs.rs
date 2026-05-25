@@ -333,8 +333,21 @@ pub fn write_file(path: &Path, contents: &str) -> Result<(), ProjectError> {
     Ok(())
 }
 
-const DEFAULT_INO_CONTENTS: &str =
-    "void setup() {\n  // initialize once\n}\n\nvoid loop() {\n  // repeat forever\n}\n";
+const DEFAULT_INO_CONTENTS: &str = "\
+// put your setup code here, to run once:
+void setup() {
+  Serial.begin(115200);
+  pinMode(LED_BUILTIN, OUTPUT);
+}
+
+// put your main code here, to run repeatedly:
+void loop() {
+  digitalWrite(LED_BUILTIN, HIGH);
+  delay(500);
+  digitalWrite(LED_BUILTIN, LOW);
+  delay(500);
+}
+";
 
 #[cfg(test)]
 mod tests {

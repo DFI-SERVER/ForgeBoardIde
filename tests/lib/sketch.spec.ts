@@ -125,6 +125,36 @@ describe("loadSketch — disposes Monaco models for stale buffers", () => {
   });
 });
 
+/* ------------------------------------------- loadSketch — same-sketch no-op --- */
+
+describe("loadSketch — re-opening the active sketch is a no-op", () => {
+  it("returns early without re-reading files or disposing models", async () => {
+    const { loadSketch } = await import("../../src/lib/sketch");
+
+    // First load establishes Old as the active sketch.
+    await loadSketch(OLD_SKETCH);
+
+    // Clear the spy's call history so we can prove the SECOND load makes
+    // no IPC calls and no model disposals.
+    const readSpy = vi.spyOn(projectApi, "readFile");
+    readSpy.mockClear();
+    // Seed a stale model so we can prove no disposal happened.
+    const liveUri = monaco.Uri.parse(`file://${OLD_SKETCH.files[0].path}-fake`);
+    const liveModel = monaco.editor.createModel(
+      "still here",
+      "arduino",
+      liveUri,
+    );
+
+    // Calling loadSketch with the same path is a no-op.
+    await loadSketch(OLD_SKETCH);
+
+    expect(readSpy).not.toHaveBeenCalled();
+    expect(liveModel.isDisposed()).toBe(false);
+    expect(currentSketch.value).toBe(OLD_SKETCH);
+  });
+});
+
 /* -------------------------------- loadSketch — per-build transient state --- */
 
 describe("loadSketch — clears per-build transient state on swap", () => {

@@ -37,6 +37,14 @@ import {
  * rather than blocking the sketch from opening.
  */
 export async function loadSketch(sketch: Sketch): Promise<void> {
+  // Re-opening the currently-active sketch is a no-op: reloading the same
+  // sketch would dispose every Monaco model (losing cursor positions, undo
+  // history, and any unsaved edits not yet flushed) for zero benefit. The
+  // common trigger is the user clicking the same recent in Open Recent.
+  if (currentSketch.value?.path === sketch.path) {
+    return;
+  }
+
   // Block until any in-flight or debounced save reaches disk — otherwise the
   // batch below wipes fileContents and editorGroups, destroying the only
   // copy of the user's unsaved edits. flushSaveAsync is a no-op when

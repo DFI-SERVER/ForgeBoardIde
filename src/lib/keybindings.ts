@@ -23,6 +23,7 @@ import {
   openSerialMonitor,
   openLibraries,
   splitEditorRight,
+  toggleFullscreen,
 } from "./actions";
 import {
   editorFind,
@@ -30,9 +31,10 @@ import {
   editorUndo,
   editorRedo,
   editorAutoFormat,
+  editorGoToLine,
 } from "./editor-actions";
 import { searchFocusRequest, type RailIcon } from "../state/appState";
-import { closeActiveTab, nextTab } from "./tabs";
+import { closeActiveTab, nextTab, reopenClosedTab } from "./tabs";
 
 /** Shortcut grouping, in the order the reference modal lists them. */
 export type KeybindingCategory = "File" | "Sketch" | "Edit" | "Tools" | "View";
@@ -138,6 +140,18 @@ export const keybindings: Keybinding[] = [
       void closeActiveTab();
     },
   },
+  {
+    id: "file.reopenClosedTab",
+    combo: "Ctrl+Shift+T",
+    label: "Reopen Closed Tab",
+    category: "File",
+    scope: "global",
+    // reopenClosedTab is async (may read from disk if the file isn't already
+    // cached in fileContents); fire-and-forget keeps the `run` signature sync.
+    run: () => {
+      void reopenClosedTab();
+    },
+  },
 
   /* -------------------------------------------------------- Sketch --- */
   {
@@ -197,6 +211,14 @@ export const keybindings: Keybinding[] = [
     category: "Edit",
     scope: "global",
     run: findInProject,
+  },
+  {
+    id: "edit.gotoLine",
+    combo: "Ctrl+G",
+    label: "Go to Line",
+    category: "Edit",
+    scope: "global",
+    run: editorGoToLine,
   },
 
   /* --------------------------------------------------------- Tools --- */
@@ -327,6 +349,26 @@ export const keybindings: Keybinding[] = [
     category: "View",
     scope: "global",
     run: goRail("boards"),
+  },
+  {
+    id: "view.settings",
+    combo: "Ctrl+,",
+    label: "Open Settings",
+    category: "View",
+    scope: "global",
+    run: goRail("settings"),
+  },
+  {
+    id: "view.toggleFullscreen",
+    combo: "F11",
+    label: "Toggle Fullscreen",
+    category: "View",
+    scope: "global",
+    // toggleFullscreen is async (dynamically imports the Tauri window API);
+    // fire-and-forget keeps the run signature sync.
+    run: () => {
+      void toggleFullscreen();
+    },
   },
 ];
 

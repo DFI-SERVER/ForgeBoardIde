@@ -6,6 +6,7 @@ import {
   serialLineEnding,
   serialConnected,
   connectedPort,
+  toast,
 } from "../state/appState";
 import "./SerialMonitor.css";
 
@@ -112,9 +113,40 @@ export function SerialMonitor() {
         <select
           class="sm-select"
           value={serialBaud.value}
-          onChange={(e) =>
-            (serialBaud.value = Number((e.target as HTMLSelectElement).value))
-          }
+          onChange={async (e) => {
+            const newBaud = Number((e.target as HTMLSelectElement).value);
+            // If the port is open, the chip is already negotiated at the
+            // OLD baud — silently flipping the signal would leave the IDE
+            // talking at the new rate while the port stays at the old one,
+            // producing the classic "garbage characters" effect. Close and
+            // reopen the port atomically so the wire matches the UI.
+            if (serialConnected.value) {
+              const port = connectedPort.value;
+              try {
+                await serialApi.close();
+                serialConnected.value = false;
+                serialBaud.value = newBaud;
+                if (port) {
+                  await serialApi.open(port, newBaud);
+                  serialConnected.value = true;
+                  toast.value = {
+                    text: `Reconnected at ${newBaud} baud`,
+                    kind: "info",
+                  };
+                }
+              } catch (err) {
+                // Leave the port closed and let the user reopen manually
+                // — better than silently re-connecting at the wrong rate.
+                serialBaud.value = newBaud;
+                toast.value = {
+                  text: `Couldn't reopen at ${newBaud} baud: ${String(err)}`,
+                  kind: "warn",
+                };
+              }
+            } else {
+              serialBaud.value = newBaud;
+            }
+          }}
         >
           {BAUD_RATES.map((b) => (
             <option value={b}>{b}</option>
