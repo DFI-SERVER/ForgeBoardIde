@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import { Check, ChevronDown } from "lucide-preact";
-import { activeProfile, sketchProfiles } from "../state/appState";
+import {
+  activeProfile,
+  currentSketch,
+  sketchProfiles,
+} from "../state/appState";
+import { writeSketchProfile } from "../lib/sketch-profile-store";
 import "./ProfilePill.css";
 
 /**
@@ -39,6 +44,11 @@ export function ProfilePill() {
 
   function pick(name: string | null) {
     activeProfile.value = name;
+    // Persist the explicit choice on the current sketch so a reopen
+    // restores it instead of reverting to default_profile. `null` clears
+    // the entry (the user is back on the global board selector).
+    const sk = currentSketch.value;
+    if (sk) writeSketchProfile(sk.path, name);
     setOpen(false);
   }
 

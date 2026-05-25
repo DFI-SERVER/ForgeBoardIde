@@ -39,10 +39,16 @@ export function BoardsView() {
     if (coreInstallRunning.value) return;
     coreInstallRunning.value = coreId;
     coreInstallProgress.value = [`Installing ${coreId}...`];
-    const unlisten = await arduinoApi.onCoreInstallOutput((line) => {
-      coreInstallProgress.value = [...coreInstallProgress.value, line];
-    });
+    // The listener subscription must live INSIDE the try so a failing
+    // onCoreInstallOutput (e.g. Tauri IPC error during event registration)
+    // still releases the install lock through `finally`. Without this, the
+    // attach reject escapes early and coreInstallRunning stays pinned to
+    // the coreId, disabling every Install button permanently.
+    let unlisten: () => void = () => {};
     try {
+      unlisten = await arduinoApi.onCoreInstallOutput((line) => {
+        coreInstallProgress.value = [...coreInstallProgress.value, line];
+      });
       const code = await arduinoApi.installCore(coreId);
       coreInstallProgress.value = [
         ...coreInstallProgress.value,
@@ -52,8 +58,8 @@ export function BoardsView() {
     } catch (e) {
       coreInstallProgress.value = [...coreInstallProgress.value, `✗ Error: ${String(e)}`];
     } finally {
-      coreInstallRunning.value = null;
       unlisten();
+      coreInstallRunning.value = null;
     }
   }
 

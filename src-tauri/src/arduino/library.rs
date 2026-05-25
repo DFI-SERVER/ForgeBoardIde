@@ -2,6 +2,7 @@ use super::cli;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
+use tauri::Emitter;
 
 /// An arduino-cli library — a registry entry or an installed library.
 ///
@@ -170,39 +171,67 @@ pub async fn list_installed(app: &tauri::AppHandle) -> Result<Vec<Library>, Stri
     Ok(libs)
 }
 
+/// Emit each non-empty line of `stderr` to the named Tauri event stream so the
+/// frontend's progress log surfaces the real error rather than just an exit
+/// code. Trailing blank lines are skipped. The caller decides when to call —
+/// typically only on a failing exit so success paths stay quiet.
+fn emit_stderr_lines(app: &tauri::AppHandle, event: &str, stderr: &str) {
+    for line in stderr.lines() {
+        if line.is_empty() {
+            continue;
+        }
+        let _ = app.emit(event, line.to_string());
+    }
+}
+
 /// Install (or upgrade, when `name` carries an `@version`) a registry library,
 /// streaming progress to the `lib-install-output` event. Returns the exit code.
+/// On failure, stderr is replayed onto the same event stream so the user sees
+/// the actual arduino-cli error (which otherwise goes only to a discarded
+/// buffer).
 pub async fn install(app: &tauri::AppHandle, name: &str) -> Result<i32, String> {
-    let (code, _stderr) = cli::run_streaming(
+    let (code, stderr) = cli::run_streaming(
         app,
         "lib-install-output",
         &["lib", "install", name, "--no-color"],
     )
     .await?;
+    if code != 0 {
+        emit_stderr_lines(app, "lib-install-output", &stderr);
+    }
     Ok(code)
 }
 
 /// Uninstall an installed library by name, streaming progress to the
-/// `lib-install-output` event. Returns the exit code.
+/// `lib-install-output` event. Returns the exit code. On failure, stderr is
+/// replayed onto the same event stream so the user sees the actual error.
 pub async fn uninstall(app: &tauri::AppHandle, name: &str) -> Result<i32, String> {
-    let (code, _stderr) = cli::run_streaming(
+    let (code, stderr) = cli::run_streaming(
         app,
         "lib-install-output",
         &["lib", "uninstall", name, "--no-color"],
     )
     .await?;
+    if code != 0 {
+        emit_stderr_lines(app, "lib-install-output", &stderr);
+    }
     Ok(code)
 }
 
 /// Install a library from a local `.zip` archive (`lib install --zip-path`),
 /// streaming progress to the `lib-install-output` event. Returns the exit code.
+/// On failure, stderr is replayed onto the same event stream so the user sees
+/// the actual error (e.g. malformed archive, missing library.properties).
 pub async fn install_zip(app: &tauri::AppHandle, zip_path: &str) -> Result<i32, String> {
-    let (code, _stderr) = cli::run_streaming(
+    let (code, stderr) = cli::run_streaming(
         app,
         "lib-install-output",
         &["lib", "install", "--zip-path", zip_path, "--no-color"],
     )
     .await?;
+    if code != 0 {
+        emit_stderr_lines(app, "lib-install-output", &stderr);
+    }
     Ok(code)
 }
 

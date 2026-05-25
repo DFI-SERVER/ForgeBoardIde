@@ -13,6 +13,7 @@ import {
   detectedPorts,
   selectedFqbn,
   toast,
+  buildPhase,
 } from "../state/appState";
 
 /** How often the watcher scans for connected boards. */
@@ -102,6 +103,13 @@ export function startBoardWatch(): void {
 
   const tick = async (): Promise<void> => {
     if (ticking) return; // a previous scan (or identify probe) is still running
+    // During an ESP32 upload the port vanishes for 1–2 s as esptool resets
+    // the chip. If the watcher runs in that window it tears down the
+    // connection and races with the in-flight upload. Skip polling while
+    // a build is in flight; the next tick after `buildPhase` returns to
+    // `idle`/`success`/`error` will pick up the post-upload reality.
+    const phase = buildPhase.value;
+    if (phase === "compiling" || phase === "uploading") return;
     ticking = true;
     try {
       const detected = await arduinoApi.detectPorts();

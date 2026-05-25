@@ -401,6 +401,12 @@ function recordCompileSize(stderr: string) {
 
 /** Verify / Compile the current sketch. */
 export async function compileSketch(): Promise<void> {
+  // Re-entry guard: keyboard shortcuts (Ctrl+R) bypass the ActionBar's
+  // disabled state, so a second invocation while a compile or upload is
+  // already in flight would spawn another arduino-cli process and have both
+  // stream into the same listener.
+  const phase = buildPhase.value;
+  if (phase === "compiling" || phase === "uploading") return;
   // Flush any pending autosave so the build sees the latest content on disk.
   // Without this, a student typing a fix and immediately hitting Verify/Upload
   // would compile the 2-second-old version and chase a phantom bug.
@@ -435,6 +441,12 @@ export async function compileSketch(): Promise<void> {
 
 /** Compile and upload the current sketch to the connected board. */
 export async function uploadSketch(): Promise<void> {
+  // Re-entry guard: keyboard shortcuts (Ctrl+U) bypass the ActionBar's
+  // disabled state, so a second invocation while a compile or upload is
+  // already in flight would spawn another arduino-cli process and have both
+  // stream into the same listener.
+  const phase = buildPhase.value;
+  if (phase === "compiling" || phase === "uploading") return;
   // Flush any pending autosave so the build sees the latest content on disk.
   // Without this, a student typing a fix and immediately hitting Verify/Upload
   // would compile the 2-second-old version and chase a phantom bug.

@@ -132,11 +132,20 @@ pub async fn arduino_lib_install_zip(
 }
 
 /// List example sketches found in the `examples/` folders of installed
-/// libraries. Synchronous filesystem work, run on a blocking thread so the
-/// scan never stalls the async runtime.
+/// libraries. The libraries root is resolved from arduino-cli's effective
+/// `directories.user/libraries` (cached for the session), then the scan
+/// itself runs on a blocking thread so synchronous filesystem walks don't
+/// stall the async runtime. An empty list is returned when no libraries
+/// root can be discovered — never an error, so a fresh install still shows
+/// the curated starter examples.
 #[tauri::command]
-pub async fn arduino_list_library_examples() -> Result<Vec<super::examples::LibraryExample>, String> {
-    tokio::task::spawn_blocking(super::examples::list_library_examples)
+pub async fn arduino_list_library_examples(
+    app: tauri::AppHandle,
+) -> Result<Vec<super::examples::LibraryExample>, String> {
+    let Some(root) = super::examples::libraries_root(&app).await else {
+        return Ok(Vec::new());
+    };
+    tokio::task::spawn_blocking(move || super::examples::list_library_examples_in(&root))
         .await
         .map_err(|e| e.to_string())
 }

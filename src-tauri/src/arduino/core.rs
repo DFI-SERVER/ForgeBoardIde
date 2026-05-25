@@ -1,6 +1,7 @@
 use super::cli;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use tauri::Emitter;
 
 /// An arduino-cli platform / core (e.g. `esp32:esp32`).
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -63,15 +64,25 @@ pub async fn search(app: &tauri::AppHandle, query: &str) -> Result<Vec<Core>, St
     Ok(cores)
 }
 
-/// Install a core on demand, streaming progress to the `core-install-output` event.
-/// Returns the arduino-cli exit code.
+/// Install a core on demand, streaming progress to the `core-install-output`
+/// event. Returns the arduino-cli exit code. On failure, stderr is replayed
+/// onto the same event stream so the user sees the real error rather than
+/// just a non-zero exit number.
 pub async fn install(app: &tauri::AppHandle, core_id: &str) -> Result<i32, String> {
-    let (code, _stderr) = cli::run_streaming(
+    let (code, stderr) = cli::run_streaming(
         app,
         "core-install-output",
         &["core", "install", core_id, "--no-color"],
     )
     .await?;
+    if code != 0 {
+        for line in stderr.lines() {
+            if line.is_empty() {
+                continue;
+            }
+            let _ = app.emit("core-install-output", line.to_string());
+        }
+    }
     Ok(code)
 }
 

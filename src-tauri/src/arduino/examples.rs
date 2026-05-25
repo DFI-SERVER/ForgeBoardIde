@@ -2,17 +2,20 @@
 //!
 //! An Arduino library may carry an `examples/` folder; each example is itself a
 //! sketch folder — `examples/<Name>/<Name>.ino`. Libraries the user installs
-//! land under the sketchbook `libraries/` directory (a sibling of the
-//! `sketches/` folder this app creates user sketches in). Scanning that tree
-//! lets library examples appear in the Examples view as soon as a library is
-//! installed, with no arduino-cli round-trip.
+//! land under arduino-cli's configured `directories.user/libraries`. Scanning
+//! that tree lets library examples appear in the Examples view as soon as a
+//! library is installed, with no arduino-cli round-trip per scan.
 //!
 //! The curated *starter* examples are bundled with the app as frontend data
 //! (see `src/lib/example-catalog.ts`); this module only handles the dynamic,
 //! installed-library set.
 
+use super::cli;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use std::path::{Path, PathBuf};
+use std::sync::Mutex;
+use std::sync::OnceLock;
 
 /// One example sketch found inside an installed library.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -27,13 +30,79 @@ pub struct LibraryExample {
     pub folder_path: PathBuf,
 }
 
-/// The sketchbook `libraries/` directory: `~/Documents/ForgeBoard/libraries`.
-///
-/// This mirrors `project::fs::sketches_root`, which resolves
-/// `~/Documents/ForgeBoard/sketches` — the libraries folder is its sibling and
-/// is where arduino-cli installs libraries when the sketchbook is set there.
-fn libraries_root() -> Option<PathBuf> {
+/// Fallback libraries root used when arduino-cli can't tell us where its user
+/// directory is — `~/Documents/ForgeBoard/libraries`, where the project's own
+/// sketchbook lives. This kept being the default before FIX 10; it stays as
+/// the safety net so a missing arduino-cli doesn't break example discovery.
+fn fallback_libraries_root() -> Option<PathBuf> {
     dirs::document_dir().map(|d| d.join("ForgeBoard").join("libraries"))
+}
+
+/// Parse arduino-cli's `config dump --format json` payload and extract the
+/// effective `directories.user` path. Returns `None` when the field is
+/// missing or not a string. Pulled out so the JSON shape can be unit-tested
+/// without spinning up a real arduino-cli process.
+pub(crate) fn parse_arduino_user_dir(config_json: &str) -> Option<PathBuf> {
+    let v: Value = serde_json::from_str(config_json).ok()?;
+    // The config payload uses dotted-string keys at the top level (Arduino's
+    // viper-style YAML→JSON dump): `"directories.user": "..."`. Some builds
+    // also nest it as a real object (`{"directories": {"user": "..."}}`).
+    // Accept both shapes so a future arduino-cli release that switches one
+    // way or the other still works.
+    if let Some(s) = v.get("directories.user").and_then(Value::as_str) {
+        return Some(PathBuf::from(s));
+    }
+    if let Some(s) = v
+        .get("directories")
+        .and_then(|d| d.get("user"))
+        .and_then(Value::as_str)
+    {
+        return Some(PathBuf::from(s));
+    }
+    None
+}
+
+/// Cached `directories.user/libraries` for the session — once arduino-cli has
+/// told us where it installs libraries, we don't re-run `config dump` on every
+/// example scan.
+static LIBRARIES_ROOT_CACHE: OnceLock<Mutex<Option<PathBuf>>> = OnceLock::new();
+
+fn cache_cell() -> &'static Mutex<Option<PathBuf>> {
+    LIBRARIES_ROOT_CACHE.get_or_init(|| Mutex::new(None))
+}
+
+/// Ask arduino-cli for its effective `directories.user`, append `libraries`,
+/// and cache the result for the rest of the session. On any error — arduino-cli
+/// missing, JSON shape unexpected — fall back to the hardcoded
+/// `~/Documents/ForgeBoard/libraries` so example discovery still produces
+/// something useful in a test scenario.
+pub async fn libraries_root(app: &tauri::AppHandle) -> Option<PathBuf> {
+    if let Ok(guard) = cache_cell().lock() {
+        if let Some(cached) = guard.as_ref() {
+            return Some(cached.clone());
+        }
+    }
+    let resolved = match cli::run_capture(app, &["config", "dump", "--format", "json"]).await {
+        Ok(json) => parse_arduino_user_dir(&json)
+            .map(|p| p.join("libraries"))
+            .or_else(fallback_libraries_root),
+        Err(_) => fallback_libraries_root(),
+    };
+    if let Some(path) = &resolved {
+        if let Ok(mut guard) = cache_cell().lock() {
+            *guard = Some(path.clone());
+        }
+    }
+    resolved
+}
+
+/// Test-only reset hook — clears the cached libraries root so a test that
+/// exercises the path resolution can run repeatedly without leaking state.
+#[cfg(test)]
+fn reset_libraries_root_cache() {
+    if let Ok(mut guard) = cache_cell().lock() {
+        *guard = None;
+    }
 }
 
 /// Find the example's main `.ino` inside `example_dir`.
@@ -119,18 +188,18 @@ fn scan_library_examples(library_name: &str, examples_dir: &Path, out: &mut Vec<
 }
 
 /// List example sketches found in the `examples/` folders of installed
-/// libraries under the sketchbook `libraries/` directory.
+/// libraries under the given `libraries_root`.
 ///
 /// Returns an empty list (never an error) when no libraries are installed or
 /// the libraries directory does not exist yet — a fresh install simply has no
 /// library examples, and the curated starter set is still shown by the UI.
 /// Results are sorted by library, then example name, so the UI can group them.
-pub fn list_library_examples() -> Vec<LibraryExample> {
+///
+/// The caller (the Tauri command) resolves `libraries_root` from arduino-cli's
+/// `directories.user/libraries`; tests can pass any path they want.
+pub fn list_library_examples_in(root: &Path) -> Vec<LibraryExample> {
     let mut out = Vec::new();
-    let Some(root) = libraries_root() else {
-        return out;
-    };
-    let Ok(libraries) = std::fs::read_dir(&root) else {
+    let Ok(libraries) = std::fs::read_dir(root) else {
         return out;
     };
     for lib_entry in libraries.flatten() {
@@ -273,5 +342,52 @@ mod tests {
         scan_library_examples("TestLib", &dir.join("TestLib").join("examples"), &mut out);
         assert_eq!(out.len(), 2);
         fs::remove_dir_all(&dir).unwrap();
+    }
+
+    /* ---------- libraries_root JSON parsing (FIX 10) ---------------------- */
+
+    #[test]
+    fn parse_arduino_user_dir_reads_dotted_key_shape() {
+        // arduino-cli's config dump uses dotted-string keys at the top level:
+        //   { "directories.user": "...", "directories.data": "...", ... }
+        let json = r#"{
+            "board_manager": { "additional_urls": [] },
+            "directories.data": "/home/u/.arduino15",
+            "directories.downloads": "/home/u/.arduino15/staging",
+            "directories.user": "/home/u/Arduino"
+        }"#;
+        let got = parse_arduino_user_dir(json);
+        assert_eq!(got, Some(PathBuf::from("/home/u/Arduino")));
+    }
+
+    #[test]
+    fn parse_arduino_user_dir_also_reads_nested_object_shape() {
+        // Some arduino-cli builds nest the field as a real object.
+        let json = r#"{
+            "directories": { "user": "/home/u/Arduino", "data": "/tmp" }
+        }"#;
+        let got = parse_arduino_user_dir(json);
+        assert_eq!(got, Some(PathBuf::from("/home/u/Arduino")));
+    }
+
+    #[test]
+    fn parse_arduino_user_dir_returns_none_when_missing() {
+        // Both shapes absent — caller should fall back to the hardcoded path.
+        let json = r#"{ "board_manager": { "additional_urls": [] } }"#;
+        assert_eq!(parse_arduino_user_dir(json), None);
+    }
+
+    #[test]
+    fn parse_arduino_user_dir_returns_none_when_value_is_not_a_string() {
+        let json = r#"{ "directories.user": 42 }"#;
+        assert_eq!(parse_arduino_user_dir(json), None);
+    }
+
+    #[test]
+    fn parse_arduino_user_dir_returns_none_on_invalid_json() {
+        assert_eq!(parse_arduino_user_dir("not json"), None);
+        // Suppress unused-import warnings on the test-only reset hook by
+        // touching it at least once from the tests module.
+        reset_libraries_root_cache();
     }
 }

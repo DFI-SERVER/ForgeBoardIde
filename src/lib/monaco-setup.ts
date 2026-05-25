@@ -22,6 +22,43 @@ export function initMonaco() {
   monaco.languages.register({ id: "arduino", extensions: [".ino", ".pde"], aliases: ["Arduino"] });
   monaco.languages.setMonarchTokensProvider("arduino", ARDUINO_MONACO_LANGUAGE as any);
 
+  // Editor behaviours for the Arduino language — without this Monaco doesn't
+  // know how to comment a line (so Ctrl+/ is silently a no-op), close
+  // brackets/quotes for the user, surround a selection with quotes, or pick
+  // up an extra indent after `{`. The shape here mirrors Monaco's bundled
+  // configuration for `cpp`, which is the dialect Arduino sketches descend
+  // from.
+  monaco.languages.setLanguageConfiguration("arduino", {
+    comments: {
+      lineComment: "//",
+      blockComment: ["/*", "*/"],
+    },
+    brackets: [
+      ["{", "}"],
+      ["[", "]"],
+      ["(", ")"],
+    ],
+    autoClosingPairs: [
+      { open: "{", close: "}" },
+      { open: "[", close: "]" },
+      { open: "(", close: ")" },
+      { open: '"', close: '"', notIn: ["string"] },
+      { open: "'", close: "'", notIn: ["string", "comment"] },
+      { open: "/**", close: " */", notIn: ["string"] },
+    ],
+    surroundingPairs: [
+      { open: "{", close: "}" },
+      { open: "[", close: "]" },
+      { open: "(", close: ")" },
+      { open: '"', close: '"' },
+      { open: "'", close: "'" },
+    ],
+    indentationRules: {
+      increaseIndentPattern: /^.*\{[^}"']*$/,
+      decreaseIndentPattern: /^\s*\}/,
+    },
+  });
+
   defineForgeBoardDark();
   defineSolarizedDark();
   defineSolarizedLight();

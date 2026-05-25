@@ -10,6 +10,10 @@ import {
   saveState,
   sketchProfiles,
   activeProfile,
+  diagnostics,
+  buildOutput,
+  buildPhase,
+  lastCompileSize,
 } from "../../src/state/appState";
 import { projectApi, type Sketch } from "../../src/ipc/project";
 
@@ -47,6 +51,10 @@ beforeEach(() => {
   activeGroupIndex.value = 0;
   openTabs.value = [];
   activeTabIndex.value = 0;
+  diagnostics.value = [];
+  buildOutput.value = [];
+  buildPhase.value = "idle";
+  lastCompileSize.value = null;
 });
 
 afterEach(() => {
@@ -114,5 +122,43 @@ describe("loadSketch — disposes Monaco models for stale buffers", () => {
     // Every model was disposed; getOrCreateModel will lazily rebuild them.
     expect(staleModel.isDisposed()).toBe(true);
     expect(monaco.editor.getModels()).toHaveLength(0);
+  });
+});
+
+/* -------------------------------- loadSketch — per-build transient state --- */
+
+describe("loadSketch — clears per-build transient state on swap", () => {
+  it("resets diagnostics, buildOutput, buildPhase and lastCompileSize", async () => {
+    const { loadSketch } = await import("../../src/lib/sketch");
+
+    // Seed every signal with a non-default value, as if a previous build had
+    // just finished and the user immediately swaps to a new sketch.
+    diagnostics.value = [
+      {
+        file: "/s/Old/Old.ino",
+        line: 2,
+        column: 1,
+        severity: "error",
+        message: "stale diagnostic",
+      },
+    ];
+    buildOutput.value = ["stale output line 1", "stale output line 2"];
+    buildPhase.value = "error";
+    lastCompileSize.value = {
+      flashUsed: 1000,
+      flashTotal: 4000,
+      ramUsed: 500,
+      ramTotal: 2000,
+    };
+
+    await loadSketch(NEW_SKETCH);
+
+    // Every per-build signal collapses back to its empty / idle / null state
+    // so the Problems, Output and MemoryBar panels don't pin yesterday's
+    // build to today's sketch.
+    expect(diagnostics.value).toEqual([]);
+    expect(buildOutput.value).toEqual([]);
+    expect(buildPhase.value).toBe("idle");
+    expect(lastCompileSize.value).toBeNull();
   });
 });

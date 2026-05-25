@@ -245,4 +245,36 @@ describe("LibrariesView", () => {
     ).toBeInTheDocument();
     await waitFor(() => expect(arduinoApi.libListAll).toHaveBeenCalled());
   });
+
+  it("releases the install lock when onLibInstallOutput itself rejects", async () => {
+    // Pre-fix bug: libraryInstalling.value was set BEFORE awaiting the
+    // listener subscription. If that await rejected, the throw escaped the
+    // function without entering the try, and the lock stayed permanently set.
+    vi.spyOn(console, "error").mockImplementation(() => {}); // expected log
+    vi.spyOn(arduinoApi, "onLibInstallOutput").mockRejectedValue(
+      new Error("listener attach failed"),
+    );
+    const installSpy = vi.spyOn(arduinoApi, "libInstall").mockResolvedValue(0);
+
+    render(<LibrariesView />);
+    await screen.findByText("FastLED");
+
+    // Narrow to FastLED so exactly one Install button is on screen.
+    fireEvent.input(
+      screen.getByPlaceholderText(/Filter the Arduino library registry/),
+      { target: { value: "fastled" } },
+    );
+    await waitFor(() =>
+      expect(screen.queryByText("Servo")).not.toBeInTheDocument(),
+    );
+
+    fireEvent.click(screen.getByText("Install").closest("button")!);
+
+    // The install lock must clear even though the listener attach rejected.
+    // Before the fix, libraryInstalling stayed pinned to "FastLED" forever.
+    await waitFor(() => expect(libraryInstalling.value).toBeNull());
+    // And the actual op is never attempted, since the throw aborts the
+    // happy path before libInstall is called.
+    expect(installSpy).not.toHaveBeenCalled();
+  });
 });

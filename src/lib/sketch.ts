@@ -3,6 +3,7 @@ import { projectApi } from "../ipc/project";
 import { batch } from "@preact/signals";
 import * as monaco from "monaco-editor";
 import { flushSaveAsync } from "./autosave";
+import { readSketchProfile } from "./sketch-profile-store";
 import {
   currentSketch,
   fileContents,
@@ -12,6 +13,10 @@ import {
   activeTabIndex,
   sketchProfiles,
   activeProfile,
+  diagnostics,
+  buildOutput,
+  buildPhase,
+  lastCompileSize,
   type Tab,
 } from "../state/appState";
 
@@ -60,6 +65,12 @@ export async function loadSketch(sketch: Sketch): Promise<void> {
   // any) so the user starts fresh on the loaded sketch. The mirror effects
   // will pick the new active group up; do everything inside a batch so
   // the editor only re-renders once.
+  //
+  // Also clear per-build transient state — diagnostics, build output, the
+  // build phase, and the last compile's size summary — so a swap doesn't
+  // leave the previous sketch's Problems, Output and MemoryBar pinned to
+  // the new sketch. `compileSizeHistory` is intentionally NOT cleared: it
+  // is the per-FQBN sparkline trail and survives sketch swaps.
   batch(() => {
     fileContents.value = contents;
     editorGroups.value = [
@@ -68,6 +79,10 @@ export async function loadSketch(sketch: Sketch): Promise<void> {
     activeGroupIndex.value = 0;
     openTabs.value = newTabs;
     activeTabIndex.value = 0;
+    diagnostics.value = [];
+    buildOutput.value = [];
+    buildPhase.value = "idle";
+    lastCompileSize.value = null;
   });
   await refreshProfiles(sketch.path);
 }
@@ -77,8 +92,15 @@ export async function loadSketch(sketch: Sketch): Promise<void> {
  * signals. Pure side effects on `sketchProfiles` + `activeProfile`.
  *
  * - No `sketch.yaml`, parse error, or empty profile list → both signals reset.
- * - Profiles present → `sketchProfiles` filled; `activeProfile` set to the
- *   declared `default_profile` if it names a known profile, otherwise null.
+ * - Profiles present → `sketchProfiles` filled; `activeProfile` resolves to:
+ *     1. the user's persisted pick from `sketch-profile-store`, IF the
+ *        picked name still exists in the loaded YAML;
+ *     2. otherwise, the YAML's `default_profile` when it names a known
+ *        profile;
+ *     3. otherwise null (the global board selector takes over).
+ *
+ * Honouring the persisted pick is what stops a user's explicit choice from
+ * being silently reverted on every sketch reopen.
  */
 async function refreshProfiles(sketchPath: string): Promise<void> {
   try {
@@ -89,8 +111,16 @@ async function refreshProfiles(sketchPath: string): Promise<void> {
       return;
     }
     sketchProfiles.value = yaml.profiles;
-    // Honour `default_profile`, but only when it actually exists in the list
-    // — otherwise leave the user on the global board selector.
+    // Prefer the user's last explicit pick for this sketch, but only when it
+    // still names a profile present in the file — otherwise fall back to
+    // default_profile (and finally to null).
+    const persisted = readSketchProfile(sketchPath);
+    const persistedStillValid =
+      persisted !== null && yaml.profiles.some((p) => p.name === persisted);
+    if (persistedStillValid) {
+      activeProfile.value = persisted;
+      return;
+    }
     const def = yaml.default_profile;
     const exists = def && yaml.profiles.some((p) => p.name === def);
     activeProfile.value = exists ? def! : null;

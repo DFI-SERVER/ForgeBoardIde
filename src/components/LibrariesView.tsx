@@ -104,9 +104,19 @@ export function LibrariesView() {
   }
 
   /** Fetch the entire registry once and cache it. Failure is non-fatal —
-   *  the view falls back to per-query backend searches. */
+   *  the view falls back to per-query backend searches.
+   *
+   *  Skipped when the registry is already loaded OR in flight, so navigating
+   *  back to the Libraries rail doesn't trigger a fresh fetch of the 9000-
+   *  entry index every time. The user-facing Retry button passes
+   *  through here too, so an error state still allows a retry. */
   async function loadRegistry() {
-    if (libraryRegistryStatus.value === "loading") return;
+    if (
+      libraryRegistryStatus.value === "loading" ||
+      libraryRegistryStatus.value === "ready"
+    ) {
+      return;
+    }
     libraryRegistryStatus.value = "loading";
     try {
       libraryRegistry.value = await arduinoApi.libListAll();
@@ -122,6 +132,11 @@ export function LibrariesView() {
    * Run a streaming library operation (install / update / uninstall) for
    * `name`, collecting progress lines and refreshing the installed list.
    * `op` returns the arduino-cli exit code.
+   *
+   * The listener subscription is attached INSIDE the try so a failing
+   * `onLibInstallOutput` (e.g. Tauri IPC error) still releases the install
+   * lock through `finally`. The unlisten handle starts as a no-op, which is
+   * what gets called when the subscription never completed.
    */
   async function runOp(
     name: string,
@@ -131,10 +146,11 @@ export function LibrariesView() {
     if (libraryInstalling.value) return;
     libraryInstalling.value = name;
     libraryInstallProgress.value = [`${label} ${name}…`];
-    const unlisten = await arduinoApi.onLibInstallOutput((line) => {
-      libraryInstallProgress.value = [...libraryInstallProgress.value, line];
-    });
+    let unlisten: () => void = () => {};
     try {
+      unlisten = await arduinoApi.onLibInstallOutput((line) => {
+        libraryInstallProgress.value = [...libraryInstallProgress.value, line];
+      });
       const code = await op();
       libraryInstallProgress.value = [
         ...libraryInstallProgress.value,
@@ -153,8 +169,8 @@ export function LibrariesView() {
       ];
       toast.value = { kind: "warn", text: `${label} error: ${String(e)}` };
     } finally {
-      libraryInstalling.value = null;
       unlisten();
+      libraryInstalling.value = null;
     }
   }
 

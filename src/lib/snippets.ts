@@ -6,9 +6,13 @@
  * Placeholders use Monaco's textmate-style syntax (`$1`, `${1:default}`)
  * so Tab cycles through fields and Esc commits the expansion.
  *
- * Snippets are registered once for the `arduino` language. The same set
- * is offered in `.ino`, `.pde`, `.cpp`, `.c`, `.h`, `.hpp` files because
- * we register against the language id Monaco assigned to those files.
+ * Snippets are registered against BOTH the `arduino` and `cpp` languages so
+ * the curated pack reaches every kind of file the IDE opens: `.ino` / `.pde`
+ * use the arduino language (registered in `monaco-setup.ts`); `.cpp`, `.c`,
+ * `.h` and `.hpp` use Monaco's bundled `cpp` (assigned by
+ * `MonacoEditor.getOrCreateModel`). Registering once per language is
+ * idempotent — Monaco accumulates providers and the same pack appears in
+ * both completion lists.
  */
 import * as monaco from "monaco-editor";
 
@@ -209,15 +213,18 @@ export const SNIPPETS: readonly ArduinoSnippet[] = [
   },
 ];
 
-/** Register the snippet pack as a Monaco completion provider for the
- *  `arduino` language. Idempotent — calling twice is harmless because we
- *  use a module-scoped guard. */
+/** Register the snippet pack as a Monaco completion provider for both the
+ *  `arduino` and `cpp` languages. Idempotent — calling twice is harmless
+ *  because we use a module-scoped guard. Registering against `cpp` too
+ *  catches `.cpp`, `.c`, `.h`, `.hpp` files (which `MonacoEditor` assigns
+ *  the `cpp` language id by extension), so the curated pack appears in
+ *  every source file the IDE opens, not just `.ino`. */
 let registered = false;
 export function registerArduinoSnippets(): void {
   if (registered) return;
   registered = true;
 
-  monaco.languages.registerCompletionItemProvider("arduino", {
+  const provider: monaco.languages.CompletionItemProvider = {
     provideCompletionItems(model, position) {
       const word = model.getWordUntilPosition(position);
       const range: monaco.IRange = {
@@ -238,5 +245,8 @@ export function registerArduinoSnippets(): void {
         })),
       };
     },
-  });
+  };
+
+  monaco.languages.registerCompletionItemProvider("arduino", provider);
+  monaco.languages.registerCompletionItemProvider("cpp", provider);
 }
