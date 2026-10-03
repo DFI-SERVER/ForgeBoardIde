@@ -1,5 +1,16 @@
 import { invoke } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+
+// Build/install progress events are addressed to the window whose command
+// started the run (two windows can compile at once). Listening on this
+// window's target — not globally — keeps another window's output from
+// landing in our panels. Resolved lazily: getCurrentWebviewWindow() needs the
+// Tauri runtime, which the unit-test environment doesn't have at import time.
+let cachedWindow: ReturnType<typeof getCurrentWebviewWindow> | null = null;
+function thisWindow() {
+  if (!cachedWindow) cachedWindow = getCurrentWebviewWindow();
+  return cachedWindow;
+}
 
 export interface Board {
   fqbn: string;
@@ -88,11 +99,13 @@ export const arduinoApi = {
     }),
   /** Compile and flash to `port`. `verbose` runs arduino-cli with `-v`.
    *  `profile`, when set, runs the build under a named `sketch.yaml` profile
-   *  via `--profile <name>` — the profile owns the FQBN in that mode. */
+   *  via `--profile <name>` — the profile owns the FQBN in that mode.
+   *  `port` may be null for boards whose uploader finds the target itself
+   *  (STM32 DFU/SWD) — the `--port` flag is omitted in that case. */
   upload: (
     sketch: string,
     fqbn: string,
-    port: string,
+    port: string | null,
     verbose: boolean,
     profile?: string | null,
   ) =>
@@ -119,18 +132,22 @@ export const arduinoApi = {
       verbose,
     }),
   onCompileOutput: (cb: (line: string) => void) =>
-    listen<string>("compile-output", (e) => cb(e.payload)),
+    thisWindow().listen<string>("compile-output", (e) => cb(e.payload)),
   onUploadOutput: (cb: (line: string) => void) =>
-    listen<string>("upload-output", (e) => cb(e.payload)),
+    thisWindow().listen<string>("upload-output", (e) => cb(e.payload)),
   onBurnBootloaderOutput: (cb: (line: string) => void) =>
-    listen<string>("burn-bootloader-output", (e) => cb(e.payload)),
+    thisWindow().listen<string>("burn-bootloader-output", (e) => cb(e.payload)),
   listCores: () => invoke<Core[]>("arduino_list_cores"),
   searchCores: (query: string) => invoke<Core[]>("arduino_search_cores", { query }),
-  installCore: (coreId: string) => invoke<number>("arduino_install_core", { coreId }),
+  /** Install a core. `boardManagerUrl` is required for vendors outside the
+   *  default Arduino index (STM32, RP2040, Teensy…) — it is passed to
+   *  arduino-cli as `--additional-urls` on update-index + install. */
+  installCore: (coreId: string, boardManagerUrl: string | null = null) =>
+    invoke<number>("arduino_install_core", { coreId, boardManagerUrl }),
   updateIndex: () => invoke<void>("arduino_update_index"),
   identifyBoard: (port: string) => invoke<BoardId>("arduino_identify_board", { port }),
   onCoreInstallOutput: (cb: (line: string) => void) =>
-    listen<string>("core-install-output", (e) => cb(e.payload)),
+    thisWindow().listen<string>("core-install-output", (e) => cb(e.payload)),
 
   /** Search the Arduino library registry (capped result set). */
   libSearch: (query: string) => invoke<Library[]>("arduino_lib_search", { query }),
@@ -146,7 +163,7 @@ export const arduinoApi = {
   libInstallZip: (zipPath: string) => invoke<number>("arduino_lib_install_zip", { zipPath }),
   /** Subscribe to streamed lib install/uninstall progress lines. */
   onLibInstallOutput: (cb: (line: string) => void) =>
-    listen<string>("lib-install-output", (e) => cb(e.payload)),
+    thisWindow().listen<string>("lib-install-output", (e) => cb(e.payload)),
 
   /** List example sketches found in installed libraries' `examples/` folders. */
   listLibraryExamples: () =>

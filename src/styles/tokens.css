@@ -1,15 +1,18 @@
 /* ============================================================
    ForgeBoard IDE — design tokens.
    Layered surfaces, a 4px spacing scale, a 7-step type scale,
-   and three internally-cohesive themes:
-     - dark              — cool slate (default), monochrome industrial
-     - solarized-dark    — Ethan Schoonover Solarized Dark
-     - solarized-light   — Ethan Schoonover Solarized Light
+   and two monochrome themes:
+     - dark   — cool slate, near-white accent (default)
+     - light  — paper white, near-black accent
 
    Non-color tokens (spacing, type scale, fonts, layout, radii,
    motion, elevation) live in :root because they are theme-
    independent. Color tokens live in [data-theme=...] blocks
    and swap at runtime via document.documentElement.dataset.theme.
+
+   Color is reserved for things that EARN it: syntax tokens,
+   diagnostics (warning/error), hardware state (--sage = board
+   connected). The chrome itself is grayscale in both themes.
    ============================================================ */
 
 :root {
@@ -33,6 +36,9 @@
   --text-md:   14px;
   --text-lg:   16px;
   --text-xl:   20px;
+  --text-2xl:  28px;
+  --text-3xl:  40px;
+  --weight-light:    300;
   --weight-normal:   400;
   --weight-medium:   500;
   --weight-semibold: 600;
@@ -46,10 +52,15 @@
   --dur-fast: 80ms;
   --dur-base: 140ms;
 
-  /* --- Fonts — UI is fixed; the editor font is driven by Settings.
-         Defaults here are sane fallbacks before settings hydrate. --- */
-  --font-ui:   "Segoe UI", system-ui, -apple-system, sans-serif;
-  --font-mono: "Cascadia Code", "Cascadia Mono", "Consolas", "Courier New", monospace;
+  /* --- Fonts —
+         --font-ui   sans, used for buttons, tabs, copy, dialogs.
+         --font-mono code + machine-language UI (filenames in trees,
+                     FQBN, paths, console output, "$ SECTION" labels).
+         --font-display optional display face for the welcome wordmark.
+         The editor's code font is driven by Settings (fontFamilyFor). --- */
+  --font-ui:      "Inter Tight", "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-display: "Inter Tight", "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono:    "JetBrains Mono", "Cascadia Code", "Cascadia Mono", "Consolas", "Courier New", monospace;
 
   /* --- Layout --- */
   --rail-w:        52px;
@@ -58,30 +69,33 @@
   --actionbar-h:   46px;
   --tabstrip-h:    36px;
   --statusbar-h:   28px;
-  --bottompanel-h: 188px;
+  --bottompanel-h: 320px;
   --row-h:         24px;
 }
 
 /* ============================================================
-   THEME: dark (default, the existing cool-slate industrial)
+   THEME: dark (default) — true neutral grayscale, near-white
+   accent. Every surface uses equal RGB channels so the chrome
+   reads as black/gray with zero hue. Colour is reserved for
+   syntax + diagnostics + hardware state (sage = connected board).
    ============================================================ */
 :root,
 [data-theme="dark"] {
-  --surface-0: #0e0f13;
-  --surface-1: #14151b;
-  --surface-2: #1e2029;
-  --surface-3: #262a35;
-  --editor-bg: #181a23;
+  --surface-0: #0a0a0a;
+  --surface-1: #121212;
+  --surface-2: #1c1c1c;
+  --surface-3: #252525;
+  --editor-bg: #181818;
 
-  --border-strong: #343843;
-  --border:        #262a33;
-  --border-subtle: #1c1e25;
+  --border-strong: #383838;
+  --border:        #2a2a2a;
+  --border-subtle: #1f1f1f;
 
-  --fg-bright:   #f0f1f5;
-  --fg-default:  #c9ccd6;
-  --fg-muted:    #8b909e;
-  --fg-subtle:   #61667a;
-  --fg-disabled: #45495a;
+  --fg-bright:   #f0f0f0;
+  --fg-default:  #cccccc;
+  --fg-muted:    #909090;
+  --fg-subtle:   #666666;
+  --fg-disabled: #484848;
 
   --accent:            #e9eaef;
   --accent-hover:      #f5f6f9;
@@ -91,23 +105,30 @@
   --accent-wash-hover: rgba(255, 255, 255, 0.045);
   --accent-ring:       rgba(255, 255, 255, 0.42);
 
+  /* Hardware state — board connected. Earned color. */
   --sage:      #57cfa0;
   --sage-fg:   #0c2018;
   --sage-wash: rgba(87, 207, 160, 0.12);
 
-  --info:         #5cb8f0;
+  /* Info uses the mono foreground rather than a chromatic hue — the
+     "blue notification" pattern reintroduces colour into chrome that's
+     otherwise grayscale. Warning + error keep their functional hues
+     because they earn the attention; info doesn't. */
+  --info:         #cccccc;
   --success:      #57cfa0;
   --warning:      #e8b24a;
   --error:        #f0625e;
   --warning-wash: rgba(232, 178, 74, 0.13);
   --error-wash:   rgba(240, 98, 94, 0.13);
 
-  --code-keyword:  #ab9fe0;
-  --code-function: #86a9e0;
-  --code-string:   #9ec293;
-  --code-number:   #7fbdbf;
-  --code-comment:  #5e6478;
-  --code-type:     #66bccb;
+  /* Syntax tokens — true neutral grayscale. Emphasis carried by weight
+     and italic, not hue. */
+  --code-keyword:  #f0f0f0;
+  --code-function: #f0f0f0;
+  --code-string:   #b0b0b0;
+  --code-number:   #909090;
+  --code-comment:  #5e5e5e;
+  --code-type:     #909090;
 
   --shadow-dropdown: 0 6px 20px rgba(0, 0, 0, 0.45);
   --shadow-modal:    0 16px 48px rgba(0, 0, 0, 0.55);
@@ -117,115 +138,61 @@
 }
 
 /* ============================================================
-   THEME: solarized-dark
-   Ethan Schoonover canonical palette. base03 bg, base0 fg,
-   blue accent. Warm-cool balance, designed for long sessions.
+   THEME: light — paper white, near-black accent.
+   Same monochrome discipline as dark. Surfaces sit close
+   together (between #fafafa and #ffffff) so the chrome reads
+   as paper, not as a UI fighting for attention.
    ============================================================ */
-[data-theme="solarized-dark"] {
-  /* Surfaces — anchored on base03; chrome a touch darker, editor a touch lighter */
-  --surface-0: #00212b;
-  --surface-1: #002b36;
-  --surface-2: #073642;
-  --surface-3: #0c4451;
-  --editor-bg: #002b36;
-
-  --border-strong: #2a5762;
-  --border:        #11414e;
-  --border-subtle: #073642;
-
-  --fg-bright:   #fdf6e3;   /* base3 */
-  --fg-default:  #93a1a1;   /* base1 */
-  --fg-muted:    #839496;   /* base0 */
-  --fg-subtle:   #657b83;   /* base00 */
-  --fg-disabled: #586e75;   /* base01 */
-
-  --accent:            #268bd2;   /* blue */
-  --accent-hover:      #4ea3df;
-  --accent-press:      #1e6ea8;
-  --accent-fg:         #002b36;
-  --accent-wash:       rgba(38, 139, 210, 0.16);
-  --accent-wash-hover: rgba(38, 139, 210, 0.08);
-  --accent-ring:       rgba(38, 139, 210, 0.55);
-
-  --sage:      #859900;   /* green */
-  --sage-fg:   #002b36;
-  --sage-wash: rgba(133, 153, 0, 0.13);
-
-  --info:         #268bd2;
-  --success:      #859900;
-  --warning:      #b58900;
-  --error:        #dc322f;
-  --warning-wash: rgba(181, 137, 0, 0.14);
-  --error-wash:   rgba(220, 50, 47, 0.14);
-
-  /* Solarized syntax — keywords green, function blue, string cyan, type yellow */
-  --code-keyword:  #859900;
-  --code-function: #268bd2;
-  --code-string:   #2aa198;
-  --code-number:   #d33682;
-  --code-comment:  #586e75;
-  --code-type:     #b58900;
-
-  --shadow-dropdown: 0 6px 20px rgba(0, 0, 0, 0.5);
-  --shadow-modal:    0 16px 48px rgba(0, 0, 0, 0.6);
-  --scrim:           rgba(0, 21, 28, 0.7);
-
-  --accent-gold-border: rgba(38, 139, 210, 0.25);
-}
-
-/* ============================================================
-   THEME: solarized-light
-   Ethan Schoonover. base3 paper, base00 ink, blue accent.
-   Warm cream, calm contrast, daylight readability.
-   ============================================================ */
-[data-theme="solarized-light"] {
-  --surface-0: #eee8d5;   /* base2 — chrome ahead of paper */
-  --surface-1: #f5efdb;   /* between base2 and base3 */
-  --surface-2: #fdf6e3;   /* base3 — paper */
+[data-theme="light"] {
+  --surface-0: #ededee;
+  --surface-1: #f2f3f5;
+  --surface-2: #f7f7f9;
   --surface-3: #ffffff;
-  --editor-bg: #fdf6e3;
+  --editor-bg: #fafafa;
 
-  --border-strong: #c6c0a8;
-  --border:        #d8d2b8;
-  --border-subtle: #e6dfc7;
+  --border-strong: #c2c4ca;
+  --border:        #d8dadf;
+  --border-subtle: #e7e8eb;
 
-  --fg-bright:   #002b36;   /* base03 — darkest ink */
-  --fg-default:  #586e75;   /* base01 */
-  --fg-muted:    #657b83;   /* base00 */
-  --fg-subtle:   #839496;   /* base0 */
-  --fg-disabled: #93a1a1;   /* base1 */
+  --fg-bright:   #0d0e12;
+  --fg-default:  #2a2c33;
+  --fg-muted:    #5a5d68;
+  --fg-subtle:   #8a8d96;
+  --fg-disabled: #b4b7c0;
 
-  --accent:            #268bd2;
-  --accent-hover:      #1e6ea8;
-  --accent-press:      #155c8c;
-  --accent-fg:         #fdf6e3;
-  --accent-wash:       rgba(38, 139, 210, 0.13);
-  --accent-wash-hover: rgba(38, 139, 210, 0.06);
-  --accent-ring:       rgba(38, 139, 210, 0.45);
+  --accent:            #1a1a1f;
+  --accent-hover:      #000000;
+  --accent-press:      #333339;
+  --accent-fg:         #fafafa;
+  --accent-wash:       rgba(0, 0, 0, 0.075);
+  --accent-wash-hover: rgba(0, 0, 0, 0.035);
+  --accent-ring:       rgba(0, 0, 0, 0.32);
 
-  --sage:      #859900;
-  --sage-fg:   #fdf6e3;
-  --sage-wash: rgba(133, 153, 0, 0.1);
+  --sage:      #3d8a64;
+  --sage-fg:   #fafafa;
+  --sage-wash: rgba(61, 138, 100, 0.10);
 
-  --info:         #268bd2;
-  --success:      #859900;
-  --warning:      #b58900;
-  --error:        #dc322f;
-  --warning-wash: rgba(181, 137, 0, 0.12);
-  --error-wash:   rgba(220, 50, 47, 0.12);
+  /* Info uses the mono foreground (no blue) — see dark theme note. */
+  --info:         #2a2c33;
+  --success:      #3d8a64;
+  --warning:      #a8730d;
+  --error:        #b53636;
+  --warning-wash: rgba(168, 115, 13, 0.10);
+  --error-wash:   rgba(181, 54, 54, 0.09);
 
-  --code-keyword:  #859900;
-  --code-function: #268bd2;
-  --code-string:   #2aa198;
-  --code-number:   #d33682;
-  --code-comment:  #93a1a1;
-  --code-type:     #b58900;
+  /* Fully grayscale syntax. Emphasis carried by weight and italic. */
+  --code-keyword:  #0d0e12;
+  --code-function: #0d0e12;
+  --code-string:   #5a5d68;
+  --code-number:   #5a5d68;
+  --code-type:     #5a5d68;
+  --code-comment:  #8a8d96;
 
-  --shadow-dropdown: 0 6px 20px rgba(101, 123, 131, 0.25);
-  --shadow-modal:    0 16px 48px rgba(101, 123, 131, 0.32);
-  --scrim:           rgba(101, 123, 131, 0.45);
+  --shadow-dropdown: 0 6px 20px rgba(20, 22, 30, 0.10);
+  --shadow-modal:    0 16px 48px rgba(20, 22, 30, 0.18);
+  --scrim:           rgba(20, 22, 30, 0.32);
 
-  --accent-gold-border: rgba(38, 139, 210, 0.3);
+  --accent-gold-border: rgba(0, 0, 0, 0.12);
 }
 
 /* ============================================================

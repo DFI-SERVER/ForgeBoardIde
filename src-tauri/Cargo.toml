@@ -34,4 +34,5 @@ zip = { version = "2", default-features = false }
 
 [dev-dependencies]
 rand = "0.8"
+tempfile = "3"
 

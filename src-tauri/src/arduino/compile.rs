@@ -20,6 +20,7 @@ pub struct CompileResult {
 /// `--fqbn` flag is omitted to avoid arduino-cli's "can't combine" rejection.
 pub async fn compile_sketch(
     app: &tauri::AppHandle,
+    target: &str,
     sketch_path: &Path,
     fqbn: &str,
     verbose: bool,
@@ -39,7 +40,7 @@ pub async fn compile_sketch(
         args.push("-v");
     }
     args.push(sketch.as_str());
-    let (code, stderr) = cli::run_streaming(app, "compile-output", &args).await?;
+    let (code, stderr) = cli::run_streaming(app, target, "compile-output", &args).await?;
     Ok(CompileResult {
         success: code == 0,
         exit_code: code,

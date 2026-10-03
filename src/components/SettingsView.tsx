@@ -14,6 +14,7 @@ import {
 } from "../lib/settings";
 import { fontFamilyFor } from "../lib/monaco-setup";
 import { projectApi, type SketchbookInfo } from "../ipc/project";
+import { correctionsApi, type CorrectionInfo } from "../ipc/corrections";
 import { errText } from "../lib/actions";
 import { toast } from "../state/appState";
 import "./SettingsView.css";
@@ -54,7 +55,7 @@ export function SettingsView() {
         <SettingRow
           stacked
           label="Theme"
-          desc="Three internally-cohesive identities; pick what works for your environment."
+          desc="Monochrome dark or light — pick what works for your environment."
         >
           <ThemePicker
             value={s.theme}
@@ -221,7 +222,131 @@ export function SettingsView() {
             onChange={(verboseBuild) => updateSettings({ verboseBuild })}
           />
         </SettingRow>
+
+        <div class="stv-group-label">Platform corrections</div>
+
+        <SettingRow
+          label="Apply platform corrections"
+          desc="Drop small overlay files into installed arduino-cli platforms to patch known upstream bugs. Recommended."
+        >
+          <Switch
+            checked={s.applyPlatformCorrections}
+            label="Apply platform corrections"
+            onChange={(applyPlatformCorrections) => {
+              updateSettings({ applyPlatformCorrections });
+              // Sync the actual file presence to match the new setting,
+              // immediately — no need to wait for an app restart.
+              if (applyPlatformCorrections) {
+                correctionsApi.apply().catch((e) => {
+                  toast.value = {
+                    text: `Couldn't apply corrections: ${errText(e)}`,
+                    kind: "warn",
+                  };
+                });
+              } else {
+                correctionsApi.remove().catch((e) => {
+                  toast.value = {
+                    text: `Couldn't remove corrections: ${errText(e)}`,
+                    kind: "warn",
+                  };
+                });
+              }
+            }}
+          />
+        </SettingRow>
+
+        <CorrectionsList />
       </div>
+    </div>
+  );
+}
+
+/* --------------------------------------------------- Corrections list --- */
+
+/**
+ * Read-only listing of every bundled correction with its runtime status.
+ * Pulled live from the Rust side so applying / removing corrections updates
+ * the view without a reload. Shows the upstream issue link when present so
+ * the user can follow the bug fix upstream.
+ */
+function CorrectionsList() {
+  const [list, setList] = useState<CorrectionInfo[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const refresh = () => {
+      correctionsApi
+        .list()
+        .then((next) => {
+          if (!cancelled) setList(next);
+        })
+        .catch((e) => {
+          if (!cancelled) setError(errText(e));
+        });
+    };
+    refresh();
+    // Refresh shortly after mount in case the user toggled the setting and
+    // we need to pick up the new file state. The Switch handler also
+    // fires apply/remove, but those don't push back into this list.
+    const t = window.setTimeout(refresh, 600);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(t);
+    };
+  }, []);
+
+  if (error) {
+    return <div class="stv-corrections-error">Couldn't load corrections: {error}</div>;
+  }
+  if (list.length === 0) {
+    return null;
+  }
+
+  return (
+    <div class="stv-corrections">
+      {list.map((c) => (
+        <div key={c.id} class={`stv-correction ${c.active ? "active" : ""}`}>
+          <div class="stv-correction-head">
+            <span class="stv-correction-title">{c.title}</span>
+            <span
+              class={`stv-correction-badge stv-correction-badge-${
+                c.active
+                  ? "active"
+                  : c.matchesInstalled
+                    ? "pending"
+                    : "n-a"
+              }`}
+            >
+              {c.active
+                ? "Active"
+                : c.matchesInstalled
+                  ? "Available"
+                  : "Not applicable"}
+            </span>
+          </div>
+          <div class="stv-correction-target">
+            <code>{c.target}</code> @ <code>{c.versionPattern}</code>
+            {c.platformDir && (
+              <span class="stv-correction-path" title={c.platformDir}>
+                {" "}
+                — {c.platformDir}
+              </span>
+            )}
+          </div>
+          <div class="stv-correction-reason">{c.reason}</div>
+          {c.upstreamIssue && (
+            <a
+              class="stv-correction-link"
+              href={c.upstreamIssue}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Upstream issue
+            </a>
+          )}
+        </div>
+      ))}
     </div>
   );
 }
@@ -354,7 +479,7 @@ function SettingRow({
 /* ----------------------------------------------------- Theme picker --- */
 
 /**
- * Theme picker — three cards, each previewing the theme's surface, accent,
+ * Theme picker — two cards, each previewing the theme's surface, accent,
  * and foreground as miniature swatches. Selected card carries an accent
  * border and a brighter background so the choice is visible even before
  * the rest of the UI has re-tinted.
@@ -362,7 +487,7 @@ function SettingRow({
  * Swatches are inline-styled with hardcoded hex values (not CSS vars) so
  * every card shows ITS theme's palette regardless of which theme is
  * currently active — i.e. the Dark card shows dark colors even when the
- * user is currently on Solarized Light.
+ * user is currently on Light.
  */
 interface ThemeOption {
   value: Theme;
@@ -377,26 +502,18 @@ const THEME_OPTIONS: readonly ThemeOption[] = [
   {
     value: "dark",
     label: "Dark",
-    bg: "#181a23",
-    panel: "#14151b",
-    fg: "#c9ccd6",
-    accent: "#e9eaef",
+    bg: "#181818",
+    panel: "#121212",
+    fg: "#cccccc",
+    accent: "#f0f0f0",
   },
   {
-    value: "solarized-dark",
-    label: "Solarized Dark",
-    bg: "#002b36",
-    panel: "#073642",
-    fg: "#839496",
-    accent: "#268bd2",
-  },
-  {
-    value: "solarized-light",
-    label: "Solarized Light",
-    bg: "#fdf6e3",
-    panel: "#eee8d5",
-    fg: "#657b83",
-    accent: "#268bd2",
+    value: "light",
+    label: "Light",
+    bg: "#fafafa",
+    panel: "#f2f3f5",
+    fg: "#2a2c33",
+    accent: "#1a1a1f",
   },
 ];
 

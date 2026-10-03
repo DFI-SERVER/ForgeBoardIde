@@ -236,7 +236,7 @@
   font-size: var(--text-2xs);
   font-weight: var(--weight-semibold);
   text-transform: uppercase;
-  padding: 0 var(--space-6);
+  padding: var(--space-3) var(--space-6) var(--space-4);
   margin: var(--space-6) 0 var(--space-3);
 }
 .lv-section-label:first-child {
@@ -261,6 +261,7 @@
   overflow: hidden;
   box-sizing: border-box;
   padding: var(--space-4) var(--space-6);
+  border-bottom: 1px solid var(--border-subtle);
   transition: background-color var(--dur-fast) var(--ease);
 }
 .lv-row:hover {
@@ -270,6 +271,9 @@
 .lv-row-main {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 /* Name line — the name truncates with an ellipsis so the version (and the

@@ -1,3 +1,11 @@
+/* ============================================================
+   Bottom panel — VS Code-style.
+   Uppercase letterspaced tab labels along the top, white 1px
+   accent line under the active tab, content area sits flush
+   under the strip with edge-to-edge padding for terminal-like
+   surfaces.
+   ============================================================ */
+
 .bp {
   background: var(--surface-1);
   border-top: 1px solid var(--border-subtle);
@@ -7,6 +15,7 @@
   /* Positioning context for the resize handle on the top edge. */
   position: relative;
 }
+
 .bp-collapsed {
   background: var(--surface-1);
   border-top: 1px solid var(--border-subtle);
@@ -30,45 +39,51 @@
 .bp-expand:hover { background: var(--accent-wash-hover); }
 .bp-expand:focus-visible { box-shadow: 0 0 0 2px var(--accent-ring); }
 
+/* --- Tab strip ---
+   Uppercase letterspaced labels, VS Code-style. The strip is a
+   single horizontal rule (border-bottom on the container); the
+   active tab paints its own 1px accent stripe AT the rule line
+   to give the appearance of an interrupted divider. */
 .bp-tabs {
   display: flex;
-  padding: 0 var(--space-5);
-  gap: 0;
+  padding: 0 var(--space-6);
+  gap: var(--space-2);
   align-items: stretch;
   font-family: var(--font-ui);
-  font-size: var(--text-sm);
   border-bottom: 1px solid var(--border-subtle);
-  min-height: 30px;
+  min-height: 34px;
 }
 .bp-tab {
   position: relative;
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-3);
   color: var(--fg-subtle);
   background: transparent;
   border: none;
-  padding: 0 var(--space-4);
+  padding: 0 var(--space-3);
+  font-family: var(--font-ui);
   font-weight: var(--weight-medium);
-  font-size: var(--text-xs);
-  letter-spacing: 0.02em;
+  font-size: var(--text-2xs);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
   cursor: pointer;
   transition:
     color var(--dur-fast) var(--ease),
     background-color var(--dur-fast) var(--ease);
 }
 .bp-tab::after {
-  /* Active-tab indicator — a thin accent line at the bottom edge.
-     A pseudo-element (not a border) keeps the tab's height stable. */
+  /* Active-tab indicator — a 1px accent line at the bottom edge that
+     lines up with .bp-tabs's border-bottom, replacing it for the
+     active tab so the strip reads as a single divider with a gap. */
   content: "";
   position: absolute;
-  left: var(--space-3);
-  right: var(--space-3);
+  left: 0;
+  right: 0;
   bottom: -1px;
-  height: 2px;
+  height: 1px;
   background: transparent;
-  border-radius: 2px 2px 0 0;
-  transition: background-color var(--dur-base) var(--ease);
+  transition: background-color var(--dur-fast) var(--ease);
 }
 .bp-tab.active {
   color: var(--fg-bright);
@@ -82,6 +97,8 @@
 .bp-tab-badge {
   color: var(--fg-subtle);
   font-size: var(--text-2xs);
+  letter-spacing: 0;
+  text-transform: none;
   font-family: var(--font-mono);
 }
 
@@ -94,10 +111,16 @@
   border-radius: var(--radius-sm);
   transition: background-color var(--dur-fast) var(--ease);
 }
-.bp-action:hover { background: var(--accent-wash-hover); }
+.bp-action:hover { background: var(--accent-wash-hover); color: var(--fg-bright); }
 .bp-action:focus-visible { box-shadow: 0 0 0 2px var(--accent-ring); }
 
-.bp-body { flex: 1; overflow: hidden; padding: var(--space-5) var(--space-6); }
+/* --- Body ---
+   Content surface beneath the tab strip. Terminal-like surfaces
+   (Serial, Plotter) want edge-to-edge layout — they override the
+   padding inside their own components. Output and Problems use
+   the default padding for prose. */
+.bp-body { flex: 1; overflow: hidden; padding: var(--space-5) var(--space-6); min-height: 0; }
+.bp-body-flush { padding: 0; }
 .bp-placeholder {
   color: var(--fg-muted);
   font-size: var(--text-base);
@@ -105,7 +128,11 @@
   padding: var(--space-7) 0;
 }
 
-/* Compile / upload output */
+/* --- Compile / upload output ---
+   Mono terminal log, flush to the panel edges so a long compiler
+   trace doesn't get a narrow column. Opt back into text selection
+   (global.css disables user-select on body) so a user can copy a
+   compiler error to paste into a search or chat. */
 .bp-output {
   margin: 0;
   height: 100%;
@@ -116,7 +143,14 @@
   color: var(--fg-muted);
   white-space: pre-wrap;
   word-break: break-word;
+  user-select: text;
+  cursor: text;
 }
+.bp-output-line { user-select: text; }
+.bp-prob-msg,
+.bp-prob-loc,
+.bp-prob-hint-explanation,
+.bp-prob-hint-fix { user-select: text; }
 .bp-output-line { min-height: 1.2em; }
 .bp-output-empty {
   color: var(--fg-subtle);
@@ -155,8 +189,8 @@
   to { transform: rotate(360deg); }
 }
 
-/* --- Problems tab ------------------------------------------------------- */
-/* The .bp-body padding suits prose; the problems list runs edge-to-edge and
+/* --- Problems tab ---
+   The .bp-body padding suits prose; the problems list runs edge-to-edge and
    owns its own scroll, so it cancels that padding with a negative margin. */
 .bp-problems {
   height: 100%;
@@ -262,7 +296,7 @@
   font-size: var(--text-xs);
 }
 
-/* --- Humanised hint -----------------------------------------------------
+/* --- Humanised hint ---
    A plain-English explanation shown under a recognised raw error. Muted and
    visually quiet so it reads as a helpful aside, not a second error. The
    left rule + lightbulb tie it to the diagnostic above it. */
@@ -299,6 +333,32 @@
   font-family: var(--font-ui);
   font-size: var(--text-xs);
   line-height: 1.5;
+}
+.bp-prob-hint-action {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-top: var(--space-1);
+  padding: 3px var(--space-2);
+  border: 1px solid var(--border-default);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--fg-default);
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  line-height: 1.4;
+  cursor: pointer;
+  user-select: none;
+  transition: background 90ms ease, border-color 90ms ease;
+}
+.bp-prob-hint-action:hover {
+  background: var(--accent-wash-hover);
+  border-color: var(--fg-subtle);
+}
+.bp-prob-hint-action:focus-visible {
+  outline: 1px solid var(--fg-default);
+  outline-offset: 1px;
 }
 .bp-prob-row:hover .bp-prob-hint-explanation {
   color: var(--fg-default);

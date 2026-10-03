@@ -2,13 +2,30 @@ mod project;
 mod arduino;
 mod serial;
 mod commands;
+mod corrections;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    use tauri::Manager;
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
-        .manage(serial::commands::SerialState(std::sync::Mutex::new(None)))
+        .manage(serial::commands::SerialState(std::sync::Mutex::new(
+            std::collections::HashMap::new(),
+        )))
+        .on_window_event(|window, event| {
+            // A window that closes while its serial monitor is connected must
+            // release the COM port, or it stays exclusively held (Windows)
+            // until the whole app exits. Detached stop: no blocking in the
+            // event handler; the io thread exits within one read timeout.
+            if matches!(event, tauri::WindowEvent::Destroyed) {
+                let state = window.state::<serial::commands::SerialState>();
+                let handle = state.0.lock().unwrap().remove(window.label());
+                if let Some(handle) = handle {
+                    serial::port::stop_detached(handle);
+                }
+            }
+        })
         .invoke_handler(tauri::generate_handler![
             commands::ping::ping,
             project::commands::project_sketches_root,
@@ -46,6 +63,9 @@ pub fn run() {
             arduino::commands::arduino_lib_uninstall,
             arduino::commands::arduino_lib_install_zip,
             arduino::commands::arduino_list_library_examples,
+            corrections::commands::corrections_list,
+            corrections::commands::corrections_apply,
+            corrections::commands::corrections_remove,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -51,9 +51,7 @@ describe("settings defaults", () => {
     expect(typeof DEFAULT_SETTINGS.indentGuides).toBe("boolean");
     expect(typeof DEFAULT_SETTINGS.formatOnSave).toBe("boolean");
     expect(typeof DEFAULT_SETTINGS.trimTrailingWhitespaceOnSave).toBe("boolean");
-    expect(["dark", "solarized-dark", "solarized-light"]).toContain(
-      DEFAULT_SETTINGS.theme,
-    );
+    expect(["dark", "light"]).toContain(DEFAULT_SETTINGS.theme);
     expect([
       "consolas",
       "cascadia-code",
@@ -235,12 +233,49 @@ describe("settings graceful fallback on corrupt data", () => {
     expect(settings.value.theme).toBe(DEFAULT_SETTINGS.theme);
   });
 
-  it("accepts each of the three known themes", async () => {
-    for (const theme of ["dark", "solarized-dark", "solarized-light"] as const) {
+  it("accepts each of the two known themes", async () => {
+    for (const theme of ["dark", "light"] as const) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ theme }));
       const { settings } = await freshImport();
       expect(settings.value.theme).toBe(theme);
     }
+  });
+
+  it("migrates a legacy solarized-dark to dark", async () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ theme: "solarized-dark" }));
+    const { settings } = await freshImport();
+    expect(settings.value.theme).toBe("dark");
+  });
+
+  it("migrates a legacy solarized-light to light", async () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ theme: "solarized-light" }));
+    const { settings } = await freshImport();
+    expect(settings.value.theme).toBe("light");
+  });
+
+  it("defaults applyPlatformCorrections to true", async () => {
+    const { DEFAULT_SETTINGS } = await freshImport();
+    expect(DEFAULT_SETTINGS.applyPlatformCorrections).toBe(true);
+  });
+
+  it("respects a stored applyPlatformCorrections=false", async () => {
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ applyPlatformCorrections: false }),
+    );
+    const { settings } = await freshImport();
+    expect(settings.value.applyPlatformCorrections).toBe(false);
+  });
+
+  it("recovers from a non-boolean applyPlatformCorrections", async () => {
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ applyPlatformCorrections: "sure" }),
+    );
+    const { settings, DEFAULT_SETTINGS } = await freshImport();
+    expect(settings.value.applyPlatformCorrections).toBe(
+      DEFAULT_SETTINGS.applyPlatformCorrections,
+    );
   });
 
   it("rejects an unknown fontFamily and falls back to the default", async () => {

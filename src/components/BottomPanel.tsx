@@ -10,6 +10,7 @@ import {
   AlertTriangle,
   FileCode2,
   Lightbulb,
+  Download,
 } from "lucide-preact";
 import { SerialMonitor } from "./SerialMonitor";
 import { SerialPlotter } from "./SerialPlotter";
@@ -22,20 +23,28 @@ import {
   buildPhase,
   diagnostics,
   lastCompileSize,
+  activeRail,
+  librarySearchQuery,
+  libraryFilterMode,
 } from "../state/appState";
 import { openFileAtLine } from "../lib/actions";
 import { groupDiagnostics } from "../lib/diagnostics";
-import { humanizeDiagnostic } from "../lib/humanize-errors";
+import { humanizeDiagnostic, type HintAction } from "../lib/humanize-errors";
 import { ResizeHandle } from "./ResizeHandle";
 import { BOTTOM_PANEL } from "../lib/layout";
 import { keybindings } from "../lib/keybindings";
 
 const TABS = [
-  { id: "serial", label: "Serial Monitor" },
+  { id: "serial", label: "Serial" },
   { id: "output", label: "Output" },
   { id: "plotter", label: "Plotter" },
   { id: "problems", label: "Problems" },
 ] as const;
+
+/** Tabs whose content fills the panel edge-to-edge (terminal-like surfaces);
+ *  the panel's default padding doesn't apply so the log can span the full
+ *  width. Output and Problems keep the prose padding. */
+const FLUSH_TABS = new Set<(typeof TABS)[number]["id"]>(["serial", "plotter"]);
 
 function OutputView() {
   const lines = buildOutput.value;
@@ -45,10 +54,10 @@ function OutputView() {
   // scroll-to-bottom effect once the memory bar renders. MemoryBar itself
   // reads the signal independently.
   const hasSize = lastCompileSize.value !== null;
-  const ref = useRef<HTMLPreElement>(null);
+  const logRef = useRef<HTMLPreElement>(null);
 
   useEffect(() => {
-    if (ref.current) ref.current.scrollTop = ref.current.scrollHeight;
+    if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
   }, [lines.length, phase, hasSize]);
 
   if (lines.length === 0 && phase === "idle") {
@@ -60,7 +69,7 @@ function OutputView() {
   }
 
   return (
-    <pre ref={ref} class="bp-output">
+    <pre ref={logRef} class="bp-output">
       {lines.map((line, i) => (
         <div key={i} class="bp-output-line">
           {line || " "}
@@ -99,6 +108,25 @@ function OutputView() {
 function baseName(path: string): string {
   const parts = path.split(/[\\/]/);
   return parts[parts.length - 1] || path;
+}
+
+/**
+ * Run a humanised-hint action. Dispatched from the Problems-panel hint button.
+ * Today this is just `search-library` — it jumps to the Libraries rail with
+ * the header name pre-filled so the user sees matching registry entries
+ * immediately and can install with one click from there.
+ */
+function runHintAction(action: HintAction): void {
+  switch (action.kind) {
+    case "search-library":
+      // Force the "All" scope: the user is here because the library is NOT
+      // installed, so the default Installed tab would always be empty for
+      // this query and the user would think the search broke.
+      libraryFilterMode.value = "all";
+      librarySearchQuery.value = action.query;
+      activeRail.value = "libraries";
+      return;
+  }
 }
 
 /** The Problems tab — compiler diagnostics grouped by file. */
@@ -160,6 +188,30 @@ function ProblemsView() {
                         {hint.explanation}
                       </span>
                       <span class="bp-prob-hint-fix">{hint.fix}</span>
+                      {hint.action && (
+                        <span
+                          role="button"
+                          tabIndex={0}
+                          class="bp-prob-hint-action"
+                          onClick={(e) => {
+                            // Stop the parent <button> from also firing
+                            // (which would jump to the source line) — the
+                            // user clicked the action, not the row.
+                            e.stopPropagation();
+                            runHintAction(hint.action!);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              runHintAction(hint.action!);
+                            }
+                          }}
+                        >
+                          <Download size={11} strokeWidth={1.8} />
+                          {hint.action.label}
+                        </span>
+                      )}
                     </div>
                   </div>
                 )}
@@ -221,7 +273,11 @@ export function BottomPanel() {
           <ChevronDown size={14} strokeWidth={1.5} />
         </button>
       </div>
-      <div class="bp-body">
+      <div
+        class={`bp-body ${
+          FLUSH_TABS.has(bottomPanelTab.value) ? "bp-body-flush" : ""
+        }`}
+      >
         {bottomPanelTab.value === "output" && <OutputView />}
         {bottomPanelTab.value === "serial" && <SerialMonitor />}
         {bottomPanelTab.value === "plotter" && <SerialPlotter />}

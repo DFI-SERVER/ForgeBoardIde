@@ -1,11 +1,15 @@
 /* ============================================================
-   TabBar — minimal VS Code-style pills.
+   TabBar — Direction A: calm, generous, monochrome.
 
-   Active tab carries a 2px accent stripe at the top and a tone
-   brighter than the strip. Inactive tabs dim into the chrome.
-   The trailing slot toggles between an unsaved-dot (default
-   when modified, no hover) and a close X (otherwise) — they
-   share the same fixed-width corner so the layout doesn't shift.
+   Taller strip than the prior pill design, Inter-Tight tab
+   labels at 13px, lots of horizontal padding. Active tab sits
+   on the editor surface with a 1-px accent line at the top
+   edge; inactive tabs slip into the chrome.
+
+   The trailing slot per-tab still toggles between a modified
+   dot (default when modified, no hover) and a close X
+   (otherwise) — they share a fixed-width corner so the row
+   never reflows on hover.
    ============================================================ */
 
 .tabbar {
@@ -16,7 +20,12 @@
   border-bottom: 1px solid var(--border-subtle);
   font-family: var(--font-ui);
   overflow-x: auto;
+  /* Hide the horizontal scrollbar — the strip can still scroll via
+     wheel / drag, but a visible scrollbar across the top of the editor
+     reads as noise on a calm chrome. */
+  scrollbar-width: none;
 }
+.tabbar::-webkit-scrollbar { display: none; }
 
 /* When two panes share the editor area, the inactive pane's tab strip is
    slightly dimmed so the user knows which pane future keystrokes will
@@ -26,46 +35,27 @@
   opacity: 0.78;
 }
 
-/* The trailing pane-close button in a split layout. Sits on the strip's
-   right edge and matches the per-tab X visually. */
-.tabbar-close-pane {
-  margin-left: auto;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 var(--space-4);
-  color: var(--fg-subtle);
-  opacity: 0.7;
-  background: transparent;
-  border: none;
-  border-left: 1px solid var(--border-subtle);
-  cursor: pointer;
-  transition:
-    opacity var(--dur-fast) var(--ease),
-    color var(--dur-fast) var(--ease),
-    background-color var(--dur-fast) var(--ease);
-}
-.tabbar-close-pane:hover {
-  opacity: 1;
-  color: var(--fg-default);
-  background: var(--accent-wash-hover);
-}
-
+/* --- Tab cell --------------------------------------------------
+   Generous 18px horizontal padding (--space-6), 8px gap between
+   icon / name / trailing slot. The 1px top border is transparent
+   on inactive tabs and the accent on the active one — same height
+   in both states so nothing jumps. */
 .tab {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
-  padding: 0 var(--space-4) 0 var(--space-5);
+  gap: var(--space-4);
+  padding: 0 var(--space-6);
   color: var(--fg-muted);
   background: transparent;
   border: none;
   border-right: 1px solid var(--border-subtle);
-  border-top: 2px solid transparent;
+  border-top: 1px solid transparent;
   cursor: pointer;
   white-space: nowrap;
   transition:
     background-color var(--dur-fast) var(--ease),
-    color var(--dur-fast) var(--ease);
+    color var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease);
 }
 .tab.active {
   background: var(--editor-bg);
@@ -88,12 +78,15 @@
   flex: none;
   transition: color var(--dur-fast) var(--ease);
 }
-.tab.active .tab-icon { color: var(--fg-muted); }
+.tab.active .tab-icon { color: var(--fg-default); }
 
 .tab-name {
-  font-size: var(--text-sm);
-  letter-spacing: 0.01em;
+  font-family: var(--font-ui);
+  font-size: var(--text-base);
+  font-weight: var(--weight-normal);
+  letter-spacing: 0;
 }
+.tab.active .tab-name { font-weight: var(--weight-medium); }
 
 /* Trailing slot — fixed width so the row never reflows when the
    dot/X swap happens on hover. */
@@ -152,5 +145,60 @@
 .tab.modified.active:not(:hover) .tab-x { opacity: 0; }
 .tab-x:hover {
   background: var(--accent-wash);
-  color: var(--fg-default);
+  color: var(--fg-bright);
+}
+
+/* --- Chrome-style new-tab button --------------------------------
+   Sits IMMEDIATELY after the rightmost tab, the way Chrome does it.
+   No auto-margin — it hugs the last tab so the affordance is easy to
+   find regardless of how many tabs are open. The pane-close button
+   in split mode keeps its own `margin-left: auto` so it still pins to
+   the right edge. */
+.tabbar-new-window {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  color: var(--fg-subtle);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition:
+    color var(--dur-fast) var(--ease),
+    background-color var(--dur-fast) var(--ease);
+}
+.tabbar-new-window:hover {
+  color: var(--fg-bright);
+  background: var(--accent-wash-hover);
+}
+.tabbar-new-window:focus-visible {
+  outline: none;
+  color: var(--fg-bright);
+  background: var(--accent-wash-hover);
+}
+
+/* The trailing pane-close button in a split layout. Sits on the strip's
+   right edge and matches the per-tab X visually. The `margin-left: auto`
+   pushes it past the new-tab button so it still pins to the right edge. */
+.tabbar-close-pane {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--space-5);
+  color: var(--fg-subtle);
+  opacity: 0.7;
+  background: transparent;
+  border: none;
+  border-left: 1px solid var(--border-subtle);
+  cursor: pointer;
+  transition:
+    opacity var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease),
+    background-color var(--dur-fast) var(--ease);
+}
+.tabbar-close-pane:hover {
+  opacity: 1;
+  color: var(--fg-bright);
+  background: var(--accent-wash-hover);
 }

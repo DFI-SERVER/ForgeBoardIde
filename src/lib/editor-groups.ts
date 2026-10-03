@@ -289,6 +289,12 @@ export function startEditorGroupsSync(): void {
     if (!group) return;
     suppressMirror++;
     try {
+      // Self-heal a stale index: if some code path shrank `editorGroups`
+      // without re-pointing `activeGroupIndex`, the `?? groups[0]` fallback
+      // above mirrors g0 — but helpers like `updateActiveGroup` bounds-check
+      // the raw index and would silently no-op on every subsequent tab
+      // operation. Snap the index to the group we actually mirrored.
+      if (idx < 0 || idx >= groups.length) activeGroupIndex.value = 0;
       // Only assign when the value differs by identity to avoid spurious
       // effect re-runs. The mirrors are read by countless components; an
       // identity-equal write still produces a notification in @preact/signals.

@@ -1,0 +1,58 @@
+# ============================================================================
+# ForgeBoard IDE platform correction — per-board overrides.
+#
+# Companion to platform.local.txt. Each board entry below switches the upload
+# reset mode from the default (`default-reset`, DTR/RTS) to `usb-reset` (USB
+# control-line sequence over the chip's native USB-CDC). Applies to ESP32-S3,
+# ESP32-C3, ESP32-C6, ESP32-H2 board entries that ship with arduino-esp32
+# 3.3.x — these chips have the bug. Classic ESP32 / ESP32-S2 entries are
+# untouched and keep their DTR/RTS behaviour.
+#
+# `hard-reset` after the write resets through the stub rather than via
+# RTS, which survives the USB-CDC re-enumeration cleanly.
+# ============================================================================
+
+# Upload speed for native-USB chips —
+#   ESP32-S3 / C3 / C6 / H2 with USB-Serial/JTAG cannot sustain 921600 baud:
+#   esptool dies at exactly 16384 bytes (one stub buffer) on every write
+#   because the chip's USB-CDC firmware can't keep up with sustained
+#   data and starves the endpoint. 460800 cuts the byte rate in half,
+#   well within what the on-chip stack can handle.
+#
+#   The platform exposes upload speeds via a `menu.UploadSpeed` system in
+#   boards.txt — a direct `esp32s3.upload.speed=460800` is overridden by
+#   the selected menu option, so we instead remap every menu entry's
+#   resolved speed to 460800. The user still sees the original numbers in
+#   the menu (we can't easily relabel them), but every choice now produces
+#   a safe baud rate. We leave anything ≤ 460800 alone — those are already
+#   below the failure threshold.
+#
+#   The platform default for boards using external USB-Serial converters
+#   (CP2102/CH340) stays at 921600 — those have dedicated silicon for the
+#   serial bridge and don't have this issue.
+
+# --- ESP32-S3 ---
+esp32s3.upload.reset_before=usb-reset
+esp32s3.upload.reset_after=hard-reset
+esp32s3.menu.UploadSpeed.921600.upload.speed=460800
+esp32s3.menu.UploadSpeed.512000.windows.upload.speed=460800
+esp32s3.menu.UploadSpeed.256000.windows.upload.speed=256000
+esp32s3.menu.UploadSpeed.230400.windows.upload.speed=230400
+
+# --- ESP32-C3 ---
+esp32c3.upload.reset_before=usb-reset
+esp32c3.upload.reset_after=hard-reset
+esp32c3.menu.UploadSpeed.921600.upload.speed=460800
+esp32c3.menu.UploadSpeed.512000.windows.upload.speed=460800
+
+# --- ESP32-C6 ---
+esp32c6.upload.reset_before=usb-reset
+esp32c6.upload.reset_after=hard-reset
+esp32c6.menu.UploadSpeed.921600.upload.speed=460800
+esp32c6.menu.UploadSpeed.512000.windows.upload.speed=460800
+
+# --- ESP32-H2 ---
+esp32h2.upload.reset_before=usb-reset
+esp32h2.upload.reset_after=hard-reset
+esp32h2.menu.UploadSpeed.921600.upload.speed=460800
+esp32h2.menu.UploadSpeed.512000.windows.upload.speed=460800

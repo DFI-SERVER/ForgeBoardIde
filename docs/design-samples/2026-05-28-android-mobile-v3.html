@@ -1,0 +1,1507 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ForgeBoard · Android · v3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Hanken+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    /* page (the showcase chrome) */
+    --pg-bg: #161413;
+    --pg-card: #1F1C1A;
+    --pg-line: #2A2624;
+    --pg-ink: #F2EFEA;
+    --pg-ink-2: #9F9893;
+    --pg-ink-3: #65605C;
+
+    /* in-phone (Claude-android-adjacent) */
+    --bg: #1A1817;
+    --bg-2: #221F1D;
+    --card: #2A2624;
+    --card-h: #322E2C;
+    --line: #353130;
+    --line-soft: #2B2725;
+    --ink: #F2EFEA;
+    --ink-2: #9F9893;
+    --ink-3: #6F6964;
+    --ink-4: #4A4541;
+
+    --orange: #D6754A;
+    --orange-deep: #C26136;
+    --orange-soft: rgba(214,117,74,0.14);
+
+    --green: #6FBF7B;
+    --green-soft: rgba(111,191,123,0.15);
+    --blue-dot: #5B9CFF;
+    --red: #E26464;
+
+    --serif: "Instrument Serif", "Tiempos Headline", Georgia, serif;
+    --sans: "Hanken Grotesk", -apple-system, system-ui, sans-serif;
+    --mono: "JetBrains Mono", monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+
+  html, body {
+    background: var(--pg-bg);
+    color: var(--pg-ink);
+    font-family: var(--sans);
+    font-weight: 400;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  /* page atmosphere — warm vignette */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 90% 70% at 50% 0%, rgba(214,117,74,0.06), transparent 60%),
+      radial-gradient(ellipse 50% 40% at 100% 100%, rgba(255,255,255,0.02), transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  main {
+    position: relative;
+    z-index: 1;
+    max-width: 1480px;
+    margin: 0 auto;
+    padding: 80px 56px 120px;
+  }
+
+  /* === HEADER === */
+  .hdr {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--pg-line);
+  }
+  .hdr .left .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--pg-ink-3);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .hdr h1 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: clamp(80px, 11vw, 168px);
+    line-height: 0.9;
+    letter-spacing: -0.025em;
+    color: var(--pg-ink);
+  }
+  .hdr h1 em { font-style: italic; color: var(--orange); }
+  .hdr .right {
+    text-align: right;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--pg-ink-2);
+    letter-spacing: 0.06em;
+    line-height: 1.8;
+  }
+  .hdr .right .k { color: var(--pg-ink-3); }
+
+  /* === INTRO === */
+  .intro {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 64px;
+    align-items: start;
+    padding: 64px 0 96px;
+    border-bottom: 1px solid var(--pg-line);
+  }
+  .intro .lede {
+    font-family: var(--serif);
+    font-size: 36px;
+    line-height: 1.15;
+    letter-spacing: -0.015em;
+    color: var(--pg-ink);
+    font-weight: 400;
+  }
+  .intro .lede em { font-style: italic; color: var(--orange); }
+  .intro .body p {
+    font-size: 16.5px;
+    line-height: 1.6;
+    color: var(--pg-ink-2);
+    margin-bottom: 18px;
+    letter-spacing: -0.005em;
+  }
+  .intro .body p strong { color: var(--pg-ink); font-weight: 600; }
+
+  /* === SCREEN LABEL === */
+  .sect-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin: 96px 0 36px;
+  }
+  .sect-label h2 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: 48px;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    color: var(--pg-ink);
+  }
+  .sect-label .meta {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--pg-ink-3);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  /* === PHONE GRID === */
+  .phone-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 64px 48px;
+    margin-bottom: 96px;
+  }
+  .phone-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+  }
+  .phone-cell .cap {
+    width: 100%;
+    text-align: left;
+    padding: 0 4px;
+  }
+  .phone-cell .cap .num {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--orange);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .phone-cell .cap .nm {
+    font-family: var(--serif);
+    font-size: 28px;
+    letter-spacing: -0.01em;
+    color: var(--pg-ink);
+    line-height: 1.1;
+    margin-bottom: 6px;
+  }
+  .phone-cell .cap .dx {
+    font-size: 14px;
+    color: var(--pg-ink-2);
+    letter-spacing: -0.005em;
+    line-height: 1.45;
+    max-width: 320px;
+  }
+
+  /* PHONE FRAME */
+  .phone {
+    width: 340px;
+    height: 700px;
+    background: #050505;
+    border-radius: 44px;
+    padding: 8px;
+    border: 1px solid #1a1817;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.03) inset,
+      0 32px 80px -32px rgba(0,0,0,0.7),
+      0 0 0 1px rgba(214,117,74,0.04);
+    position: relative;
+  }
+  .screen {
+    width: 100%;
+    height: 100%;
+    border-radius: 38px;
+    background: var(--bg);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    color: var(--ink);
+    font-family: var(--sans);
+  }
+  /* status bar */
+  .stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 26px 6px;
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink);
+    letter-spacing: -0.005em;
+  }
+  .stat .r { display: flex; gap: 6px; align-items: center; opacity: 0.9; }
+  .stat .r svg { width: 14px; height: 14px; }
+  .stat .l { display: flex; gap: 8px; align-items: center; }
+  .stat .l .ind { width: 10px; height: 10px; border-radius: 50%; background: var(--green); display: inline-block; }
+
+  /* universal top bar (hamburger + title + icon) */
+  .topbar {
+    display: grid;
+    grid-template-columns: 40px 1fr 40px;
+    align-items: center;
+    padding: 12px 16px 8px;
+  }
+  .topbar .ham {
+    display: flex; flex-direction: column; gap: 5px;
+    padding: 10px;
+  }
+  .topbar .ham span {
+    display: block;
+    width: 22px; height: 1.5px;
+    background: var(--ink);
+  }
+  .topbar .ham span:nth-child(2) { width: 14px; }
+  .topbar .ttl {
+    text-align: center;
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: 26px;
+    letter-spacing: -0.005em;
+    color: var(--ink);
+    line-height: 1;
+  }
+  .topbar .ic {
+    width: 36px; height: 36px;
+    border: 1.2px solid var(--line);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--ink-2);
+    margin-left: auto;
+  }
+  .topbar .ic svg { width: 16px; height: 16px; }
+
+  /* === SCREEN 1: SKETCHES === */
+  .body-pad { flex: 1; overflow: hidden; padding: 22px 18px 18px; position: relative; }
+
+  /* big LEFT-aligned title (alternative to centered topbar) */
+  .left-title {
+    padding: 4px 22px 18px;
+  }
+  .left-title h1 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: 44px;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+  .left-title-row {
+    padding: 4px 22px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+  .left-title-row h1 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: 44px;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+  .left-title-row .menu-ic {
+    width: 26px;
+    display: flex; flex-direction: column; gap: 5px;
+    margin-bottom: 8px;
+  }
+  .left-title-row .menu-ic span { display: block; width: 22px; height: 1.5px; background: var(--ink); }
+  .left-title-row .menu-ic span:nth-child(2) { width: 14px; }
+
+  /* user-account card (like settings email card) */
+  .acct-card {
+    background: var(--card);
+    border: 1px solid var(--line-soft);
+    border-radius: 18px;
+    padding: 18px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  .acct-card .em { font-size: 15.5px; color: var(--ink); font-weight: 500; letter-spacing: -0.005em; }
+  .acct-card .plan {
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: 12.5px;
+    font-weight: 600;
+  }
+
+  /* card group (multiple options inside one rounded card with dividers) */
+  .group-card {
+    background: var(--card);
+    border: 1px solid var(--line-soft);
+    border-radius: 18px;
+    overflow: hidden;
+    margin-bottom: 14px;
+  }
+  .gr-row {
+    display: grid;
+    grid-template-columns: 28px 1fr auto;
+    gap: 14px;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--line);
+  }
+  .gr-row:last-child { border-bottom: none; }
+  .gr-row .ic { width: 22px; height: 22px; color: var(--ink); display: flex; align-items: center; justify-content: center; }
+  .gr-row .ic svg { width: 20px; height: 20px; stroke-width: 1.4; }
+  .gr-row .lb { line-height: 1.25; }
+  .gr-row .lb .l1 { font-size: 15.5px; color: var(--ink); font-weight: 500; letter-spacing: -0.005em; }
+  .gr-row .lb .l2 { font-size: 13px; color: var(--ink-2); margin-top: 2px; letter-spacing: -0.005em; }
+  .gr-row .lb .l2 .conn { color: var(--green); }
+  .gr-row .lb .l2 .disc { color: var(--ink-3); }
+  .gr-row .meta-r { color: var(--ink-3); font-size: 13px; }
+  .gr-row .chev { color: var(--ink-3); }
+
+  /* chips (filter pills) */
+  .chips {
+    display: flex; gap: 10px;
+    padding: 0 22px 20px;
+    overflow-x: auto;
+  }
+  .chips::-webkit-scrollbar { display: none; }
+  .chip {
+    padding: 9px 16px;
+    border-radius: 999px;
+    border: 1.2px solid var(--line);
+    font-size: 13.5px;
+    color: var(--ink-2);
+    font-weight: 500;
+    display: flex; gap: 8px;
+    align-items: center;
+    white-space: nowrap;
+    letter-spacing: -0.005em;
+  }
+  .chip .ct {
+    color: var(--ink-3);
+    font-size: 12.5px;
+    font-weight: 500;
+  }
+  .chip.act {
+    background: var(--ink);
+    color: var(--bg);
+    border-color: var(--ink);
+  }
+  .chip.act .ct { color: var(--ink-3); }
+
+  /* section caption gray (Today, This week) */
+  .sec-cap {
+    padding: 6px 22px 14px;
+    font-size: 14px;
+    color: var(--ink-2);
+    font-weight: 500;
+  }
+
+  /* session-card list (like the Code screen items) */
+  .sess-list { padding: 0 18px; display: flex; flex-direction: column; gap: 12px; }
+  .sess-card {
+    background: var(--card);
+    border: 1px solid var(--line-soft);
+    border-radius: 18px;
+    padding: 14px 16px;
+    display: grid;
+    grid-template-columns: 42px 1fr auto;
+    gap: 12px;
+    align-items: center;
+  }
+  .sess-card .icn {
+    width: 42px; height: 42px;
+    background: var(--bg-2);
+    border-radius: 12px;
+    border: 1px dashed var(--line);
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .sess-card .icn::after {
+    content: "";
+    position: absolute;
+    top: 5px; right: 5px;
+    width: 7px; height: 7px;
+    background: var(--blue-dot);
+    border-radius: 50%;
+    border: 2px solid var(--card);
+  }
+  .sess-card .icn.flashed { border-style: solid; }
+  .sess-card .icn.flashed::after { background: var(--green); }
+  .sess-card .icn .glyph {
+    font-family: var(--mono);
+    font-size: 13px; font-weight: 600;
+    color: var(--orange);
+  }
+  .sess-card .meta-c { min-width: 0; }
+  .sess-card .meta-c .nm {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--ink);
+    letter-spacing: -0.005em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-bottom: 4px;
+  }
+  .sess-card .meta-c .sub {
+    font-size: 12.5px;
+    color: var(--ink-2);
+    display: flex; align-items: center; gap: 8px;
+    letter-spacing: -0.005em;
+  }
+  .sess-card .meta-c .sub .conn { color: var(--green); display: flex; align-items: center; gap: 5px; }
+  .sess-card .meta-c .sub .conn svg { width: 13px; height: 13px; }
+  .sess-card .meta-c .sub .disc { color: var(--ink-3); display: flex; align-items: center; gap: 5px; }
+  .sess-card .meta-c .sub .disc svg { width: 13px; height: 13px; }
+  .sess-card .meta-c .sub .dot { width: 3px; height: 3px; background: var(--ink-3); border-radius: 50%; }
+  .sess-card .meta-c .sub .path { color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--mono); font-size: 12px; }
+  .sess-card .time-r {
+    font-size: 13px;
+    color: var(--ink-3);
+    letter-spacing: -0.005em;
+  }
+
+  /* === FAB === */
+  .fab-pill {
+    position: absolute;
+    bottom: 24px;
+    right: 22px;
+    background: var(--orange);
+    color: #1A0A02;
+    border-radius: 999px;
+    padding: 14px 22px 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    box-shadow: 0 14px 32px -12px rgba(214,117,74,0.4);
+  }
+  .fab-pill .plus {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.18);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .fab-pill .plus svg { width: 13px; height: 13px; stroke-width: 2.6; }
+
+  /* === SCREEN 2: EDITOR (artifact-like card) === */
+  .artifact-shell { padding: 16px 22px; }
+  .artifact-card {
+    background: var(--card);
+    border: 1px solid var(--line-soft);
+    border-radius: 22px;
+    padding: 22px 20px 20px;
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .artifact-window {
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 18px 16px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    line-height: 1.7;
+    color: var(--ink-2);
+    overflow: hidden;
+    height: 230px;
+  }
+  .aw-ln { display: flex; padding: 0 2px; }
+  .aw-n { width: 22px; color: var(--ink-4); text-align: right; padding-right: 10px; font-size: 9.5px; }
+  .aw-t { white-space: pre; }
+  .kw { color: #C8A6E6; }
+  .ty { color: #87B9E0; }
+  .st { color: #8EC79F; }
+  .nm { color: var(--orange); }
+  .cm { color: var(--ink-4); font-style: italic; }
+  .fn { color: #87B9E0; }
+  .vr { color: var(--ink); }
+  .pin-hi { background: rgba(214,117,74,0.18); box-shadow: 0 0 0 1px var(--orange); color: var(--orange); padding: 0 3px; margin: 0 -3px; border-radius: 2px; }
+
+  .artifact-meta {
+    padding-top: 8px;
+  }
+  .artifact-meta .nm {
+    font-family: var(--serif);
+    font-size: 28px;
+    font-weight: 400;
+    line-height: 1.05;
+    letter-spacing: -0.015em;
+    color: var(--ink);
+    margin-bottom: 6px;
+  }
+  .artifact-meta .sub {
+    font-size: 13.5px;
+    color: var(--ink-2);
+    letter-spacing: -0.005em;
+  }
+
+  /* editor toolbar (alternative bottom action row) */
+  .ed-toolbar {
+    position: absolute;
+    left: 18px; right: 18px;
+    bottom: 24px;
+    display: flex; gap: 8px;
+    align-items: center;
+  }
+  .ed-btn {
+    width: 44px; height: 44px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    color: var(--ink-2);
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .ed-btn svg { width: 18px; height: 18px; stroke-width: 1.6; }
+  .ed-flash {
+    flex: 1; height: 44px;
+    background: var(--orange);
+    color: #1A0A02;
+    border-radius: 14px;
+    font-size: 14.5px;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    display: flex; align-items: center; justify-content: center;
+    gap: 8px;
+  }
+  .ed-flash svg { width: 16px; height: 16px; stroke-width: 2.4; }
+
+  /* === SCREEN 3: PINOUT === */
+  .pin-shell { padding: 16px 22px; flex: 1; display: flex; flex-direction: column; }
+  .pcb-card {
+    background: var(--card);
+    border: 1px solid var(--line-soft);
+    border-radius: 22px;
+    padding: 28px 18px 24px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background:
+      radial-gradient(ellipse 80% 80% at 50% 50%, rgba(214,117,74,0.05), transparent 70%),
+      var(--card);
+  }
+  .pcb {
+    width: 220px;
+    background: linear-gradient(135deg, #3a2818, #5a3f24 50%, #2e1e10);
+    border: 1px solid #6b4a28;
+    border-radius: 14px;
+    padding: 20px 12px;
+    position: relative;
+  }
+  .pcb-mcu {
+    background: #050505;
+    border: 1px solid #1a1a1a;
+    border-radius: 4px;
+    padding: 22px 10px;
+    margin: 4px 8px;
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 8px;
+    color: var(--ink-2);
+    letter-spacing: 0.1em;
+  }
+  .pcb-mcu .mc { color: var(--ink); font-size: 9px; font-weight: 600; margin-bottom: 4px; }
+  .pcb-side { position: absolute; top: 18px; bottom: 18px; display: flex; flex-direction: column; justify-content: space-around; }
+  .pcb-l { left: -8px; }
+  .pcb-r { right: -8px; }
+  .pn {
+    background: #c89a5c;
+    width: 16px; height: 7px;
+    position: relative;
+  }
+  .pn .lb {
+    position: absolute;
+    font-family: var(--mono);
+    font-size: 8.5px;
+    color: var(--ink-2);
+    white-space: nowrap;
+    top: 50%;
+    transform: translateY(-50%);
+    letter-spacing: 0.02em;
+  }
+  .pcb-l .pn .lb { right: 20px; }
+  .pcb-r .pn .lb { left: 20px; }
+  .pn.live {
+    background: var(--orange);
+    box-shadow: 0 0 10px rgba(214,117,74,0.6), 0 0 0 1.5px var(--orange);
+    animation: pinPulse 1.8s ease-in-out infinite;
+  }
+  .pn.live .lb { color: var(--orange); font-weight: 600; }
+
+  .pin-name {
+    text-align: center;
+    margin-top: 8px;
+  }
+  .pin-name .nm {
+    font-family: var(--serif);
+    font-size: 28px;
+    color: var(--ink);
+    line-height: 1;
+    margin-bottom: 4px;
+    letter-spacing: -0.01em;
+  }
+  .pin-name .sub {
+    font-size: 13px;
+    color: var(--ink-2);
+    letter-spacing: -0.005em;
+  }
+
+  /* === SCREEN 4: BOARDS PICKER === */
+  .picker-title {
+    padding: 8px 22px 16px;
+  }
+  .picker-title h2 {
+    font-family: var(--serif);
+    font-size: 32px;
+    line-height: 1;
+    color: var(--ink);
+    letter-spacing: -0.015em;
+  }
+  .picker-section {
+    padding: 8px 22px 6px;
+    font-size: 13px;
+    color: var(--ink-2);
+    font-weight: 500;
+    letter-spacing: -0.005em;
+    margin-top: 6px;
+  }
+  .pk-card {
+    margin: 0 18px 12px;
+    background: var(--card);
+    border: 1px solid var(--line-soft);
+    border-radius: 18px;
+    overflow: hidden;
+  }
+  .pk-row {
+    display: grid;
+    grid-template-columns: 38px 1fr auto;
+    gap: 14px;
+    align-items: center;
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--line);
+  }
+  .pk-row:last-child { border-bottom: none; }
+  .pk-row.sel { background: rgba(214,117,74,0.04); }
+  .pk-row .ic {
+    width: 38px; height: 38px;
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--ink-2);
+  }
+  .pk-row .ic svg { width: 17px; height: 17px; stroke-width: 1.5; }
+  .pk-row.sel .ic { color: var(--orange); border-color: var(--orange); background: var(--orange-soft); }
+  .pk-row .info .nm { font-size: 15px; color: var(--ink); font-weight: 500; letter-spacing: -0.005em; }
+  .pk-row .info .sub { font-family: var(--mono); font-size: 11.5px; color: var(--ink-2); margin-top: 3px; letter-spacing: 0.02em; }
+  .pk-row .via {
+    font-size: 12px;
+    color: var(--ink-3);
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .pk-row.sel .via { color: var(--orange); }
+
+  /* === SCREEN 5: MONITOR === */
+  .mon-h {
+    padding: 6px 22px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+  .mon-h h2 {
+    font-family: var(--serif);
+    font-size: 38px;
+    line-height: 1;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+  }
+  .mon-h .baud {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-2);
+    letter-spacing: 0.04em;
+  }
+  .mon-pill-row {
+    padding: 0 22px 16px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .mon-pill {
+    display: flex; align-items: center; gap: 7px;
+    padding: 7px 12px;
+    border-radius: 999px;
+    background: var(--orange-soft);
+    border: 1px solid var(--orange);
+    color: var(--orange);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .mon-pill::before { content:""; width: 6px; height: 6px; background: var(--orange); border-radius: 50%; animation: breathe 1.1s ease-in-out infinite; }
+  .mon-meta { font-size: 13px; color: var(--ink-2); }
+
+  .mon-card {
+    margin: 0 18px;
+    background: var(--card);
+    border: 1px solid var(--line-soft);
+    border-radius: 18px;
+    overflow: hidden;
+    flex: 1;
+    display: flex; flex-direction: column;
+  }
+  .mon-log {
+    flex: 1;
+    padding: 16px 18px;
+    overflow: hidden;
+    font-family: var(--mono);
+    font-size: 11px;
+    line-height: 1.8;
+    color: var(--ink-2);
+  }
+  .lg { display: grid; grid-template-columns: 58px 30px 1fr; gap: 10px; }
+  .lg .ts { color: var(--ink-3); font-size: 10px; }
+  .lg .lv { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; }
+  .lg .lv.i { color: #87B9E0; }
+  .lg .lv.w { color: var(--orange); }
+  .lg .lv.d { color: var(--ink-3); }
+  .lg .nu { color: var(--orange); }
+  .lg .ms { color: var(--ink); }
+  .cur { display: inline-block; width: 6px; height: 11px; background: var(--orange); margin-left: 3px; animation: blink 1s steps(2) infinite; vertical-align: middle; }
+
+  .mon-input {
+    padding: 12px 14px;
+    border-top: 1px solid var(--line);
+    display: grid;
+    grid-template-columns: 1fr 40px;
+    gap: 8px;
+    align-items: center;
+    background: var(--bg-2);
+  }
+  .mon-input input {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink);
+    outline: none;
+  }
+  .mon-input input::placeholder { color: var(--ink-3); }
+  .mon-input .send {
+    width: 40px; height: 40px;
+    background: var(--orange);
+    color: #1A0A02;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .mon-input .send svg { width: 16px; height: 16px; stroke-width: 2.2; }
+
+  /* gesture pill at bottom */
+  .gest { width: 100px; height: 4px; background: var(--ink-3); border-radius: 2px; margin: 12px auto 8px; }
+
+  /* === DETAIL CARDS BELOW PHONES === */
+  .detail-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+    margin: 64px 0 96px;
+  }
+  .detail-card {
+    background: var(--pg-card);
+    border: 1px solid var(--pg-line);
+    border-radius: 22px;
+    padding: 32px 28px;
+  }
+  .detail-card .num {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--orange);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .detail-card h4 {
+    font-family: var(--serif);
+    font-size: 26px;
+    font-weight: 400;
+    line-height: 1.1;
+    letter-spacing: -0.015em;
+    margin-bottom: 12px;
+    color: var(--pg-ink);
+  }
+  .detail-card p {
+    font-size: 14.5px;
+    color: var(--pg-ink-2);
+    line-height: 1.55;
+    letter-spacing: -0.005em;
+  }
+
+  /* === TYPE + COLOR SPEC === */
+  .spec {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 48px;
+    margin: 96px 0;
+    padding: 56px 0;
+    border-top: 1px solid var(--pg-line);
+    border-bottom: 1px solid var(--pg-line);
+  }
+  .spec-type .ts-row {
+    display: grid;
+    grid-template-columns: 130px 1fr;
+    gap: 28px;
+    padding: 20px 0;
+    border-bottom: 1px dashed var(--pg-line);
+    align-items: baseline;
+  }
+  .spec-type .ts-row:last-child { border-bottom: none; }
+  .ts-row .lb {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--pg-ink-3);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    line-height: 1.4;
+  }
+  .ts-row .lb b { color: var(--orange); display: block; margin-bottom: 4px; font-weight: 600; }
+  .ts-display { font-family: var(--serif); font-size: 56px; line-height: 0.95; letter-spacing: -0.025em; color: var(--pg-ink); }
+  .ts-display em { font-style: italic; color: var(--orange); }
+  .ts-title { font-family: var(--sans); font-size: 26px; font-weight: 500; line-height: 1.15; color: var(--pg-ink); letter-spacing: -0.015em; }
+  .ts-body { font-family: var(--sans); font-size: 16px; line-height: 1.55; color: var(--pg-ink-2); letter-spacing: -0.005em; }
+  .ts-mono { font-family: var(--mono); font-size: 12.5px; color: var(--orange); letter-spacing: 0.02em; }
+
+  .spec-palette { }
+  .spec-palette h3 {
+    font-family: var(--serif);
+    font-size: 28px;
+    font-weight: 400;
+    line-height: 1;
+    letter-spacing: -0.015em;
+    margin-bottom: 18px;
+    color: var(--pg-ink);
+  }
+  .sw-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .sw {
+    aspect-ratio: 3/2;
+    border-radius: 14px;
+    padding: 14px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.04em;
+    border: 1px solid rgba(255,255,255,0.04);
+  }
+  .sw .nm { opacity: 0.8; }
+  .sw .hx { opacity: 0.55; }
+
+  /* === FOOTER === */
+  .ft {
+    margin-top: 64px;
+    padding-top: 32px;
+    border-top: 1px solid var(--pg-line);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--pg-ink-3);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .ft em { font-style: normal; color: var(--orange); }
+
+  /* === ANIMATIONS === */
+  @keyframes pinPulse {
+    0%, 100% { box-shadow: 0 0 10px rgba(214,117,74,0.6), 0 0 0 1.5px var(--orange); }
+    50% { box-shadow: 0 0 18px rgba(214,117,74,0.95), 0 0 0 2.5px var(--orange); }
+  }
+  @keyframes breathe { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  @keyframes blink { 50% { opacity: 0; } }
+  @keyframes wave { 0% { left: -40%; } 100% { left: 100%; } }
+
+  /* === DETAIL: COMPILE WAVE === */
+  .wave {
+    width: 100%; height: 3px;
+    background: rgba(255,255,255,0.06);
+    position: relative; overflow: hidden;
+    border-radius: 2px;
+  }
+  .wave::after {
+    content: ""; position: absolute; top: 0; left: -40%;
+    width: 40%; height: 100%;
+    background: linear-gradient(90deg, transparent, var(--orange), transparent);
+    animation: wave 1.8s ease-in-out infinite;
+  }
+  .kb { display: flex; gap: 4px; width: 100%; }
+  .kk {
+    flex: 1;
+    background: var(--card);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 14px;
+    padding: 10px 0;
+    text-align: center;
+    border-radius: 8px;
+  }
+
+  @media (max-width: 1200px) {
+    .phone-grid { grid-template-columns: repeat(2, 1fr); }
+    .detail-row, .spec { grid-template-columns: 1fr; gap: 32px; }
+    .intro { grid-template-columns: 1fr; gap: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<main>
+
+  <!-- HEADER -->
+  <div class="hdr">
+    <div class="left">
+      <div class="eyebrow">ForgeBoard / Android · v3 · 28.05.2026</div>
+      <h1>The IDE,<br/><em>at hand.</em></h1>
+    </div>
+    <div class="right">
+      <span class="k">FB-IDE-AND</span><br/>
+      Direction · v3<br/>
+      <span class="k">Iteration</span>
+      <br/>03 / Final
+    </div>
+  </div>
+
+  <!-- INTRO -->
+  <div class="intro">
+    <div class="lede">
+      A hardware IDE that <em>feels like prose</em> — quiet typography, warm gray rooms, one verb per screen.
+    </div>
+    <div class="body">
+      <p>Aligned to the Claude Android language: <strong>Instrument Serif</strong> for titles, <strong>Hanken Grotesk</strong> for body, warm dark rooms instead of cold slate. A single burnt orange carries every primary action, the rest disappears.</p>
+      <p>Five phones below. Each one is the entire screen — no Material chrome, no dribbble framing. The thing itself, as it would live in the operator's hand.</p>
+    </div>
+  </div>
+
+  <!-- PHONES -->
+  <div class="sect-label">
+    <h2>Screens.</h2>
+    <div class="meta">Five frames · core loop</div>
+  </div>
+
+  <div class="phone-grid">
+
+    <!-- ============== 1. SKETCHES (Code-screen pattern) ============== -->
+    <div class="phone-cell">
+      <div class="cap">
+        <div class="num">01 · Entry</div>
+        <div class="nm">Sketches</div>
+        <div class="dx">Big serif title, filter chips, session cards, pill FAB. Same skeleton as Claude's Code screen — different content.</div>
+      </div>
+      <div class="phone"><div class="screen">
+        <div class="stat">
+          <div class="l"><span>09:41</span></div>
+          <div class="r">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M5 12a10 10 0 0 1 14 0M8 15a6 6 0 0 1 8 0M12 19h.01"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="9" width="18" height="6" rx="1"/><rect x="20" y="11" width="2" height="2"/></svg>
+          </div>
+        </div>
+
+        <div class="left-title-row">
+          <h1>Sketches</h1>
+          <div class="menu-ic"><span></span><span></span></div>
+        </div>
+
+        <div class="chips">
+          <div class="chip act">All <span class="ct">14</span></div>
+          <div class="chip">Drafts <span class="ct">9</span></div>
+          <div class="chip">Flashed <span class="ct">5</span></div>
+        </div>
+
+        <div class="sec-cap">Today</div>
+
+        <div class="sess-list">
+          <div class="sess-card">
+            <div class="icn flashed"><span class="glyph">B</span></div>
+            <div class="meta-c">
+              <div class="nm">blink_amber</div>
+              <div class="sub">
+                <span class="conn">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="6" width="18" height="12" rx="1"/></svg>
+                  Connected
+                </span>
+                <span class="dot"></span>
+                <span class="path">A4F2 · pin 16</span>
+              </div>
+            </div>
+            <div class="time-r">now</div>
+          </div>
+
+          <div class="sess-card">
+            <div class="icn"><span class="glyph">T</span></div>
+            <div class="meta-c">
+              <div class="nm">telemetry_dht</div>
+              <div class="sub">
+                <span class="disc">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="6" width="18" height="12" rx="1"/><path d="M3 3l18 18"/></svg>
+                  Disconnected
+                </span>
+                <span class="dot"></span>
+                <span class="path">DHT11 sketch</span>
+              </div>
+            </div>
+            <div class="time-r">22m</div>
+          </div>
+        </div>
+
+        <div class="sec-cap" style="margin-top: 16px;">This week</div>
+
+        <div class="sess-list">
+          <div class="sess-card">
+            <div class="icn"><span class="glyph">R</span></div>
+            <div class="meta-c">
+              <div class="nm">rgb_breath</div>
+              <div class="sub">
+                <span class="disc">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="6" width="18" height="12" rx="1"/><path d="M3 3l18 18"/></svg>
+                  Disconnected
+                </span>
+                <span class="dot"></span>
+                <span class="path">pin 3 · HSV</span>
+              </div>
+            </div>
+            <div class="time-r">2d</div>
+          </div>
+        </div>
+
+        <div class="fab-pill">
+          <div class="plus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg></div>
+          New sketch
+        </div>
+      </div></div>
+    </div>
+
+    <!-- ============== 2. EDITOR (Artifact-card pattern) ============== -->
+    <div class="phone-cell">
+      <div class="cap">
+        <div class="num">02 · Edit</div>
+        <div class="nm">Editor</div>
+        <div class="dx">Borrowing Claude's Artifacts treatment — code lives inside a rounded card, big serif name underneath. The screen is the artifact.</div>
+      </div>
+      <div class="phone"><div class="screen">
+        <div class="stat">
+          <div class="l"><span>09:41</span></div>
+          <div class="r">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M5 12a10 10 0 0 1 14 0"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="9" width="18" height="6" rx="1"/></svg>
+          </div>
+        </div>
+
+        <div class="left-title-row">
+          <h1>Editor</h1>
+          <div class="menu-ic"><span></span><span></span></div>
+        </div>
+
+        <div class="artifact-shell">
+          <div class="artifact-card">
+            <div class="artifact-window">
+              <div class="aw-ln"><span class="aw-n">1</span><span class="aw-t"><span class="cm">// ForgeBoard breath</span></span></div>
+              <div class="aw-ln"><span class="aw-n">2</span><span class="aw-t"><span class="kw">#include</span> <span class="st">&lt;Arduino.h&gt;</span></span></div>
+              <div class="aw-ln"><span class="aw-n">3</span><span class="aw-t"> </span></div>
+              <div class="aw-ln"><span class="aw-n">4</span><span class="aw-t"><span class="kw">constexpr</span> <span class="ty">uint8_t</span> <span class="vr">LED</span> = <span class="pin-hi">16</span>;</span></div>
+              <div class="aw-ln"><span class="aw-n">5</span><span class="aw-t"> </span></div>
+              <div class="aw-ln"><span class="aw-n">6</span><span class="aw-t"><span class="ty">void</span> <span class="fn">setup</span>() {</span></div>
+              <div class="aw-ln"><span class="aw-n">7</span><span class="aw-t">  <span class="fn">pinMode</span>(<span class="vr">LED</span>, <span class="kw">OUTPUT</span>);</span></div>
+              <div class="aw-ln"><span class="aw-n">8</span><span class="aw-t">}</span></div>
+              <div class="aw-ln"><span class="aw-n">9</span><span class="aw-t"> </span></div>
+              <div class="aw-ln"><span class="aw-n">10</span><span class="aw-t"><span class="ty">void</span> <span class="fn">loop</span>() {</span></div>
+              <div class="aw-ln"><span class="aw-n">11</span><span class="aw-t">  <span class="ty">float</span> <span class="vr">t</span> = <span class="fn">millis</span>()/<span class="nm">1000.0f</span>;</span></div>
+              <div class="aw-ln"><span class="aw-n">12</span><span class="aw-t">  <span class="fn">analogWrite</span>(<span class="vr">LED</span>,</span></div>
+              <div class="aw-ln"><span class="aw-n">13</span><span class="aw-t">     <span class="fn">sin</span>(<span class="vr">t</span>)*<span class="nm">127</span>+<span class="nm">128</span>);</span></div>
+              <div class="aw-ln"><span class="aw-n">14</span><span class="aw-t">  <span class="fn">delay</span>(<span class="nm">8</span>);</span></div>
+              <div class="aw-ln"><span class="aw-n">15</span><span class="aw-t">}</span></div>
+            </div>
+            <div class="artifact-meta">
+              <div class="nm">blink_amber.ino</div>
+              <div class="sub">edited 4 minutes ago · 17 lines</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ed-toolbar">
+          <div class="ed-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+          </div>
+          <div class="ed-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 6L9 17l-5-5"/></svg>
+          </div>
+          <div class="ed-flash">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12l7-7 7 7"/></svg>
+            Flash
+          </div>
+        </div>
+      </div></div>
+    </div>
+
+    <!-- ============== 3. PINOUT (the moment) ============== -->
+    <div class="phone-cell">
+      <div class="cap">
+        <div class="num">03 · Probe</div>
+        <div class="nm">Pinout</div>
+        <div class="dx">Live board diagram. The active pin breathes orange. Big serif at the bottom names what it is. Hardware-aware moment Arduino IDE can't ship.</div>
+      </div>
+      <div class="phone"><div class="screen">
+        <div class="stat">
+          <div class="l"><span>09:41</span></div>
+          <div class="r">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M5 12a10 10 0 0 1 14 0"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="9" width="18" height="6" rx="1"/></svg>
+          </div>
+        </div>
+
+        <div class="left-title-row">
+          <h1>Pinout</h1>
+          <div class="menu-ic"><span></span><span></span></div>
+        </div>
+
+        <div class="pin-shell">
+          <div class="pcb-card">
+            <div class="pcb">
+              <div class="pcb-mcu"><div class="mc">ESP32-S3-WROOM-1</div>N16R8</div>
+              <div class="pcb-side pcb-l">
+                <div class="pn"><span class="lb">3V3</span></div>
+                <div class="pn"><span class="lb">GND</span></div>
+                <div class="pn live"><span class="lb">GPIO 16 · LED</span></div>
+                <div class="pn"><span class="lb">GPIO 17</span></div>
+                <div class="pn"><span class="lb">GPIO 21 · LDR</span></div>
+                <div class="pn"><span class="lb">GPIO 45 · DHT</span></div>
+              </div>
+              <div class="pcb-side pcb-r">
+                <div class="pn"><span class="lb">5V</span></div>
+                <div class="pn"><span class="lb">GND</span></div>
+                <div class="pn"><span class="lb">GPIO 3 · RGB</span></div>
+                <div class="pn"><span class="lb">GPIO 4</span></div>
+                <div class="pn"><span class="lb">GPIO 47</span></div>
+                <div class="pn"><span class="lb">GPIO 48 · BUZ</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="pin-name">
+            <div class="nm"><em style="font-style:italic; color:var(--orange);">Pin 16</em> — onboard LED</div>
+            <div class="sub">Digital · PWM-capable · currently driven by <code style="font-family: var(--mono); font-size: 11.5px; color: var(--ink);">analogWrite()</code></div>
+          </div>
+        </div>
+
+        <div class="gest"></div>
+      </div></div>
+    </div>
+
+    <!-- ============== 4. BOARDS PICKER (Settings-style grouped cards) ============== -->
+    <div class="phone-cell">
+      <div class="cap">
+        <div class="num">04 · Choose</div>
+        <div class="nm">Boards</div>
+        <div class="dx">Grouped-card layout straight from Claude's Settings. USB OTG and WiFi each get their own card, internal dividers between devices.</div>
+      </div>
+      <div class="phone"><div class="screen">
+        <div class="stat">
+          <div class="l"><span>09:41</span></div>
+          <div class="r">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M5 12a10 10 0 0 1 14 0"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="9" width="18" height="6" rx="1"/></svg>
+          </div>
+        </div>
+
+        <div class="topbar">
+          <div class="ham"><span></span><span></span></div>
+          <div class="ttl">Boards</div>
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg></div>
+        </div>
+
+        <div class="picker-section" style="padding-top: 14px;">USB · OTG</div>
+        <div class="pk-card">
+          <div class="pk-row sel">
+            <div class="ic">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18"/><circle cx="7" cy="14" r="1"/></svg>
+            </div>
+            <div class="info">
+              <div class="nm">ForgeBoard · A4F2</div>
+              <div class="sub">303A:1001 · /dev/usb/001/006</div>
+            </div>
+            <div class="via">USB</div>
+          </div>
+        </div>
+
+        <div class="picker-section">WiFi · mDNS</div>
+        <div class="pk-card">
+          <div class="pk-row">
+            <div class="ic">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 12a10 10 0 0 1 14 0M2 9a14 14 0 0 1 20 0M8 15a6 6 0 0 1 8 0"/><circle cx="12" cy="19" r="1"/></svg>
+            </div>
+            <div class="info">
+              <div class="nm">forgeboard-91b3.local</div>
+              <div class="sub">192.168.1.42 · OTA · 12s</div>
+            </div>
+            <div class="via">WIFI</div>
+          </div>
+          <div class="pk-row">
+            <div class="ic">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 12a10 10 0 0 1 14 0M8 15a6 6 0 0 1 8 0"/><circle cx="12" cy="19" r="1"/></svg>
+            </div>
+            <div class="info">
+              <div class="nm">forgeboard-bench</div>
+              <div class="sub">192.168.1.51 · 03 min</div>
+            </div>
+            <div class="via">WIFI</div>
+          </div>
+        </div>
+
+        <div class="picker-section">Recent</div>
+        <div class="pk-card">
+          <div class="pk-row">
+            <div class="ic">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+            </div>
+            <div class="info">
+              <div class="nm">Arduino Uno R3</div>
+              <div class="sub">avr · 14h ago</div>
+            </div>
+            <div class="via">USB</div>
+          </div>
+        </div>
+
+        <div class="gest"></div>
+      </div></div>
+    </div>
+
+    <!-- ============== 5. MONITOR ============== -->
+    <div class="phone-cell">
+      <div class="cap">
+        <div class="num">05 · Observe</div>
+        <div class="nm">Monitor</div>
+        <div class="dx">Live serial inside one big rounded card. Pulsing orange "LIVE" pill, monospace log, send input at the bottom of the card.</div>
+      </div>
+      <div class="phone"><div class="screen">
+        <div class="stat">
+          <div class="l"><span>09:41</span><span class="ind"></span></div>
+          <div class="r">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M5 12a10 10 0 0 1 14 0"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="9" width="18" height="6" rx="1"/></svg>
+          </div>
+        </div>
+
+        <div class="left-title-row">
+          <h1>Monitor</h1>
+          <div class="menu-ic"><span></span><span></span></div>
+        </div>
+
+        <div class="mon-pill-row">
+          <div class="mon-pill">LIVE</div>
+          <span class="mon-meta">A4F2 · 115200 · 8N1</span>
+        </div>
+
+        <div class="mon-card">
+          <div class="mon-log">
+            <div class="lg"><span class="ts">00:00.124</span><span class="lv i">INF</span><span class="ms">boot — fw v2.3.1-rc1</span></div>
+            <div class="lg"><span class="ts">00:00.156</span><span class="lv i">INF</span><span class="ms">wifi · rssi <span class="nu">-46</span> dBm</span></div>
+            <div class="lg"><span class="ts">00:00.302</span><span class="lv d">DBG</span><span class="ms">sensors · DHT ok · LDR ok</span></div>
+            <div class="lg"><span class="ts">00:01.000</span><span class="lv i">INF</span><span class="ms">t=<span class="nu">24.6</span>C h=<span class="nu">58</span>% lx=<span class="nu">412</span></span></div>
+            <div class="lg"><span class="ts">00:02.000</span><span class="lv i">INF</span><span class="ms">t=<span class="nu">24.6</span>C h=<span class="nu">58</span>% lx=<span class="nu">410</span></span></div>
+            <div class="lg"><span class="ts">00:03.000</span><span class="lv w">WRN</span><span class="ms">heap wm <span class="nu">3220</span> B</span></div>
+            <div class="lg"><span class="ts">00:04.000</span><span class="lv i">INF</span><span class="ms">t=<span class="nu">24.7</span>C h=<span class="nu">58</span>% lx=<span class="nu">418</span><span class="cur"></span></span></div>
+          </div>
+          <div class="mon-input">
+            <input placeholder="Send..." />
+            <div class="send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 12l14-7-3 14-3-6-8-1z"/></svg></div>
+          </div>
+        </div>
+
+        <div class="gest"></div>
+      </div></div>
+    </div>
+
+    <!-- ============== 6. SETTINGS (matches Claude exactly) ============== -->
+    <div class="phone-cell">
+      <div class="cap">
+        <div class="num">06 · Setup</div>
+        <div class="nm">Settings</div>
+        <div class="dx">Direct cousin of Claude's Settings. Account card top, grouped option cards below. Hamburger + centered serif + info icon.</div>
+      </div>
+      <div class="phone"><div class="screen">
+        <div class="stat">
+          <div class="l"><span>09:41</span></div>
+          <div class="r">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M5 12a10 10 0 0 1 14 0"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="9" width="18" height="6" rx="1"/></svg>
+          </div>
+        </div>
+
+        <div class="topbar">
+          <div class="ham"><span></span><span></span></div>
+          <div class="ttl">Settings</div>
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg></div>
+        </div>
+
+        <div class="body-pad" style="padding-top: 18px;">
+          <div class="acct-card">
+            <div class="em">av@defenceforgeindustries.com</div>
+            <div class="plan">Max</div>
+          </div>
+
+          <div class="group-card">
+            <div class="gr-row">
+              <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="10" r="3"/><path d="M6 19c1.5-3 4-4 6-4s4.5 1 6 4"/></svg></div>
+              <div class="lb"><div class="l1">Profile</div></div>
+              <span class="chev">›</span>
+            </div>
+            <div class="gr-row">
+              <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18"/></svg></div>
+              <div class="lb"><div class="l1">Bundled board</div><div class="l2">ForgeBoard · ESP32-S3</div></div>
+              <span class="chev">›</span>
+            </div>
+            <div class="gr-row">
+              <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></div>
+              <div class="lb"><div class="l1">Cores</div><div class="l2">3 installed</div></div>
+              <span class="chev">›</span>
+            </div>
+          </div>
+
+          <div class="group-card">
+            <div class="gr-row">
+              <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z"/></svg></div>
+              <div class="lb"><div class="l1">Color mode</div><div class="l2">System</div></div>
+              <span class="chev">›</span>
+            </div>
+            <div class="gr-row">
+              <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 7l4-3h8l4 3M4 7l4 3M20 7l-4 3M4 7v10l8 4 8-4V7"/></svg></div>
+              <div class="lb"><div class="l1">Font style</div><div class="l2">Hanken · Serif titles</div></div>
+              <span class="chev">›</span>
+            </div>
+            <div class="gr-row">
+              <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></div>
+              <div class="lb"><div class="l1">Build server</div><div class="l2"><span class="conn">Connected · 192.168.1.4</span></div></div>
+              <span class="chev">›</span>
+            </div>
+          </div>
+
+          <div class="group-card">
+            <div class="gr-row">
+              <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4z"/></svg></div>
+              <div class="lb"><div class="l1">Haptics</div></div>
+              <div style="width: 36px; height: 22px; background: var(--orange); border-radius: 999px; position: relative;">
+                <div style="position: absolute; right: 2px; top: 2px; width: 18px; height: 18px; background: var(--ink); border-radius: 50%;"></div>
+              </div>
+            </div>
+            <div class="gr-row">
+              <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21a2 2 0 0 0 4 0"/></svg></div>
+              <div class="lb"><div class="l1">Notifications</div></div>
+              <span class="chev">›</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="gest"></div>
+      </div></div>
+    </div>
+
+  </div>
+
+  <!-- DETAIL CARDS -->
+  <div class="sect-label">
+    <h2>Signature.</h2>
+    <div class="meta">Cross-screen elements</div>
+  </div>
+
+  <div class="detail-row">
+    <div class="detail-card">
+      <div class="num">A · Compile wave</div>
+      <h4>Progress as horizon, not percent.</h4>
+      <p>A thin orange wave slides across the editor toolbar while compiling and flashing. Calmer than a ring; readable in the periphery while you reach for the cable.</p>
+      <div style="margin-top: 24px;"><div class="wave"></div></div>
+    </div>
+    <div class="detail-card">
+      <div class="num">B · Coder's row</div>
+      <h4>The keys above the keys.</h4>
+      <p>Soft-keyboard accessory bar with the characters you actually type in C++ — single tap, no holding shift, no swiping to symbols. Reused on the serial input.</p>
+      <div style="margin-top: 24px;"><div class="kb"><div class="kk">{</div><div class="kk">}</div><div class="kk">;</div><div class="kk">&lt;</div><div class="kk">&gt;</div><div class="kk">/</div><div class="kk">⇥</div></div></div>
+    </div>
+    <div class="detail-card">
+      <div class="num">C · Pill FAB</div>
+      <h4>One verb. Always orange.</h4>
+      <p>Every screen with a primary action surfaces it as a labeled pill in the bottom-right. <em>New sketch. New board. Send.</em> The orange exists only for verbs.</p>
+      <div style="margin-top: 24px;">
+        <div style="background: var(--orange); color: #1A0A02; border-radius: 999px; padding: 12px 22px 12px 14px; display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 600; width: fit-content;">
+          <div style="width: 22px; height: 22px; border-radius: 50%; background: rgba(0,0,0,0.18); display: flex; align-items: center; justify-content: center;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"/></svg>
+          </div>
+          New sketch
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SYSTEM SPEC -->
+  <div class="sect-label">
+    <h2>System.</h2>
+    <div class="meta">Type · Palette · Tokens</div>
+  </div>
+
+  <div class="spec">
+    <div class="spec-type">
+      <div class="ts-row">
+        <div class="lb"><b>Display</b>Instrument Serif<br/>56 · ital</div>
+        <div class="ts-display">The IDE, <em>at hand.</em></div>
+      </div>
+      <div class="ts-row">
+        <div class="lb"><b>Title</b>Hanken Grotesk<br/>26 · 500</div>
+        <div class="ts-title">Recent sketches</div>
+      </div>
+      <div class="ts-row">
+        <div class="lb"><b>Body</b>Hanken Grotesk<br/>16 · 400</div>
+        <div class="ts-body">Plug in the board, pick a sketch, ship a binary in three taps. The bench is wherever the operator is — the IDE follows.</div>
+      </div>
+      <div class="ts-row">
+        <div class="lb"><b>Mono</b>JetBrains Mono<br/>13 · 500</div>
+        <div class="ts-mono">esptool · 921600 baud · 0x1000 → 0x8000 OK</div>
+      </div>
+    </div>
+
+    <div class="spec-palette">
+      <h3>Palette</h3>
+      <div class="sw-grid">
+        <div class="sw" style="background:var(--bg); color:var(--ink);"><span class="nm">Bg · warm dark</span><span class="hx">#1A1817</span></div>
+        <div class="sw" style="background:var(--card); color:var(--ink);"><span class="nm">Card</span><span class="hx">#2A2624</span></div>
+        <div class="sw" style="background:var(--orange); color:#1A0A02;"><span class="nm">Orange · verb</span><span class="hx">#D6754A</span></div>
+        <div class="sw" style="background:var(--ink); color:var(--bg);"><span class="nm">Ink · primary</span><span class="hx">#F2EFEA</span></div>
+        <div class="sw" style="background:var(--green); color:#0A1A0E;"><span class="nm">Green · link</span><span class="hx">#6FBF7B</span></div>
+        <div class="sw" style="background:var(--ink-2); color:var(--bg);"><span class="nm">Ink · secondary</span><span class="hx">#9F9893</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="ft">
+    <span>ForgeBoard · IDE · Android · <em>v3</em></span>
+    <span>Instrument Serif + Hanken Grotesk · 28.05.26</span>
+  </div>
+
+</main>
+
+</body>
+</html>

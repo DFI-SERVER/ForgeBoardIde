@@ -1,34 +1,64 @@
+/* ============================================================
+   Serial Monitor — VS Code terminal layout.
+
+   Three rows: a thin toolbar, a mono edge-to-edge log, and a
+   prompt input. Everything sits on the panel's chrome surface;
+   no boxes, no nested borders. The log fills the available
+   height and scrolls; the toolbar and input rows are fixed.
+   ============================================================ */
+
 .sm {
   display: flex;
   flex-direction: column;
   height: 100%;
+  min-height: 0;
+  background: var(--surface-1);
+  font-family: var(--font-mono);
 }
 
+/* --- Toolbar ---
+   Compact horizontal row of ghost buttons + native selects.
+   Sits flush under the panel tab strip and shares the same
+   1px divider feel. */
 .sm-toolbar {
-  display: flex;
-  gap: var(--space-4);
-  padding: 0 0 var(--space-4);
-  align-items: center;
-}
-.sm-btn {
   display: flex;
   align-items: center;
   gap: var(--space-3);
+  padding: var(--space-3) var(--space-6);
+  border-bottom: 1px solid var(--border-subtle);
+  font-family: var(--font-ui);
+  flex-shrink: 0;
+}
+.sm-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
   background: transparent;
-  border: 1px solid var(--border);
-  color: var(--fg-default);
+  border: 1px solid var(--border-subtle);
+  color: var(--fg-muted);
   padding: var(--space-2) var(--space-4);
   border-radius: var(--radius-sm);
-  font-size: var(--text-sm);
   font-family: var(--font-ui);
-  font-weight: var(--weight-semibold);
-  transition: background-color var(--dur-fast) var(--ease);
+  font-size: var(--text-xs);
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease);
 }
-.sm-btn:hover { background: var(--accent-wash-hover); }
-.sm-btn:focus-visible { box-shadow: 0 0 0 2px var(--accent-ring); }
-.sm-btn.connected { border-color: var(--sage); color: var(--sage); }
+.sm-btn:hover {
+  background: var(--accent-wash-hover);
+  color: var(--fg-bright);
+  border-color: var(--border);
+}
+.sm-btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
+.sm-btn.connected {
+  border-color: var(--sage);
+  color: var(--sage);
+}
 
-/* CSS status circle inside the Connect/Disconnect button */
+/* Status circle inside the Connect/Disconnect button. */
 .sm-dot {
   width: 7px;
   height: 7px;
@@ -39,89 +69,179 @@
 .sm-btn.connected .sm-dot { background: currentColor; }
 
 .sm-btn-ghost {
-  color: var(--fg-muted);
+  display: inline-flex;
+  align-items: center;
+  color: var(--fg-subtle);
+  background: transparent;
   border: 1px solid transparent;
   padding: var(--space-2) var(--space-4);
-  font-size: var(--text-sm);
   font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  letter-spacing: 0.02em;
   border-radius: var(--radius-sm);
-  transition: background-color var(--dur-fast) var(--ease);
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease);
 }
-.sm-btn-ghost:hover { background: var(--accent-wash-hover); }
-.sm-btn-ghost:focus-visible { box-shadow: 0 0 0 2px var(--accent-ring); }
+.sm-btn-ghost:hover { background: var(--accent-wash-hover); color: var(--fg-bright); }
+.sm-btn-ghost:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
+
 .sm-select {
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  color: var(--fg-default);
-  padding: var(--space-2) var(--space-4);
-  font-size: var(--text-sm);
-  border-radius: var(--radius-sm);
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  color: var(--fg-muted);
+  padding: var(--space-2) var(--space-3);
   font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
 }
-.sm-select:focus-visible { box-shadow: 0 0 0 2px var(--accent-ring); }
+.sm-select:hover { color: var(--fg-bright); border-color: var(--border); }
+.sm-select:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
 .sm-spacer { flex: 1; }
 
+/* --- Segmented pill control ---
+   Used for the line-ending picker (4 fixed options). Replaces a
+   native <select> so the OS popup — which renders inconsistently
+   with the dark mono chrome on Windows — never appears. Active
+   pill is filled; the rest are quiet. */
+.sm-seg-group {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  font-family: var(--font-mono);
+  height: 26px;
+}
+.sm-seg {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--fg-muted);
+  padding: 0 var(--space-4);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  border-right: 1px solid var(--border-subtle);
+  transition:
+    background-color var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease);
+}
+.sm-seg:last-child { border-right: none; }
+.sm-seg:hover:not(.active) {
+  color: var(--fg-bright);
+  background: var(--accent-wash-hover);
+}
+.sm-seg.active {
+  background: var(--accent-wash);
+  color: var(--fg-bright);
+}
+.sm-seg:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--accent-ring);
+}
+
+/* --- Log ---
+   Edge-to-edge mono output. Each entry is one line by default;
+   long lines wrap with hanging indent so the timestamp stays
+   aligned visually. Opt back into text selection (global.css
+   disables it on body) so the user can copy a serial line to
+   paste into a calculator, search, or log. */
 .sm-log {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding: var(--space-3) 0;
   font-family: var(--font-mono);
   font-size: var(--text-sm);
-  line-height: 1.6;
+  line-height: 1.55;
+  user-select: text;
+  cursor: text;
 }
+.sm-entry,
+.sm-ts { user-select: text; }
 .sm-empty {
   color: var(--fg-subtle);
   font-family: var(--font-ui);
-  font-size: var(--text-base);
-  padding: var(--space-2);
+  font-size: var(--text-sm);
+  padding: var(--space-3) var(--space-6);
+  font-style: italic;
 }
 .sm-entry {
-  padding: 0 var(--space-2);
+  padding: 0 var(--space-6);
   white-space: pre-wrap;
   word-break: break-word;
 }
-.sm-ts { color: var(--fg-subtle); margin-right: var(--space-4); }
+.sm-ts {
+  color: var(--fg-subtle);
+  margin-right: var(--space-4);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.02em;
+}
 .sm-rx { color: var(--fg-default); }
-.sm-tx { color: var(--accent); }
+.sm-tx { color: var(--fg-bright); font-weight: var(--weight-medium); }
 .sm-info { color: var(--fg-muted); font-style: italic; }
 
+/* --- Input row ---
+   Terminal-style prompt: `>` then a borderless input that fills
+   the row. Enter sends; the Send button is a quiet mono affordance
+   for discoverability. Disabled state dims the row but keeps the
+   prompt visible so the input doesn't read as a hidden field. */
 .sm-input-row {
   display: flex;
-  gap: var(--space-4);
   align-items: center;
-  padding: var(--space-4) 0 0;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-6);
   border-top: 1px solid var(--border-subtle);
+  background: var(--surface-1);
+  flex-shrink: 0;
 }
 .sm-prompt {
-  color: var(--fg-subtle);
+  color: var(--accent);
   font-family: var(--font-mono);
-  font-size: var(--text-base);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  user-select: none;
+  flex-shrink: 0;
 }
 .sm-input {
   flex: 1;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: var(--space-3) var(--space-5);
-  color: var(--fg-default);
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: var(--fg-bright);
   font-family: var(--font-mono);
   font-size: var(--text-sm);
   outline: none;
+  caret-color: var(--accent);
 }
-.sm-input::placeholder { color: var(--fg-subtle); }
-.sm-input:focus-visible { box-shadow: 0 0 0 2px var(--accent-ring); }
+.sm-input::placeholder { color: var(--fg-subtle); font-style: italic; }
 .sm-input:disabled { color: var(--fg-disabled); }
 .sm-send {
-  background: var(--sage);
-  color: var(--sage-fg);
-  padding: var(--space-3) var(--space-6);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-semibold);
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--fg-subtle);
+  padding: var(--space-1) var(--space-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: color var(--dur-fast) var(--ease), background-color var(--dur-fast) var(--ease);
 }
-.sm-send:focus-visible { box-shadow: 0 0 0 2px var(--accent-ring); }
+.sm-send:hover:not(:disabled) {
+  color: var(--fg-bright);
+  background: var(--accent-wash-hover);
+}
+.sm-send:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring); }
 .sm-send:disabled {
-  background: var(--border);
   color: var(--fg-disabled);
   cursor: not-allowed;
 }

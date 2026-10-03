@@ -1,7 +1,6 @@
 use super::cli;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use tauri::Emitter;
 
 /// An arduino-cli platform / core (e.g. `esp32:esp32`).
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -68,19 +67,38 @@ pub async fn search(app: &tauri::AppHandle, query: &str) -> Result<Vec<Core>, St
 /// event. Returns the arduino-cli exit code. On failure, stderr is replayed
 /// onto the same event stream so the user sees the real error rather than
 /// just a non-zero exit number.
-pub async fn install(app: &tauri::AppHandle, core_id: &str) -> Result<i32, String> {
-    let (code, stderr) = cli::run_streaming(
-        app,
-        "core-install-output",
-        &["core", "install", core_id, "--no-color"],
-    )
-    .await?;
+pub async fn install(
+    app: &tauri::AppHandle,
+    target: &str,
+    core_id: &str,
+    board_manager_url: Option<&str>,
+) -> Result<i32, String> {
+    let mut args: Vec<&str> = vec!["core", "install", core_id, "--no-color"];
+    if let Some(url) = board_manager_url {
+        // Vendors outside Arduino's default package index (STM32, RP2040,
+        // Teensy, Seeed…) need their board-manager URL on BOTH commands:
+        // update-index fetches the vendor index so install can resolve the
+        // platform, and install needs it again to trust that index. Without
+        // this, installing any non-default core fails with "platform not
+        // found". The URL is passed per-invocation, never persisted into the
+        // shared arduino-cli.yaml (which Arduino IDE also reads).
+        let _ = cli::run_streaming(
+            app,
+            target,
+            "core-install-output",
+            &["core", "update-index", "--additional-urls", url, "--no-color"],
+        )
+        .await?;
+        args.push("--additional-urls");
+        args.push(url);
+    }
+    let (code, stderr) = cli::run_streaming(app, target, "core-install-output", &args).await?;
     if code != 0 {
         for line in stderr.lines() {
             if line.is_empty() {
                 continue;
             }
-            let _ = app.emit("core-install-output", line.to_string());
+            cli::emit_line_to(app, target, "core-install-output", line.to_string());
         }
     }
     Ok(code)

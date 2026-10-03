@@ -24,7 +24,15 @@ export interface HumanizedHint {
   explanation: string;
   /** A concrete next step to resolve it. */
   fix: string;
+  /** Optional one-click follow-up the UI can offer. The Problems panel uses
+   *  this to render an actionable button next to the textual hint. */
+  action?: HintAction;
 }
+
+/** A follow-up action a hint can offer the user. Discriminated by `kind` so
+ *  new action shapes can be added without churning the call sites. */
+export type HintAction =
+  | { kind: "search-library"; query: string; label: string };
 
 /**
  * One humanisation rule. `test` matches a diagnostic's message; `build`
@@ -98,14 +106,27 @@ const RULES: HumanizeRule[] = [
     // gcc fatal error: `WiFi.h: No such file or directory`
     id: "missing-header",
     test: /([\w./+-]+\.h)\s*:\s*No such file or directory/i,
-    build: (m) => ({
-      explanation:
-        `The compiler can't find "${m[1]}". This header belongs to a ` +
-        "library that isn't installed yet.",
-      fix:
-        `Open the Library Manager and install the library that provides ` +
-        `"${m[1]}". If it's already installed, check the #include spelling.`,
-    }),
+    build: (m) => {
+      const header = m[1];
+      // Strip the path + extension and turn underscores into spaces so
+      // `Adafruit_NeoPixel.h` searches for "Adafruit NeoPixel" — arduino-cli's
+      // substring match against full registry names then finds the right entry.
+      const stem = header.split(/[\\/]/).pop()!.replace(/\.[^.]+$/, "");
+      const query = stem.replace(/_+/g, " ").trim() || stem;
+      return {
+        explanation:
+          `The compiler can't find "${header}". This header belongs to a ` +
+          "library that isn't installed yet.",
+        fix:
+          `Search the library registry for "${query}" and install the match. ` +
+          "If it should be a local file, check the #include spelling.",
+        action: {
+          kind: "search-library",
+          query,
+          label: `Find "${query}" in libraries`,
+        },
+      };
+    },
   },
 
   /* ------------------------------------------------------ names & types --- */

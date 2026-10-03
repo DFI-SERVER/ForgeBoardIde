@@ -154,6 +154,9 @@ export function MonacoEditor({ groupId }: MonacoEditorProps) {
       renderLineHighlight: "line",
       smoothScrolling: true,
       cursorBlinking: "smooth",
+      // The caret glides to its new position instead of teleporting — the
+      // single highest-feel editor option (Cursor/Zed both ship it on).
+      cursorSmoothCaretAnimation: "on",
       padding: { top: 12, bottom: 12 },
       automaticLayout: true,
       insertSpaces: true,

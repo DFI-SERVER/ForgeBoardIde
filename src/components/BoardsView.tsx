@@ -10,14 +10,48 @@ import {
 import { connectToPort } from "../lib/connection";
 import "./BoardsView.css";
 
-const CURATED_CATALOG: { id: string; name: string; platform: string }[] = [
-  { id: "esp32:esp32", name: "ESP32 (incl. ForgeBoard, S3, WROOM)", platform: "Espressif" },
-  { id: "esp8266:esp8266", name: "ESP8266 (NodeMCU, Wemos D1)", platform: "Espressif" },
+/** Curated cores offered for one-click install. `url` is the vendor's
+ *  board-manager index — REQUIRED for anything outside Arduino's default
+ *  package index, or arduino-cli can't resolve the platform at all.
+ *  `arduino:avr` ships in the default index, so it carries no URL. */
+const CURATED_CATALOG: { id: string; name: string; platform: string; url?: string }[] = [
+  {
+    id: "esp32:esp32",
+    name: "ESP32 (incl. ForgeBoard, S3, WROOM)",
+    platform: "Espressif",
+    url: "https://espressif.github.io/arduino-esp32/package_esp32_index.json",
+  },
+  {
+    id: "esp8266:esp8266",
+    name: "ESP8266 (NodeMCU, Wemos D1)",
+    platform: "Espressif",
+    url: "https://arduino.esp8266.com/stable/package_esp8266com_index.json",
+  },
   { id: "arduino:avr", name: "Arduino AVR (Uno, Nano, Mega)", platform: "Arduino" },
-  { id: "rp2040:rp2040", name: "Raspberry Pi Pico (RP2040)", platform: "earlephilhower" },
-  { id: "STMicroelectronics:stm32", name: "STM32 (Nucleo, Blue Pill)", platform: "STMicroelectronics" },
-  { id: "teensy:avr", name: "Teensy 2.0 / 3.x / 4.x / LC", platform: "PJRC" },
-  { id: "Seeeduino:xiao_samd", name: "Seeed XIAO SAMD21 / M0", platform: "Seeed" },
+  {
+    id: "rp2040:rp2040",
+    name: "Raspberry Pi Pico (RP2040)",
+    platform: "earlephilhower",
+    url: "https://github.com/earlephilhower/arduino-pico/releases/download/global/package_rp2040_index.json",
+  },
+  {
+    id: "STMicroelectronics:stm32",
+    name: "STM32 (Nucleo, Black Pill)",
+    platform: "STMicroelectronics",
+    url: "https://github.com/stm32duino/BoardManagerFiles/raw/main/package_stmicroelectronics_index.json",
+  },
+  {
+    id: "teensy:avr",
+    name: "Teensy 2.0 / 3.x / 4.x / LC",
+    platform: "PJRC",
+    url: "https://www.pjrc.com/teensy/package_teensy_index.json",
+  },
+  {
+    id: "Seeeduino:xiao_samd",
+    name: "Seeed XIAO SAMD21 / M0",
+    platform: "Seeed",
+    url: "https://files.seeedstudio.com/arduino/package_seeeduino_boards_index.json",
+  },
 ];
 
 export function BoardsView() {
@@ -49,7 +83,8 @@ export function BoardsView() {
       unlisten = await arduinoApi.onCoreInstallOutput((line) => {
         coreInstallProgress.value = [...coreInstallProgress.value, line];
       });
-      const code = await arduinoApi.installCore(coreId);
+      const entry = CURATED_CATALOG.find((c) => c.id === coreId);
+      const code = await arduinoApi.installCore(coreId, entry?.url ?? null);
       coreInstallProgress.value = [
         ...coreInstallProgress.value,
         code === 0 ? `✓ Installed ${coreId}` : `✗ Install failed (exit ${code})`,

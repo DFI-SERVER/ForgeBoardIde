@@ -2,7 +2,6 @@ import "./FileSidebar.css";
 import { useState } from "preact/hooks";
 import {
   FolderOpen,
-  FilePlus2,
   FilePlus,
   FolderPlus,
   Pencil,
@@ -18,7 +17,7 @@ import {
   activeTabIndex,
   toast,
 } from "../state/appState";
-import { newSketch, openSketch } from "../lib/actions";
+import { openSketch } from "../lib/actions";
 import { focusOpenFile } from "../lib/editor-groups";
 import { iconForName } from "../lib/file-icons";
 import {
@@ -224,9 +223,6 @@ function FilesView() {
         <span class="sb-actions">
           <button class="sb-action" title="Open sketch…" onClick={openSketch}>
             <FolderOpen size={16} strokeWidth={1.5} />
-          </button>
-          <button class="sb-action" title="New sketch" onClick={newSketch}>
-            <FilePlus2 size={16} strokeWidth={1.5} />
           </button>
         </span>
       </div>

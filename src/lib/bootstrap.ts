@@ -1,18 +1,43 @@
 import { projectApi, type Sketch } from "../ipc/project";
 import { loadSketch } from "./sketch";
+import { consumeSketchHashOverride } from "./window-mgmt";
 
-/** On app start, reopen the most recent sketch or create a default "hello" sketch. */
+/**
+ * On app start, open a sketch into the editor.
+ *
+ * Priority:
+ *  1. A `#sketch=<path>` URL-hash override — used by child windows spawned
+ *     from a Recent click in another window, so the child opens THAT
+ *     sketch and not the most-recent in the global list.
+ *  2. The most-recently-opened sketch in the recent list.
+ *  3. A fresh "hello" template, created on disk if needed.
+ */
 export async function bootstrapProject() {
-  const recent = await projectApi.listRecent();
   let sketch: Sketch | undefined;
 
-  if (recent.length > 0) {
+  // 1. Child-window hint — open the requested sketch and clear the hash.
+  const override = consumeSketchHashOverride();
+  if (override) {
     try {
-      sketch = await projectApi.open(recent[0].path);
+      sketch = await projectApi.open(override);
     } catch {
-      /* recent entry is stale — fall through and create */
+      /* path is stale / missing — fall through to recent / hello */
     }
   }
+
+  // 2. Most-recent sketch.
+  if (!sketch) {
+    const recent = await projectApi.listRecent();
+    if (recent.length > 0) {
+      try {
+        sketch = await projectApi.open(recent[0].path);
+      } catch {
+        /* recent entry is stale — fall through and create */
+      }
+    }
+  }
+
+  // 3. Fall back to a fresh "hello".
   if (!sketch) {
     try {
       sketch = await projectApi.create("hello");

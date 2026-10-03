@@ -16,8 +16,8 @@ import { signal } from "@preact/signals";
 /** Tab width, in spaces. The editor only offers these two. */
 export type TabSize = 2 | 4;
 
-/** The three internally-cohesive theme identities the IDE ships. */
-export type Theme = "dark" | "solarized-dark" | "solarized-light";
+/** The two monochrome themes the IDE ships. */
+export type Theme = "dark" | "light";
 
 /** The editor font family options — keys map to a CSS font-family stack in
  *  monaco-setup.ts. The chosen face MUST already be installed on the user's
@@ -61,6 +61,11 @@ export interface Settings {
   fontLigatures: boolean;
   /** Pass `-v` to arduino-cli so the Output panel shows the full build log. */
   verboseBuild: boolean;
+  /** Apply ForgeBoard's platform corrections — small overlay files that
+   *  patch known upstream platform.txt bugs (e.g. the ESP32-S3 native-USB
+   *  upload bug). On by default; turn off only if you maintain your own
+   *  platform.local.txt and don't want ours to overwrite it. */
+  applyPlatformCorrections: boolean;
 }
 
 /** Inclusive bounds for the editor font size, shared by the UI and the clamp. */
@@ -68,7 +73,24 @@ export const FONT_SIZE_MIN = 10;
 export const FONT_SIZE_MAX = 22;
 
 /** The valid Theme values, kept as a tuple so coerce can validate strings. */
-const THEMES: readonly Theme[] = ["dark", "solarized-dark", "solarized-light"];
+const THEMES: readonly Theme[] = ["dark", "light"];
+
+/** Legacy theme identifiers from the previous (3-theme) ship. A localStorage
+ *  value left over from that build is migrated to the closest mono equivalent
+ *  rather than dropped to the default — Solarized Dark users land on Dark,
+ *  Solarized Light users land on Light. */
+const LEGACY_THEME_MIGRATION: Readonly<Record<string, Theme>> = {
+  "solarized-dark": "dark",
+  "solarized-light": "light",
+};
+
+/** Translate any persisted theme string to a current Theme. Unknown strings
+ *  return `null` so coerce can fall back to the shipped default. */
+function migrateTheme(raw: unknown): Theme | null {
+  if (typeof raw !== "string") return null;
+  if (THEMES.includes(raw as Theme)) return raw as Theme;
+  return LEGACY_THEME_MIGRATION[raw] ?? null;
+}
 
 /** The valid FontFamily values, used by coerce to validate stored strings. */
 const FONT_FAMILIES: readonly FontFamily[] = [
@@ -94,6 +116,7 @@ export const DEFAULT_SETTINGS: Settings = {
   fontFamily: "cascadia-code",
   fontLigatures: false,
   verboseBuild: false,
+  applyPlatformCorrections: true,
 };
 
 /** localStorage key the settings object is persisted under. */
@@ -129,14 +152,16 @@ function coerce(raw: unknown): Settings {
       o.trimTrailingWhitespaceOnSave,
       DEFAULT_SETTINGS.trimTrailingWhitespaceOnSave,
     ),
-    theme: THEMES.includes(o.theme as Theme)
-      ? (o.theme as Theme)
-      : DEFAULT_SETTINGS.theme,
+    theme: migrateTheme(o.theme) ?? DEFAULT_SETTINGS.theme,
     fontFamily: FONT_FAMILIES.includes(o.fontFamily as FontFamily)
       ? (o.fontFamily as FontFamily)
       : DEFAULT_SETTINGS.fontFamily,
     fontLigatures: bool(o.fontLigatures, DEFAULT_SETTINGS.fontLigatures),
     verboseBuild: bool(o.verboseBuild, DEFAULT_SETTINGS.verboseBuild),
+    applyPlatformCorrections: bool(
+      o.applyPlatformCorrections,
+      DEFAULT_SETTINGS.applyPlatformCorrections,
+    ),
   };
 }
 

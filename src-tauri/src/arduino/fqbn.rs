@@ -12,6 +12,12 @@
 ///
 /// An FQBN that already specifies `CDCOnBoot`, and any non-ESP32-S3 board,
 /// is returned unchanged.
+///
+/// Note: an earlier session briefly removed this normalisation while
+/// chasing a "won't upload to one specific board" bug. The actual cause
+/// turned out to be arduino-cli 1.5.0 (which we replaced with 1.4.1 in
+/// `src-tauri/binaries/` and pinned in `scripts/download-arduino-cli.ps1`).
+/// CDCOnBoot=cdc itself is not implicated.
 pub fn normalize_fqbn(fqbn: &str) -> String {
     // An FQBN is `vendor:arch:board` with an optional 4th `:`-separated
     // field of comma-separated `option=value` pairs.

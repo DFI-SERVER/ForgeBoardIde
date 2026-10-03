@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { effectiveFqbn } from "../../src/lib/effective-fqbn";
+import { effectiveFqbn, isPortlessUploadFqbn } from "../../src/lib/effective-fqbn";
 import {
   activeProfile,
   sketchProfiles,
@@ -39,5 +39,22 @@ describe("effectiveFqbn", () => {
     ];
     activeProfile.value = "release";
     expect(effectiveFqbn()).toBe("esp32:esp32:esp32");
+  });
+});
+
+describe("isPortlessUploadFqbn", () => {
+  it("allows port-less upload for STM32 (DFU/SWD find the target themselves)", () => {
+    expect(isPortlessUploadFqbn("STMicroelectronics:stm32:GenF4")).toBe(true);
+    expect(
+      isPortlessUploadFqbn(
+        "STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F411CE,upload_method=dfuMethod",
+      ),
+    ).toBe(true);
+  });
+
+  it("keeps the port requirement for serial-flashed families", () => {
+    expect(isPortlessUploadFqbn("esp32:esp32:esp32s3")).toBe(false);
+    expect(isPortlessUploadFqbn("arduino:avr:uno")).toBe(false);
+    expect(isPortlessUploadFqbn("rp2040:rp2040:rpipico")).toBe(false);
   });
 });

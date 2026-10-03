@@ -19,3 +19,16 @@ export function effectiveFqbn(): string {
   }
   return selectedFqbn.value;
 }
+
+/**
+ * True when this board family can upload WITHOUT a serial port selected.
+ *
+ * STM32 is the canonical case: its DFU and SWD upload methods go through
+ * STM32CubeProgrammer, which enumerates the target itself (a board in DFU
+ * mode has NO COM port at all — USB 0483:DF11 with no serial interface), and
+ * the core declares no serial discovery. Gating Upload on a detected port
+ * would make DFU upload impossible.
+ */
+export function isPortlessUploadFqbn(fqbn: string): boolean {
+  return fqbn.startsWith("STMicroelectronics:stm32");
+}

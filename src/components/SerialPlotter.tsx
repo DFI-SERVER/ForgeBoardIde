@@ -1,22 +1,27 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import { Pause, Play, Trash2, Activity } from "lucide-preact";
 import { ensureSerialListeners } from "../ipc/serial";
-import { serialLog, serialConnected, connectedPort } from "../state/appState";
+import {
+  serialLog,
+  serialLogTotal,
+  serialConnected,
+  connectedPort,
+} from "../state/appState";
 import { parsePlotterLine } from "../lib/plotter-parse";
 import "./SerialPlotter.css";
 
 /**
- * Cool-hue palette for the data series — the one place colour is allowed in
- * this otherwise-monochrome panel, because telling series apart is functional.
- * Hues are lifted from the editor theme (see lib/monaco-setup.ts) so the
- * plotter sits in the same cool family as the rest of the IDE.
+ * Earned-colour palette for the data series — the one place colour is allowed
+ * in this otherwise-monochrome panel, because telling series apart is
+ * functional. Blue is deliberately excluded — the chrome is monochrome and
+ * the editor no longer tints functions blue, so the plotter follows suit.
  */
 const SERIES_COLORS = [
-  "#86a9e0", // soft blue   — code-function
-  "#7fbdbf", // teal        — code-number
-  "#ab9fe0", // violet      — code-keyword
-  "#66bccb", // cyan        — code-type
-  "#9ec293", // sage        — code-string
+  "#e3e4ea", // near-white  — primary series, mono accent
+  "#7fbdbf", // teal        — number / type
+  "#9ec293", // sage        — string
+  "#ab9fe0", // violet      — keyword
+  "#e8b24a", // amber       — warning / contrast
 ] as const;
 
 /** Window-size options — the count of most-recent samples kept on screen. */
@@ -82,9 +87,11 @@ export function SerialPlotter() {
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafRef = useRef<number | null>(null);
-  // How far into serialLog the plotter has already consumed — lets it ingest
-  // only the new tail on each change, never re-reading the whole log.
-  const cursorRef = useRef(0);
+  // How much of the serial stream the plotter has consumed, as an ABSOLUTE
+  // count over the life of the app (`serialLogTotal`), not an index into the
+  // array — the log drops its head once it hits the retention cap, so array
+  // indices shift under us while the total only ever grows.
+  const consumedRef = useRef(0);
   const pausedRef = useRef(paused);
   const windowRef = useRef<WindowSize>(windowSize);
   pausedRef.current = paused;
@@ -100,16 +107,21 @@ export function SerialPlotter() {
   // the *same* serialLog the Serial Monitor does — no second connection.
   useEffect(() => {
     const log = serialLog.value;
-    // serialLog is cleared by the Serial Monitor's Clear button; if it shrank
-    // below our cursor, restart from the top.
-    if (cursorRef.current > log.length) cursorRef.current = 0;
+    const total = serialLogTotal.peek();
+    if (consumedRef.current > total) consumedRef.current = 0; // defensive
     if (pausedRef.current) {
-      cursorRef.current = log.length; // skip — don't backfill on resume
+      consumedRef.current = total; // skip — don't backfill on resume
       return;
     }
 
+    // The unseen tail of the stream. If more arrived than the log retains
+    // (cap trimmed the head before we ran), the dropped lines are simply
+    // gone — read what's still there.
+    let unseen = total - consumedRef.current;
+    if (unseen > log.length) unseen = log.length;
+
     let appended = false;
-    for (let i = cursorRef.current; i < log.length; i++) {
+    for (let i = log.length - unseen; i < log.length; i++) {
       const entry = log[i];
       if (entry.kind !== "rx") continue; // only device output, not tx/info
       const samples = parsePlotterLine(entry.text);
@@ -127,7 +139,7 @@ export function SerialPlotter() {
         appended = true;
       }
     }
-    cursorRef.current = log.length;
+    consumedRef.current = total;
 
     if (appended) {
       // Trim every series to the active window and ask for a repaint.

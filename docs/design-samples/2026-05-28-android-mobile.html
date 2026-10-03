@@ -1,0 +1,1525 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ForgeBoard IDE — Android Direction · 28.05.26</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #07090C;
+    --bg-grain: #090C10;
+    --surface-0: #0E1318;
+    --surface-1: #131921;
+    --surface-2: #1A2129;
+    --surface-3: #232C36;
+    --line: #232C36;
+    --line-soft: #1A2129;
+    --ink-0: #F2F4F7;
+    --ink-1: #B7BFCA;
+    --ink-2: #7D8794;
+    --ink-3: #4E5763;
+    --ink-4: #2F363F;
+    --amber: #F0A658;
+    --amber-soft: #4A3322;
+    --amber-glow: rgba(240, 166, 88, 0.18);
+    --good: #5DD394;
+    --bad: #FF6B6B;
+    --code-blue: #7DB4E6;
+    --code-purple: #B89EFF;
+    --code-green: #6DC290;
+    --code-amber: #F0A658;
+    --code-gray: #6B7280;
+    --code-comment: #4E5763;
+    --radius-sm: 8px;
+    --radius: 14px;
+    --radius-lg: 22px;
+    --radius-xl: 36px;
+    --shadow-1: 0 1px 0 rgba(255,255,255,0.04) inset, 0 8px 24px -8px rgba(0,0,0,0.6);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background:
+      radial-gradient(1200px 700px at 70% -10%, rgba(240,166,88,0.05), transparent 60%),
+      radial-gradient(900px 600px at -10% 30%, rgba(125,180,230,0.035), transparent 60%),
+      var(--bg);
+    color: var(--ink-0);
+    font-family: "Geist", -apple-system, system-ui, sans-serif;
+    font-feature-settings: "ss01", "ss02", "cv11";
+    font-weight: 400;
+    line-height: 1.5;
+    letter-spacing: -0.005em;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+      radial-gradient(rgba(255,255,255,0.012) 1px, transparent 1px);
+    background-size: 3px 3px, 7px 7px;
+    background-position: 0 0, 1px 2px;
+    pointer-events: none;
+    z-index: 0;
+    mix-blend-mode: overlay;
+  }
+
+  main { position: relative; z-index: 1; padding: 64px 56px 96px; max-width: 1640px; margin: 0 auto; }
+
+  /* === HEADER === */
+  .top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 96px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--line-soft);
+    animation: fadeUp 700ms ease both;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-family: "Geist Mono";
+    font-weight: 500;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    color: var(--ink-1);
+    text-transform: uppercase;
+  }
+  .brand-mark {
+    width: 22px; height: 22px;
+    border: 1px solid var(--amber);
+    transform: rotate(45deg);
+    position: relative;
+  }
+  .brand-mark::after {
+    content:"";
+    position: absolute;
+    inset: 4px;
+    background: var(--amber);
+  }
+  .top-meta {
+    text-align: right;
+    font-family: "Geist Mono";
+    font-size: 11px;
+    color: var(--ink-2);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .top-meta .v { color: var(--ink-0); font-weight: 500; }
+
+  /* === HERO === */
+  .hero { margin-bottom: 80px; max-width: 1100px; animation: fadeUp 800ms 100ms ease both; }
+  .hero .kicker {
+    font-family: "Geist Mono";
+    font-size: 11px;
+    color: var(--amber);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .hero .kicker::before { content:""; width: 24px; height: 1px; background: var(--amber); }
+  .hero h1 {
+    font-size: clamp(48px, 6vw, 88px);
+    font-weight: 500;
+    line-height: 0.98;
+    letter-spacing: -0.035em;
+    color: var(--ink-0);
+    margin-bottom: 28px;
+  }
+  .hero h1 .em { font-style: italic; font-weight: 400; color: var(--amber); }
+  .hero p {
+    font-size: 18px;
+    color: var(--ink-1);
+    max-width: 720px;
+    line-height: 1.55;
+    letter-spacing: -0.005em;
+  }
+
+  /* === PILLARS === */
+  .pillars {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    margin: 64px 0 96px;
+  }
+  .pillar {
+    border: 1px solid var(--line-soft);
+    background: linear-gradient(180deg, var(--surface-0), transparent);
+    padding: 28px 24px;
+    border-radius: var(--radius);
+    position: relative;
+    overflow: hidden;
+    animation: fadeUp 600ms ease both;
+  }
+  .pillar:nth-child(1) { animation-delay: 200ms; }
+  .pillar:nth-child(2) { animation-delay: 280ms; }
+  .pillar:nth-child(3) { animation-delay: 360ms; }
+  .pillar:nth-child(4) { animation-delay: 440ms; }
+  .pillar .num {
+    font-family: "Geist Mono";
+    font-size: 11px;
+    color: var(--ink-3);
+    letter-spacing: 0.1em;
+    margin-bottom: 16px;
+    display: block;
+  }
+  .pillar h3 {
+    font-size: 17px;
+    font-weight: 500;
+    line-height: 1.3;
+    color: var(--ink-0);
+    margin-bottom: 10px;
+    letter-spacing: -0.01em;
+  }
+  .pillar p { font-size: 13.5px; color: var(--ink-2); line-height: 1.5; }
+
+  /* === SECTIONS === */
+  .section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 36px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .section-head h2 {
+    font-size: 32px;
+    font-weight: 500;
+    letter-spacing: -0.025em;
+    color: var(--ink-0);
+  }
+  .section-head .label {
+    font-family: "Geist Mono";
+    font-size: 11px;
+    color: var(--ink-2);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  /* === TYPE + COLOR === */
+  .sys-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 48px;
+    margin-bottom: 120px;
+  }
+
+  .typespec { display: grid; grid-template-rows: auto auto auto auto auto; gap: 24px; }
+  .type-row { display: flex; align-items: baseline; gap: 28px; padding-bottom: 24px; border-bottom: 1px dashed var(--line-soft); }
+  .type-row:last-child { border-bottom: none; }
+  .type-row .meta {
+    font-family: "Geist Mono";
+    font-size: 10px;
+    color: var(--ink-3);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    min-width: 130px;
+  }
+  .type-row .sample { flex: 1; color: var(--ink-0); }
+  .display { font-size: 48px; line-height: 1; letter-spacing: -0.03em; font-weight: 500; }
+  .title { font-size: 24px; line-height: 1.2; letter-spacing: -0.015em; font-weight: 500; }
+  .body { font-size: 15px; line-height: 1.5; color: var(--ink-1); }
+  .mono { font-family: "Geist Mono"; font-size: 13px; color: var(--amber); letter-spacing: 0.01em; }
+
+  .palette { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .swatch {
+    aspect-ratio: 5/3;
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(255,255,255,0.04);
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    font-family: "Geist Mono";
+    font-size: 10px;
+    letter-spacing: 0.06em;
+  }
+  .swatch .name { color: var(--ink-0); opacity: 0.7; }
+  .swatch .hex { color: var(--ink-0); opacity: 0.5; }
+  .sw-bg { background: var(--bg); }
+  .sw-surf { background: var(--surface-1); }
+  .sw-card { background: var(--surface-2); }
+  .sw-line { background: var(--surface-3); }
+  .sw-amber { background: var(--amber); color: #1A1208; }
+  .sw-amber .name, .sw-amber .hex { color: #1A1208; opacity: 0.7; }
+  .sw-ink0 { background: var(--ink-0); color: #07090C; }
+  .sw-ink0 .name, .sw-ink0 .hex { color: #07090C; opacity: 0.7; }
+  .sw-ink2 { background: var(--ink-2); color: #07090C; }
+  .sw-ink2 .name, .sw-ink2 .hex { color: #07090C; opacity: 0.65; }
+
+  /* === PHONE FRAMES === */
+  .frames-rail {
+    display: flex;
+    gap: 36px;
+    overflow-x: auto;
+    overflow-y: visible;
+    padding: 32px 8px 56px;
+    margin: 0 -8px;
+    scroll-snap-type: x mandatory;
+  }
+  .frames-rail::-webkit-scrollbar { height: 8px; }
+  .frames-rail::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
+
+  .phone-stack {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    animation: phoneIn 900ms cubic-bezier(0.2,0.7,0.2,1) both;
+  }
+  .phone-stack:nth-child(1) { animation-delay: 400ms; }
+  .phone-stack:nth-child(2) { animation-delay: 480ms; }
+  .phone-stack:nth-child(3) { animation-delay: 560ms; }
+  .phone-stack:nth-child(4) { animation-delay: 640ms; }
+  .phone-stack:nth-child(5) { animation-delay: 720ms; }
+
+  .phone-cap {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 0 6px;
+  }
+  .phone-cap .name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink-0);
+    letter-spacing: -0.01em;
+  }
+  .phone-cap .idx {
+    font-family: "Geist Mono";
+    font-size: 10px;
+    color: var(--ink-3);
+    letter-spacing: 0.1em;
+  }
+
+  .phone {
+    width: 340px;
+    height: 720px;
+    border-radius: 48px;
+    background: #000;
+    border: 1px solid #1a1f26;
+    padding: 8px;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.04) inset,
+      0 50px 80px -40px rgba(0,0,0,0.7),
+      0 0 0 1px rgba(240,166,88,0.04);
+    position: relative;
+  }
+  .phone-screen {
+    width: 100%;
+    height: 100%;
+    border-radius: 41px;
+    background: var(--bg);
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+  .status-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px 4px;
+    font-family: "Geist Mono";
+    font-size: 11px;
+    color: var(--ink-0);
+    letter-spacing: 0.02em;
+  }
+  .status-bar .right { display: flex; gap: 6px; align-items: center; }
+  .status-bar .right svg { width: 14px; height: 14px; opacity: 0.85; }
+
+  .app-header {
+    padding: 14px 22px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .app-header .title { font-size: 17px; letter-spacing: -0.015em; font-weight: 500; }
+  .app-header .meta { font-family: "Geist Mono"; font-size: 10px; color: var(--ink-2); letter-spacing: 0.08em; text-transform: uppercase; }
+
+  .app-body { flex: 1; overflow: hidden; padding: 16px 22px; position: relative; }
+
+  .bottom-nav {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border-top: 1px solid var(--line-soft);
+    background: linear-gradient(180deg, transparent, rgba(0,0,0,0.4));
+    padding: 8px 16px 24px;
+  }
+  .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 10px 0 6px;
+    color: var(--ink-3);
+    font-family: "Geist";
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    position: relative;
+    cursor: pointer;
+    transition: color 200ms ease;
+  }
+  .nav-item.active { color: var(--ink-0); }
+  .nav-item.active::before {
+    content:"";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 28px;
+    height: 2px;
+    background: var(--amber);
+    border-radius: 0 0 2px 2px;
+  }
+  .nav-item svg { width: 20px; height: 20px; stroke-width: 1.4; }
+
+  /* === SCREEN 1 — HOME === */
+  .board-chip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface-1);
+    margin-bottom: 24px;
+  }
+  .board-dot {
+    width: 8px; height: 8px;
+    background: var(--good);
+    border-radius: 50%;
+    box-shadow: 0 0 0 4px rgba(93, 211, 148, 0.15);
+    animation: breathe 2.4s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+  .board-chip .l { flex: 1; }
+  .board-chip .l .n { font-size: 13px; font-weight: 500; color: var(--ink-0); letter-spacing: -0.005em; }
+  .board-chip .l .s { font-family: "Geist Mono"; font-size: 10.5px; color: var(--ink-2); letter-spacing: 0.04em; margin-top: 2px; }
+  .board-chip .swap {
+    font-family: "Geist Mono"; font-size: 10px;
+    color: var(--ink-1); letter-spacing: 0.08em;
+    text-transform: uppercase; padding: 6px 10px;
+    border: 1px solid var(--line); border-radius: 999px;
+  }
+
+  .section-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: "Geist Mono";
+    font-size: 10.5px;
+    color: var(--ink-2);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin: 6px 0 14px;
+  }
+  .section-label .count { color: var(--ink-3); }
+
+  .sketch-list { display: flex; flex-direction: column; gap: 10px; }
+  .sketch-card {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    padding: 14px 14px;
+    background: var(--surface-1);
+    border: 1px solid var(--line-soft);
+    border-radius: var(--radius);
+    transition: border-color 240ms ease, transform 240ms ease;
+  }
+  .sketch-card:hover { border-color: var(--surface-3); transform: translateY(-1px); }
+  .sketch-card .thumb {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--surface-2), var(--surface-0));
+    border: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "Geist Mono";
+    font-size: 13px;
+    color: var(--amber);
+    flex-shrink: 0;
+  }
+  .sketch-card .info { flex: 1; min-width: 0; }
+  .sketch-card .info .nm { font-size: 13.5px; font-weight: 500; letter-spacing: -0.005em; color: var(--ink-0); }
+  .sketch-card .info .mt {
+    font-family: "Geist Mono"; font-size: 10px;
+    color: var(--ink-2); letter-spacing: 0.04em;
+    margin-top: 3px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .sketch-card .badge {
+    font-family: "Geist Mono"; font-size: 9.5px;
+    color: var(--ink-2); letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 4px 8px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--surface-0);
+    flex-shrink: 0;
+  }
+  .sketch-card .badge.flashed { color: var(--amber); border-color: var(--amber-soft); background: rgba(240,166,88,0.05); }
+
+  .fab {
+    position: absolute;
+    bottom: 22px;
+    right: 22px;
+    width: 56px; height: 56px;
+    border-radius: 18px;
+    background: var(--amber);
+    color: #0E0904;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 12px 32px -12px rgba(240,166,88,0.4), 0 0 0 1px rgba(240,166,88,0.3);
+    cursor: pointer;
+    transition: transform 240ms cubic-bezier(0.2,0.7,0.2,1);
+  }
+  .fab:hover { transform: scale(1.05); }
+  .fab svg { width: 22px; height: 22px; stroke-width: 2; }
+
+  /* === SCREEN 2 — EDITOR === */
+  .editor-shell { display: flex; flex-direction: column; height: 100%; padding: 0; }
+  .editor-tabs {
+    display: flex;
+    gap: 4px;
+    padding: 8px 16px 0;
+    border-bottom: 1px solid var(--line-soft);
+    overflow-x: auto;
+  }
+  .editor-tabs::-webkit-scrollbar { display: none; }
+  .editor-tab {
+    padding: 10px 14px 12px;
+    font-family: "Geist Mono";
+    font-size: 11px;
+    color: var(--ink-2);
+    letter-spacing: 0.02em;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    white-space: nowrap;
+  }
+  .editor-tab.active {
+    color: var(--ink-0);
+    border-bottom-color: var(--amber);
+  }
+  .editor-tab .dirty {
+    display: inline-block;
+    width: 5px; height: 5px;
+    background: var(--amber);
+    border-radius: 50%;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+
+  .code-area {
+    flex: 1;
+    overflow: hidden;
+    font-family: "Geist Mono";
+    font-size: 12.5px;
+    line-height: 1.65;
+    letter-spacing: 0.005em;
+    padding: 12px 0;
+    color: var(--ink-1);
+    position: relative;
+  }
+  .line { display: flex; padding: 0 4px; }
+  .ln-num {
+    width: 30px;
+    color: var(--ink-3);
+    text-align: right;
+    padding-right: 10px;
+    font-size: 11px;
+    flex-shrink: 0;
+    user-select: none;
+  }
+  .ln-text { white-space: pre; flex: 1; }
+  .k { color: var(--code-purple); }
+  .t { color: var(--code-blue); }
+  .s { color: var(--code-green); }
+  .n { color: var(--code-amber); }
+  .c { color: var(--code-comment); font-style: italic; }
+  .fn { color: var(--code-blue); }
+  .v { color: var(--ink-0); }
+  .pin-highlight {
+    background: rgba(240,166,88,0.18);
+    box-shadow: 0 0 0 1px var(--amber);
+    border-radius: 3px;
+    padding: 0 3px;
+    margin: 0 -3px;
+    color: var(--amber);
+  }
+  .line.active { background: rgba(240,166,88,0.04); border-left: 2px solid var(--amber); padding-left: 2px; }
+  .line.active .ln-num { color: var(--amber); }
+
+  .editor-toolbar {
+    display: flex;
+    gap: 10px;
+    padding: 12px 16px 14px;
+    border-top: 1px solid var(--line-soft);
+    background: var(--surface-0);
+    align-items: center;
+  }
+  .tool-btn {
+    width: 38px; height: 38px;
+    border-radius: 11px;
+    background: var(--surface-1);
+    border: 1px solid var(--line);
+    color: var(--ink-1);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: background 200ms ease, color 200ms ease;
+  }
+  .tool-btn:hover { background: var(--surface-2); color: var(--ink-0); }
+  .tool-btn svg { width: 16px; height: 16px; stroke-width: 1.6; }
+  .upload-btn {
+    flex: 1;
+    height: 38px;
+    border-radius: 11px;
+    background: var(--amber);
+    color: #0E0904;
+    font-family: "Geist";
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .upload-btn svg { width: 15px; height: 15px; stroke-width: 2.2; }
+
+  /* === SCREEN 3 — PINOUT === */
+  .pin-screen { padding: 0; height: 100%; display: flex; flex-direction: column; }
+  .pin-header {
+    padding: 18px 22px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .pin-header .l .l1 { font-size: 17px; font-weight: 500; letter-spacing: -0.015em; }
+  .pin-header .l .l2 { font-family: "Geist Mono"; font-size: 10.5px; color: var(--ink-2); margin-top: 4px; letter-spacing: 0.06em; }
+  .pin-header .close {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: var(--surface-1);
+    border: 1px solid var(--line);
+    color: var(--ink-1);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+  }
+
+  .board-wrap {
+    flex: 1;
+    padding: 28px 22px;
+    display: flex; align-items: center; justify-content: center;
+    background:
+      radial-gradient(ellipse at center, rgba(240,166,88,0.04), transparent 70%);
+  }
+  .board-pcb {
+    width: 240px;
+    background: #4A3322;
+    background: linear-gradient(135deg, #3a2a18, #5a4028);
+    border-radius: 18px;
+    padding: 20px 14px;
+    position: relative;
+    border: 1px solid #6b4a28;
+    box-shadow:
+      0 4px 16px -4px rgba(0,0,0,0.5),
+      0 0 0 2px rgba(240,166,88,0.05);
+  }
+  .pcb-mcu {
+    background: #0a0a0a;
+    border-radius: 6px;
+    padding: 24px 12px;
+    text-align: center;
+    font-family: "Geist Mono";
+    font-size: 8px;
+    color: var(--ink-2);
+    letter-spacing: 0.12em;
+    border: 1px solid #1a1a1a;
+    margin: 8px 8px;
+  }
+  .pcb-mcu .l1 { color: var(--ink-1); margin-bottom: 4px; font-size: 9px; }
+  .pcb-mcu .l2 { font-size: 7px; }
+  .pcb-pins-left, .pcb-pins-right {
+    position: absolute;
+    top: 24px;
+    bottom: 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    gap: 4px;
+  }
+  .pcb-pins-left { left: -8px; }
+  .pcb-pins-right { right: -8px; }
+  .pin {
+    background: #c89a5c;
+    width: 18px; height: 8px;
+    border-radius: 2px;
+    position: relative;
+    font-family: "Geist Mono";
+    font-size: 8px;
+    color: var(--ink-3);
+    display: flex; align-items: center;
+  }
+  .pin .label {
+    position: absolute;
+    font-family: "Geist Mono";
+    font-size: 8.5px;
+    color: var(--ink-2);
+    white-space: nowrap;
+    letter-spacing: 0.04em;
+  }
+  .pcb-pins-left .pin .label { right: 22px; }
+  .pcb-pins-right .pin .label { left: 22px; }
+  .pin.active {
+    background: var(--amber);
+    box-shadow: 0 0 12px var(--amber-glow), 0 0 0 1px var(--amber);
+    animation: pinPulse 2s ease-in-out infinite;
+  }
+  .pin.active .label { color: var(--amber); font-weight: 500; }
+
+  .pin-legend {
+    padding: 16px 22px 22px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 14px;
+    border-top: 1px solid var(--line-soft);
+  }
+  .pl-item { display: flex; gap: 8px; align-items: center; font-family: "Geist Mono"; font-size: 10.5px; color: var(--ink-1); letter-spacing: 0.02em; }
+  .pl-item .pl-pin { font-size: 9.5px; color: var(--amber); min-width: 28px; }
+  .pl-item .pl-fn { color: var(--ink-2); }
+
+  /* === SCREEN 4 — BOARDS SHEET === */
+  .sheet-screen { display: flex; flex-direction: column; height: 100%; padding: 0; background: rgba(0,0,0,0.5); position: relative; }
+  .sheet-blur-bg {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(180deg, rgba(0,0,0,0.0), rgba(0,0,0,0.6));
+  }
+  .sheet-blur-bg::before {
+    content: "Editor · Blink.ino";
+    position: absolute;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: "Geist Mono";
+    font-size: 10.5px;
+    color: var(--ink-3);
+    letter-spacing: 0.06em;
+  }
+  .sheet {
+    margin-top: auto;
+    background: var(--surface-0);
+    border: 1px solid var(--line);
+    border-bottom: none;
+    border-radius: 28px 28px 0 0;
+    padding: 12px 0 20px;
+    z-index: 2;
+  }
+  .sheet-grabber {
+    width: 40px; height: 4px;
+    border-radius: 2px;
+    background: var(--ink-4);
+    margin: 0 auto 16px;
+  }
+  .sheet-title {
+    padding: 0 24px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .sheet-title .t { font-size: 18px; font-weight: 500; letter-spacing: -0.015em; }
+  .sheet-title .scan {
+    font-family: "Geist Mono";
+    font-size: 10.5px;
+    color: var(--amber);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .sheet-title .scan::before {
+    content:""; width: 6px; height: 6px;
+    background: var(--amber); border-radius: 50%;
+    animation: breathe 1.2s ease-in-out infinite;
+  }
+
+  .sheet-section {
+    padding: 0 24px;
+    font-family: "Geist Mono";
+    font-size: 10px;
+    color: var(--ink-3);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin: 14px 0 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .sheet-section::after { content:""; flex: 1; height: 1px; background: var(--line-soft); }
+
+  .device {
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .device:hover { background: var(--surface-1); }
+  .device.selected { background: rgba(240,166,88,0.04); border-left: 2px solid var(--amber); padding-left: 22px; }
+  .device-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    background: var(--surface-1);
+    border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--ink-1);
+    flex-shrink: 0;
+  }
+  .device-icon svg { width: 16px; height: 16px; stroke-width: 1.5; }
+  .device.selected .device-icon { color: var(--amber); border-color: var(--amber-soft); }
+  .device .info { flex: 1; min-width: 0; }
+  .device .info .n { font-size: 13.5px; font-weight: 500; color: var(--ink-0); letter-spacing: -0.005em; }
+  .device .info .d { font-family: "Geist Mono"; font-size: 10.5px; color: var(--ink-2); margin-top: 2px; letter-spacing: 0.04em; }
+  .device .via {
+    font-family: "Geist Mono";
+    font-size: 9.5px;
+    color: var(--ink-2);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 4px 9px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+  }
+  .device.selected .via { color: var(--amber); border-color: var(--amber-soft); background: rgba(240,166,88,0.05); }
+
+  /* === SCREEN 5 — SERIAL === */
+  .serial-shell { padding: 0; display: flex; flex-direction: column; height: 100%; }
+  .serial-header {
+    padding: 14px 22px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .serial-header .l { display: flex; align-items: center; gap: 10px; }
+  .serial-header .pill {
+    font-family: "Geist Mono";
+    font-size: 10px;
+    color: var(--amber);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 4px 8px;
+    border: 1px solid var(--amber-soft);
+    background: rgba(240,166,88,0.05);
+    border-radius: 999px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .serial-header .pill::before {
+    content:""; width: 5px; height: 5px;
+    background: var(--amber); border-radius: 50%;
+    animation: breathe 1.2s ease-in-out infinite;
+  }
+  .serial-header .baud {
+    font-family: "Geist Mono";
+    font-size: 11px;
+    color: var(--ink-2);
+    letter-spacing: 0.04em;
+  }
+  .serial-body {
+    flex: 1;
+    overflow: hidden;
+    padding: 14px 22px;
+    font-family: "Geist Mono";
+    font-size: 11.5px;
+    line-height: 1.7;
+    color: var(--ink-1);
+    letter-spacing: 0.01em;
+  }
+  .serial-body .ln { display: flex; gap: 12px; }
+  .serial-body .ts { color: var(--ink-3); font-size: 10.5px; min-width: 64px; }
+  .serial-body .lvl { min-width: 36px; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; }
+  .serial-body .lvl-i { color: var(--code-blue); }
+  .serial-body .lvl-w { color: var(--amber); }
+  .serial-body .lvl-d { color: var(--ink-3); }
+  .serial-body .msg { color: var(--ink-0); flex: 1; }
+  .serial-body .num { color: var(--amber); }
+  .serial-body .cursor {
+    display: inline-block;
+    width: 7px; height: 12px;
+    background: var(--amber);
+    vertical-align: middle;
+    margin-left: 2px;
+    animation: blink 1s steps(2) infinite;
+  }
+
+  .serial-input {
+    border-top: 1px solid var(--line-soft);
+    padding: 12px 22px 14px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    background: var(--surface-0);
+  }
+  .serial-input input {
+    flex: 1;
+    background: var(--surface-1);
+    border: 1px solid var(--line);
+    border-radius: 11px;
+    padding: 10px 14px;
+    font-family: "Geist Mono";
+    font-size: 12px;
+    color: var(--ink-0);
+    outline: none;
+    letter-spacing: 0.01em;
+  }
+  .serial-input input::placeholder { color: var(--ink-3); }
+  .serial-input .send {
+    width: 38px; height: 38px;
+    border-radius: 11px;
+    background: var(--amber);
+    color: #0E0904;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .serial-input .send svg { width: 15px; height: 15px; stroke-width: 2; }
+
+  /* === COMPONENT GALLERY === */
+  .components { margin-top: 64px; }
+  .comp-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-top: 36px;
+  }
+  .comp-card {
+    background: linear-gradient(180deg, var(--surface-0), transparent);
+    border: 1px solid var(--line-soft);
+    border-radius: var(--radius);
+    padding: 28px 24px;
+    position: relative;
+  }
+  .comp-card .meta {
+    font-family: "Geist Mono";
+    font-size: 10px;
+    color: var(--ink-3);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+  .comp-card h4 {
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 6px;
+    letter-spacing: -0.01em;
+  }
+  .comp-card p { font-size: 13px; color: var(--ink-2); line-height: 1.5; margin-bottom: 24px; }
+  .demo-stage {
+    background: var(--surface-1);
+    border: 1px solid var(--line-soft);
+    border-radius: var(--radius);
+    padding: 24px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100px;
+  }
+
+  /* DEMO: progress wave */
+  .compile-progress {
+    width: 100%;
+    height: 4px;
+    background: var(--surface-2);
+    border-radius: 2px;
+    overflow: hidden;
+    position: relative;
+  }
+  .compile-progress::after {
+    content:"";
+    position: absolute;
+    top: 0; left: 0;
+    height: 100%; width: 40%;
+    background: linear-gradient(90deg, transparent, var(--amber), transparent);
+    animation: wave 1.8s ease-in-out infinite;
+  }
+
+  /* DEMO: keyboard accessory */
+  .kb-accessory {
+    display: flex;
+    gap: 4px;
+    width: 100%;
+    overflow: hidden;
+  }
+  .kb-key {
+    flex: 1;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    color: var(--ink-0);
+    font-family: "Geist Mono";
+    font-size: 14px;
+    border-radius: 6px;
+    padding: 8px 0;
+    text-align: center;
+  }
+
+  /* DEMO: status pill */
+  .demo-pills { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+  .demo-pill {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    font-size: 12.5px;
+    width: fit-content;
+    font-weight: 500;
+  }
+  .demo-pill .dot { width: 7px; height: 7px; border-radius: 50%; }
+  .demo-pill.ok .dot { background: var(--good); box-shadow: 0 0 0 3px rgba(93,211,148,0.18); }
+  .demo-pill.flash .dot { background: var(--amber); animation: breathe 1s ease-in-out infinite; }
+  .demo-pill.err .dot { background: var(--bad); }
+
+  /* === FOOTER === */
+  .footer {
+    margin-top: 96px;
+    padding-top: 32px;
+    border-top: 1px solid var(--line-soft);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-family: "Geist Mono";
+    font-size: 11px;
+    color: var(--ink-3);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  /* === ANIMATIONS === */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes phoneIn {
+    from { opacity: 0; transform: translateY(60px) scale(0.96); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes breathe {
+    0%, 100% { box-shadow: 0 0 0 0 currentColor; opacity: 1; }
+    50% { box-shadow: 0 0 0 4px currentColor; opacity: 0.7; }
+  }
+  @keyframes pinPulse {
+    0%, 100% { box-shadow: 0 0 12px var(--amber-glow), 0 0 0 1px var(--amber); }
+    50% { box-shadow: 0 0 20px var(--amber-glow), 0 0 0 2px var(--amber); }
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+  @keyframes wave {
+    0% { left: -40%; }
+    100% { left: 100%; }
+  }
+
+  @media (max-width: 900px) {
+    main { padding: 32px 20px 64px; }
+    .sys-grid, .pillars, .comp-grid { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 48px; }
+    .section-head h2 { font-size: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<main>
+
+  <!-- TOP -->
+  <div class="top">
+    <div class="brand"><span class="brand-mark"></span>ForgeBoard&nbsp;/&nbsp;IDE</div>
+    <div class="top-meta">
+      Direction · Android · <span class="v">v0.1</span><br/>
+      28 . 05 . 2026
+    </div>
+  </div>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="kicker">Mobile · Codename Ironwire</div>
+    <h1>An IDE for hardware,<br/>shaped <span class="em">for the hand.</span></h1>
+    <p>ForgeBoard's Android client takes the desktop workflow — write, compile, flash, observe — and rebuilds it around one thumb, a USB-C cable, and a board on the bench. Monochrome cool-slate, a single warm amber for intent, and one moment of theatre per screen.</p>
+  </section>
+
+  <!-- PILLARS -->
+  <section class="pillars">
+    <div class="pillar">
+      <span class="num">01 / Restraint</span>
+      <h3>Monochrome with one accent</h3>
+      <p>Cool-slate surfaces, near-white type, amber reserved for primary intent. The screen never argues with itself.</p>
+    </div>
+    <div class="pillar">
+      <span class="num">02 / Tactility</span>
+      <h3>Touch targets ≥ 44 px, always</h3>
+      <p>FAB, tool buttons, list rows, soft-keyboard accessory — every interactive surface sized for the worst-case thumb.</p>
+    </div>
+    <div class="pillar">
+      <span class="num">03 / Theatre</span>
+      <h3>One moment per screen</h3>
+      <p>The pinout panel breathing under a finger. The compile wave. The connection dot. Small, but unmistakably ForgeBoard.</p>
+    </div>
+    <div class="pillar">
+      <span class="num">04 / Continuity</span>
+      <h3>Same code, different shell</h3>
+      <p>Preact components ride into the Tauri Android shell. The desktop tokens are reused, retuned for the small screen.</p>
+    </div>
+  </section>
+
+  <!-- TYPE + COLOR -->
+  <div class="section-head">
+    <h2>System</h2>
+    <div class="label">Type · Color · Surface</div>
+  </div>
+
+  <section class="sys-grid">
+    <div class="typespec">
+      <div class="type-row">
+        <div class="meta">Display / 48 / Geist Med</div>
+        <div class="sample display">An IDE for hardware</div>
+      </div>
+      <div class="type-row">
+        <div class="meta">Title / 24 / Geist Med</div>
+        <div class="sample title">Recent sketches</div>
+      </div>
+      <div class="type-row">
+        <div class="meta">Body / 15 / Geist Reg</div>
+        <div class="sample body">Plug in your board, pick a sketch, ship a binary in three taps.</div>
+      </div>
+      <div class="type-row">
+        <div class="meta">Mono / 13 / Geist Mono</div>
+        <div class="sample mono">esptool · 921600 baud · 0x1000 → 0x8000 OK</div>
+      </div>
+    </div>
+
+    <div class="palette">
+      <div class="swatch sw-bg"><span class="name">Background</span><span class="hex">#07090C</span></div>
+      <div class="swatch sw-amber"><span class="name">Amber · Intent</span><span class="hex">#F0A658</span></div>
+      <div class="swatch sw-surf"><span class="name">Surface 1</span><span class="hex">#131921</span></div>
+      <div class="swatch sw-card"><span class="name">Surface 2</span><span class="hex">#1A2129</span></div>
+      <div class="swatch sw-line"><span class="name">Line / Surface 3</span><span class="hex">#232C36</span></div>
+      <div class="swatch sw-ink0"><span class="name">Ink 0 · Primary</span><span class="hex">#F2F4F7</span></div>
+      <div class="swatch sw-ink2"><span class="name">Ink 2 · Secondary</span><span class="hex">#7D8794</span></div>
+      <div class="swatch" style="background:var(--surface-1); border-color:var(--line);"><span class="name" style="color:var(--good);">Good</span><span class="hex" style="color:var(--good); opacity:0.6">#5DD394</span></div>
+    </div>
+  </section>
+
+  <!-- PHONES -->
+  <div class="section-head">
+    <h2>Screens</h2>
+    <div class="label">Five frames · core loop</div>
+  </div>
+
+  <div class="frames-rail">
+
+    <!-- ============== 1. HOME ============== -->
+    <div class="phone-stack">
+      <div class="phone-cap">
+        <span class="name">Home / Sketches</span>
+        <span class="idx">01 — entry</span>
+      </div>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="status-bar">
+            <span>9:41</span>
+            <div class="right">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 18c0 .5-.5 1-1 1s-1-.5-1-1 .5-1 1-1 1 .5 1 1z"/><path d="M5 12a10 10 0 0 1 14 0M2 9a14 14 0 0 1 20 0M8 15a6 6 0 0 1 8 0"/></svg>
+              <svg viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="9" width="18" height="6" rx="1"/><rect x="21" y="11" width="2" height="2"/></svg>
+            </div>
+          </div>
+          <div class="app-header">
+            <div class="title">Sketches</div>
+            <div class="meta">14 local · 3 cloud</div>
+          </div>
+          <div class="app-body">
+            <div class="board-chip">
+              <div class="board-dot"></div>
+              <div class="l">
+                <div class="n">ForgeBoard · A4F2</div>
+                <div class="s">ESP32-S3 · /dev/usb · OTG</div>
+              </div>
+              <div class="swap">SWAP</div>
+            </div>
+            <div class="section-label">Recent <span class="count">04</span></div>
+            <div class="sketch-list">
+              <div class="sketch-card">
+                <div class="thumb">B</div>
+                <div class="info">
+                  <div class="nm">blink_amber</div>
+                  <div class="mt">LED pin 16 · edited 4m ago</div>
+                </div>
+                <div class="badge flashed">FLASHED</div>
+              </div>
+              <div class="sketch-card">
+                <div class="thumb">T</div>
+                <div class="info">
+                  <div class="nm">telemetry_dht</div>
+                  <div class="mt">DHT11 → serial · 22 min</div>
+                </div>
+                <div class="badge">DRAFT</div>
+              </div>
+              <div class="sketch-card">
+                <div class="thumb">R</div>
+                <div class="info">
+                  <div class="nm">rgb_breath</div>
+                  <div class="mt">Pin 3 · HSV sweep · 1 d</div>
+                </div>
+                <div class="badge">DRAFT</div>
+              </div>
+              <div class="sketch-card">
+                <div class="thumb">P</div>
+                <div class="info">
+                  <div class="nm">peripheral_test</div>
+                  <div class="mt">Bundled example · 2 d</div>
+                </div>
+                <div class="badge">EXAMPLE</div>
+              </div>
+            </div>
+            <div class="fab" title="New sketch">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg>
+            </div>
+          </div>
+          <div class="bottom-nav">
+            <div class="nav-item active">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 12l9 4 9-4M3 17l9 4 9-4"/></svg>
+              Sketches
+            </div>
+            <div class="nav-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M8 2v4M16 2v4M8 22v-4M16 22v-4"/></svg>
+              Boards
+            </div>
+            <div class="nav-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>
+              Monitor
+            </div>
+            <div class="nav-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+              Settings
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============== 2. EDITOR ============== -->
+    <div class="phone-stack">
+      <div class="phone-cap">
+        <span class="name">Editor / blink_amber.ino</span>
+        <span class="idx">02 — core surface</span>
+      </div>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="status-bar">
+            <span>9:41</span>
+            <div class="right">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 18c0 .5-.5 1-1 1s-1-.5-1-1 .5-1 1-1 1 .5 1 1z"/><path d="M5 12a10 10 0 0 1 14 0M2 9a14 14 0 0 1 20 0"/></svg>
+              <svg viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="9" width="18" height="6" rx="1"/></svg>
+            </div>
+          </div>
+          <div class="editor-shell">
+            <div class="editor-tabs">
+              <div class="editor-tab active">blink_amber.ino<span class="dirty"></span></div>
+              <div class="editor-tab">pins.h</div>
+              <div class="editor-tab">README.md</div>
+            </div>
+            <div class="code-area">
+              <div class="line"><span class="ln-num">1</span><span class="ln-text"><span class="c">// ForgeBoard · LED breathing</span></span></div>
+              <div class="line"><span class="ln-num">2</span><span class="ln-text"><span class="k">#include</span> <span class="s">&lt;Arduino.h&gt;</span></span></div>
+              <div class="line"><span class="ln-num">3</span><span class="ln-text"> </span></div>
+              <div class="line"><span class="ln-num">4</span><span class="ln-text"><span class="k">constexpr</span> <span class="t">uint8_t</span> <span class="v">LED</span> = <span class="pin-highlight">16</span>;</span></div>
+              <div class="line"><span class="ln-num">5</span><span class="ln-text"><span class="k">constexpr</span> <span class="t">uint16_t</span> <span class="v">PERIOD_MS</span> = <span class="n">2400</span>;</span></div>
+              <div class="line"><span class="ln-num">6</span><span class="ln-text"> </span></div>
+              <div class="line"><span class="ln-num">7</span><span class="ln-text"><span class="t">void</span> <span class="fn">setup</span>() {</span></div>
+              <div class="line"><span class="ln-num">8</span><span class="ln-text">  <span class="fn">pinMode</span>(<span class="v">LED</span>, <span class="k">OUTPUT</span>);</span></div>
+              <div class="line"><span class="ln-num">9</span><span class="ln-text">  <span class="v">Serial</span>.<span class="fn">begin</span>(<span class="n">115200</span>);</span></div>
+              <div class="line"><span class="ln-num">10</span><span class="ln-text">}</span></div>
+              <div class="line"><span class="ln-num">11</span><span class="ln-text"> </span></div>
+              <div class="line active"><span class="ln-num">12</span><span class="ln-text"><span class="t">void</span> <span class="fn">loop</span>() {</span></div>
+              <div class="line"><span class="ln-num">13</span><span class="ln-text">  <span class="t">float</span> <span class="v">t</span> = <span class="fn">millis</span>() / <span class="n">1000.0f</span>;</span></div>
+              <div class="line"><span class="ln-num">14</span><span class="ln-text">  <span class="t">uint8_t</span> <span class="v">d</span> = <span class="fn">sin</span>(<span class="v">t</span>) * <span class="n">127</span> + <span class="n">128</span>;</span></div>
+              <div class="line"><span class="ln-num">15</span><span class="ln-text">  <span class="fn">analogWrite</span>(<span class="v">LED</span>, <span class="v">d</span>);</span></div>
+              <div class="line"><span class="ln-num">16</span><span class="ln-text">  <span class="fn">delay</span>(<span class="n">8</span>);</span></div>
+              <div class="line"><span class="ln-num">17</span><span class="ln-text">}</span></div>
+            </div>
+            <div class="editor-toolbar">
+              <button class="tool-btn" title="Files">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h4"/></svg>
+              </button>
+              <button class="tool-btn" title="Verify">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 6L9 17l-5-5"/></svg>
+              </button>
+              <button class="upload-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12l7-7 7 7"/></svg>
+                FLASH
+              </button>
+              <button class="tool-btn" title="Monitor">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============== 3. PINOUT ============== -->
+    <div class="phone-stack">
+      <div class="phone-cap">
+        <span class="name">Pinout / live board</span>
+        <span class="idx">03 — the moment</span>
+      </div>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="status-bar">
+            <span>9:41</span>
+            <div class="right">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 12a10 10 0 0 1 14 0"/></svg>
+              <svg viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="9" width="18" height="6" rx="1"/></svg>
+            </div>
+          </div>
+          <div class="pin-screen">
+            <div class="pin-header">
+              <div class="l">
+                <div class="l1">ForgeBoard · A4F2</div>
+                <div class="l2">Intermediate · ESP32-S3 · live</div>
+              </div>
+              <div class="close">×</div>
+            </div>
+            <div class="board-wrap">
+              <div class="board-pcb">
+                <div class="pcb-mcu">
+                  <div class="l1">ESP32-S3-WROOM-1</div>
+                  <div class="l2">N16R8</div>
+                </div>
+                <div class="pcb-pins-left">
+                  <div class="pin"><span class="label">3V3</span></div>
+                  <div class="pin"><span class="label">GND</span></div>
+                  <div class="pin active"><span class="label">GPIO16 · LED</span></div>
+                  <div class="pin"><span class="label">GPIO17</span></div>
+                  <div class="pin"><span class="label">GPIO18</span></div>
+                  <div class="pin"><span class="label">GPIO21 · LDR</span></div>
+                  <div class="pin"><span class="label">GPIO45 · DHT</span></div>
+                  <div class="pin"><span class="label">GPIO46 · IR</span></div>
+                </div>
+                <div class="pcb-pins-right">
+                  <div class="pin"><span class="label">5V</span></div>
+                  <div class="pin"><span class="label">GND</span></div>
+                  <div class="pin"><span class="label">GPIO3 · RGB</span></div>
+                  <div class="pin"><span class="label">GPIO4</span></div>
+                  <div class="pin"><span class="label">GPIO5</span></div>
+                  <div class="pin"><span class="label">GPIO6</span></div>
+                  <div class="pin"><span class="label">GPIO47</span></div>
+                  <div class="pin"><span class="label">GPIO48 · BUZ</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="pin-legend">
+              <div class="pl-item"><span class="pl-pin">16</span><span>LED</span><span class="pl-fn"> · digital</span></div>
+              <div class="pl-item"><span class="pl-pin">03</span><span>RGB</span><span class="pl-fn"> · neopixel</span></div>
+              <div class="pl-item"><span class="pl-pin">21</span><span>LDR</span><span class="pl-fn"> · analog</span></div>
+              <div class="pl-item"><span class="pl-pin">45</span><span>DHT11</span><span class="pl-fn"> · 1-wire</span></div>
+              <div class="pl-item"><span class="pl-pin">46</span><span>IR RX</span><span class="pl-fn"> · interrupt</span></div>
+              <div class="pl-item"><span class="pl-pin">48</span><span>BUZZER</span><span class="pl-fn"> · pwm</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============== 4. BOARDS SHEET ============== -->
+    <div class="phone-stack">
+      <div class="phone-cap">
+        <span class="name">Boards / picker</span>
+        <span class="idx">04 — board swap</span>
+      </div>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="status-bar">
+            <span>9:41</span>
+            <div class="right">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 12a10 10 0 0 1 14 0"/></svg>
+              <svg viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="9" width="18" height="6" rx="1"/></svg>
+            </div>
+          </div>
+          <div class="sheet-screen">
+            <div class="sheet-blur-bg"></div>
+            <div class="sheet">
+              <div class="sheet-grabber"></div>
+              <div class="sheet-title">
+                <div class="t">Select a board</div>
+                <div class="scan">SCANNING</div>
+              </div>
+
+              <div class="sheet-section">USB · OTG</div>
+              <div class="device selected">
+                <div class="device-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18"/><circle cx="7" cy="14" r="1"/></svg>
+                </div>
+                <div class="info">
+                  <div class="n">ForgeBoard · A4F2</div>
+                  <div class="d">ESP32-S3 · 303A:1001 · /dev/bus/usb/001/006</div>
+                </div>
+                <div class="via">USB</div>
+              </div>
+
+              <div class="sheet-section">WiFi · mDNS</div>
+              <div class="device">
+                <div class="device-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 12a10 10 0 0 1 14 0M2 9a14 14 0 0 1 20 0M8 15a6 6 0 0 1 8 0"/><circle cx="12" cy="19" r="1"/></svg>
+                </div>
+                <div class="info">
+                  <div class="n">forgeboard-91b3.local</div>
+                  <div class="d">192.168.1.42 · OTA · last seen 12s</div>
+                </div>
+                <div class="via">WIFI</div>
+              </div>
+              <div class="device">
+                <div class="device-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 12a10 10 0 0 1 14 0M2 9a14 14 0 0 1 20 0M8 15a6 6 0 0 1 8 0"/></svg>
+                </div>
+                <div class="info">
+                  <div class="n">forgeboard-bench.local</div>
+                  <div class="d">192.168.1.51 · OTA · last seen 03m</div>
+                </div>
+                <div class="via">WIFI</div>
+              </div>
+
+              <div class="sheet-section">Recent</div>
+              <div class="device">
+                <div class="device-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                </div>
+                <div class="info">
+                  <div class="n">Arduino Uno R3</div>
+                  <div class="d">avr · last used 14h ago</div>
+                </div>
+                <div class="via">USB</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============== 5. SERIAL ============== -->
+    <div class="phone-stack">
+      <div class="phone-cap">
+        <span class="name">Serial · 115200</span>
+        <span class="idx">05 — observation</span>
+      </div>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="status-bar">
+            <span>9:41</span>
+            <div class="right">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 12a10 10 0 0 1 14 0"/></svg>
+              <svg viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="9" width="18" height="6" rx="1"/></svg>
+            </div>
+          </div>
+          <div class="serial-shell">
+            <div class="serial-header">
+              <div class="l">
+                <div class="pill">LIVE</div>
+                <div class="title" style="font-size: 14px;">A4F2 · monitor</div>
+              </div>
+              <div class="baud">115200 · 8N1</div>
+            </div>
+            <div class="serial-body">
+              <div class="ln"><span class="ts">00:00.124</span><span class="lvl lvl-i">INF</span><span class="msg">ForgeBoard boot — v2.3.1-rc1</span></div>
+              <div class="ln"><span class="ts">00:00.156</span><span class="lvl lvl-i">INF</span><span class="msg">WiFi: connected, rssi <span class="num">-46</span> dBm</span></div>
+              <div class="ln"><span class="ts">00:00.302</span><span class="lvl lvl-d">DBG</span><span class="msg">sensor init: DHT11 ok, LDR ok, IR ok</span></div>
+              <div class="ln"><span class="ts">00:01.000</span><span class="lvl lvl-i">INF</span><span class="msg">tick · temp=<span class="num">24.6</span>C  hum=<span class="num">58</span>%  lux=<span class="num">412</span></span></div>
+              <div class="ln"><span class="ts">00:02.000</span><span class="lvl lvl-i">INF</span><span class="msg">tick · temp=<span class="num">24.6</span>C  hum=<span class="num">58</span>%  lux=<span class="num">410</span></span></div>
+              <div class="ln"><span class="ts">00:03.000</span><span class="lvl lvl-w">WRN</span><span class="msg">heap watermark <span class="num">3220</span> bytes — under 4 KiB</span></div>
+              <div class="ln"><span class="ts">00:04.000</span><span class="lvl lvl-i">INF</span><span class="msg">tick · temp=<span class="num">24.7</span>C  hum=<span class="num">58</span>%  lux=<span class="num">418</span><span class="cursor"></span></span></div>
+            </div>
+            <div class="serial-input">
+              <input placeholder="Send…  ↵" />
+              <button class="send">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 12l14-7-3 14-3-6-8-1z"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- COMPONENTS -->
+  <section class="components">
+    <div class="section-head">
+      <h2>Signature components</h2>
+      <div class="label">Reused, anywhere</div>
+    </div>
+
+    <div class="comp-grid">
+      <div class="comp-card">
+        <div class="meta">A / Compile wave</div>
+        <h4>Progress as horizon</h4>
+        <p>Indeterminate compile + flash use a thin amber wave across the toolbar instead of a percent ring. Quieter, calmer, on every screen.</p>
+        <div class="demo-stage"><div class="compile-progress"></div></div>
+      </div>
+
+      <div class="comp-card">
+        <div class="meta">B / KB accessory</div>
+        <h4>Coder's row above the keys</h4>
+        <p>Soft-keyboard accessory bar with the chars you actually type — single tap, no holding shift.</p>
+        <div class="demo-stage">
+          <div class="kb-accessory">
+            <div class="kb-key">{</div>
+            <div class="kb-key">}</div>
+            <div class="kb-key">;</div>
+            <div class="kb-key">&lt;</div>
+            <div class="kb-key">&gt;</div>
+            <div class="kb-key">/</div>
+            <div class="kb-key">⇥</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="comp-card">
+        <div class="meta">C / Status pills</div>
+        <h4>What the board is doing</h4>
+        <p>One pill per state. Green breathing = connected. Amber pulsing = flashing. Red = lost link. No icon, no doubt.</p>
+        <div class="demo-stage">
+          <div class="demo-pills">
+            <div class="demo-pill ok"><span class="dot"></span>Connected · A4F2</div>
+            <div class="demo-pill flash"><span class="dot"></span>Flashing · 64%</div>
+            <div class="demo-pill err"><span class="dot"></span>USB detached</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <span>ForgeBoard IDE · Android · Direction v0.1</span>
+    <span>Geist + Geist Mono · Monochrome / Amber · 28.05.26</span>
+  </div>
+
+</main>
+
+</body>
+</html>

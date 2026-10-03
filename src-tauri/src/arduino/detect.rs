@@ -50,15 +50,42 @@ fn find_esptool() -> Option<PathBuf> {
 }
 
 /// Probe the chip on `port` with esptool — exact for any ESP32-family chip.
+///
+/// Argument names are the underscored form (`flash_id`, `usb_reset`) used by
+/// esptool 4.x — which is what arduino-esp32 3.0.7 (our supported platform)
+/// ships. esptool 5.x switched to the hyphenated form (`flash-id`,
+/// `usb-reset`); a 5.x build of esptool would reject the names below. We
+/// pin to 3.0.7 because the 3.3.x + esptool-5 combo has an unfixed
+/// native-USB upload bug; if that ever flips, this needs to flip too.
+///
+/// `--before usb_reset` is required to drive an ESP32-S2/S3/C3/C6/H2 with
+/// native USB-CDC into download mode. The default `default_reset` toggles
+/// DTR/RTS, which only works on chips with an external UART bridge — on a
+/// native-USB chip it does nothing and the probe immediately fails with
+/// "Failed to connect", leaving the IDE unable to identify the board.
 async fn probe_chip(esptool: &PathBuf, port: &str) -> Option<BoardId> {
     let mut cmd = Command::new(esptool);
-    cmd.args(["--port", port, "flash-id"])
+    cmd.args([
+        "--before", "usb_reset",
+        "--after", "hard_reset",
+        "--port", port,
+        "flash_id",
+    ])
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
     #[cfg(windows)]
     cmd.creation_flags(CREATE_NO_WINDOW);
 
-    let output = cmd.output().await.ok()?;
+    // Cap the probe — a chip running custom firmware that ignores the
+    // USB-CDC reset request will otherwise let esptool retry forever and
+    // freeze the connection watcher (which serialises ticks on `ticking`).
+    let output = tokio::time::timeout(
+        std::time::Duration::from_secs(8),
+        cmd.output(),
+    )
+    .await
+    .ok()?
+    .ok()?;
     let text = format!(
         "{}{}",
         String::from_utf8_lossy(&output.stdout),

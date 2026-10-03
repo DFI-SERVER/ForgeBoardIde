@@ -18,6 +18,7 @@ pub struct BurnBootloaderResult {
 /// programmers (USB-attached ones, e.g. Atmel-ICE) don't need it.
 pub async fn burn_bootloader(
     app: &tauri::AppHandle,
+    target: &str,
     fqbn: &str,
     port: Option<&str>,
     programmer: &str,
@@ -41,7 +42,7 @@ pub async fn burn_bootloader(
     if verbose {
         args.push("-v");
     }
-    let (code, stderr) = cli::run_streaming(app, "burn-bootloader-output", &args).await?;
+    let (code, stderr) = cli::run_streaming(app, target, "burn-bootloader-output", &args).await?;
     Ok(BurnBootloaderResult {
         success: code == 0,
         exit_code: code,

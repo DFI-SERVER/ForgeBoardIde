@@ -46,13 +46,20 @@ describe("humanizeDiagnostic", () => {
     }
   });
 
-  it("quotes the missing header name and points to the Library Manager", () => {
+  it("quotes the missing header and exposes a search-library action", () => {
     const hint = humanizeDiagnostic(
       diag("Adafruit_NeoPixel.h: No such file or directory"),
     );
     expect(hint).not.toBeNull();
     expect(hint!.explanation).toContain("Adafruit_NeoPixel.h");
-    expect(hint!.fix).toMatch(/Library Manager/i);
+    expect(hint!.fix).toMatch(/librar/i);
+    // Underscores in the header become spaces so arduino-cli's substring
+    // match against full registry names ("Adafruit NeoPixel") finds the entry.
+    expect(hint!.action).toEqual({
+      kind: "search-library",
+      query: "Adafruit NeoPixel",
+      label: expect.stringContaining("Adafruit NeoPixel"),
+    });
   });
 
   it("quotes the undeclared identifier in the hint", () => {

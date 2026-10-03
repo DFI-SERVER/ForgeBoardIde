@@ -19,19 +19,28 @@ pub struct UploadResult {
 ///
 /// `profile`, if `Some`, switches the build to a `sketch.yaml` profile
 /// (`--profile <name>`). The profile owns the FQBN in that mode, so the
-/// `--fqbn` flag is omitted; `--port` is still required because the profile
+/// `--fqbn` flag is omitted; `--port` is still passed because the profile
 /// does not pin a target port.
+///
+/// `port` is `None` for boards whose upload tool finds the target itself —
+/// STM32 DFU/SWD via STM32CubeProgrammer. A board in DFU mode has no COM
+/// port, so there is nothing to pass; the `--port` flag is simply omitted.
 pub async fn upload_sketch(
     app: &tauri::AppHandle,
+    target: &str,
     sketch_path: &Path,
     fqbn: &str,
-    port: &str,
+    port: Option<&str>,
     verbose: bool,
     profile: Option<&str>,
 ) -> Result<UploadResult, String> {
     let sketch = sketch_path.to_string_lossy().into_owned();
     let fqbn = normalize_fqbn(fqbn);
-    let mut args: Vec<&str> = vec!["compile", "--upload", "--port", port, "--no-color"];
+    let mut args: Vec<&str> = vec!["compile", "--upload", "--no-color"];
+    if let Some(p) = port {
+        args.push("--port");
+        args.push(p);
+    }
     if let Some(p) = profile {
         args.push("--profile");
         args.push(p);
@@ -43,7 +52,7 @@ pub async fn upload_sketch(
         args.push("-v");
     }
     args.push(sketch.as_str());
-    let (code, stderr) = cli::run_streaming(app, "upload-output", &args).await?;
+    let (code, stderr) = cli::run_streaming(app, target, "upload-output", &args).await?;
     Ok(UploadResult {
         success: code == 0,
         exit_code: code,

@@ -46,21 +46,39 @@ export const SIDEBAR: PanelSpec = {
   reserve: 480,
 };
 
-/** The bottom panel — Serial Monitor / Output / Plotter / Problems. */
+/** The bottom panel — Serial Monitor / Output / Plotter / Problems.
+ *  Default of 220 px gives the Serial Monitor enough room to show toolbar +
+ *  a few log lines + the prompt without dominating the screen; users that
+ *  want more drag the resize handle taller and the layout module persists
+ *  their pick. `reserve: 420` keeps at least 420 px of editor area visible
+ *  no matter how aggressively the user drags. */
 export const BOTTOM_PANEL: PanelSpec = {
   key: "bottomPanelHeight",
   cssVar: "--bottompanel-h",
   min: 120,
-  max: 600,
-  default: 188,
+  max: 520,
+  default: 220,
   axis: "height",
-  reserve: 320,
+  reserve: 420,
 };
 
 const SPECS: readonly PanelSpec[] = [SIDEBAR, BOTTOM_PANEL];
 
 /** localStorage key the sizes are persisted under. */
 const STORAGE_KEY = "forgeboard.layout";
+
+/** A migration marker — set once we've reset the bottom-panel height to a
+ *  sensible default on launches that inherited the brief
+ *  shipped-default-was-too-big window. New installs never see this; existing
+ *  installs run the reset once.
+ *
+ *  The reset is unconditional (not threshold-based) because the prior
+ *  default-was-320 build silently persisted that value into localStorage,
+ *  putting a lot of installs in the 300–500 px range where a threshold
+ *  guess can't distinguish "user dragged this taller" from "prior default
+ *  baked itself in". The user can immediately drag taller again if they
+ *  want a roomy panel; double-clicking the resize handle snaps to default. */
+const MIGRATION_KEY = "forgeboard.layout.migrated_v3";
 
 /** The live, in-memory sizes — the source of truth between drags. */
 const sizes: Record<PanelSpec["key"], number> = {
@@ -142,6 +160,31 @@ export function initLayout(): void {
     typeof stored === "object" && stored !== null
       ? (stored as Record<string, unknown>)
       : {};
+
+  // One-time migration: the prior shipped default of 320 px (and a brief
+  // "even bigger" build) baked itself into many installs via persist() on
+  // first run, so a threshold-based reset can't reliably tell "user
+  // dragged this" from "stale default". Reset bottomPanelHeight to spec
+  // default unconditionally on this migration. Idempotent — keyed under
+  // MIGRATION_KEY so it runs exactly once per install. The sidebar width
+  // is left untouched; only the bottom panel was affected.
+  let migrated = false;
+  try {
+    migrated = localStorage.getItem(MIGRATION_KEY) === "true";
+  } catch {
+    migrated = false;
+  }
+  if (!migrated) {
+    obj[BOTTOM_PANEL.key] = BOTTOM_PANEL.default;
+    try {
+      localStorage.setItem(MIGRATION_KEY, "true");
+    } catch {
+      // If we can't record the migration, oh well — next launch tries again,
+      // which is still safe because the reset is idempotent against the
+      // freshly-written default.
+    }
+  }
+
   for (const spec of SPECS) {
     const saved = obj[spec.key];
     sizes[spec.key] =
@@ -150,4 +193,7 @@ export function initLayout(): void {
         : spec.default;
     applyVar(spec);
   }
+  // Persist whatever the migration resolved to, so the saved state matches
+  // what the user actually sees on disk.
+  persist();
 }

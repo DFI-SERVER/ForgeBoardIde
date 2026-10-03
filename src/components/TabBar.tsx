@@ -1,9 +1,13 @@
 import "./TabBar.css";
-import { X } from "lucide-preact";
-import { editorGroups, activeGroupIndex } from "../state/appState";
+import { Plus, X } from "lucide-preact";
+import {
+  editorGroups,
+  activeGroupIndex,
+} from "../state/appState";
 import { closeTab } from "../lib/tabs";
 import { setActiveGroup, updateActiveGroup, closeGroup } from "../lib/editor-groups";
 import { iconForName } from "../lib/file-icons";
+import { newSketch } from "../lib/actions";
 
 interface TabBarProps {
   /** Which group's tabs to render. Each pane in a split layout has its own
@@ -97,6 +101,23 @@ export function TabBar({ groupId }: TabBarProps) {
           </button>
         );
       })}
+      {/* Trailing-edge "+" opens the New Sketch dialog (name + Browse
+          location picker). Only the active pane renders this in split
+          layouts so the row doesn't double up the affordance. To add a
+          file to the current sketch, use the Files sidebar. */}
+      {isActive && (
+        <button
+          class="tabbar-new-window"
+          title="New sketch"
+          aria-label="New sketch"
+          onClick={(e) => {
+            e.stopPropagation();
+            newSketch();
+          }}
+        >
+          <Plus size={14} strokeWidth={1.7} />
+        </button>
+      )}
       {/* When this is a split layout (>1 group), every tab strip carries
           a close affordance that collapses just that pane. Hidden when
           there is only one group — closing it would leave the layout in a

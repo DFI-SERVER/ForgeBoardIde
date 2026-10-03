@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { serialApi, ensureSerialListeners } from "../ipc/serial";
 import {
   serialLog,
+  appendSerialLog,
   serialBaud,
   serialLineEnding,
   serialConnected,
@@ -13,7 +14,7 @@ import "./SerialMonitor.css";
 const BAUD_RATES = [9600, 19200, 38400, 57600, 115200, 230400, 460800, 921600];
 
 function info(text: string) {
-  serialLog.value = [...serialLog.value, { ts: Date.now(), text, kind: "info" }];
+  appendSerialLog({ ts: Date.now(), text, kind: "info" });
 }
 
 function formatTime(ts: number): string {
@@ -67,10 +68,7 @@ export function SerialMonitor() {
     const bytes = Array.from(new TextEncoder().encode(payload));
     try {
       await serialApi.write(bytes);
-      serialLog.value = [
-        ...serialLog.value,
-        { ts: Date.now(), text: `> ${input}`, kind: "tx" },
-      ];
+      appendSerialLog({ ts: Date.now(), text: `> ${input}`, kind: "tx" });
       setHistory([input, ...history].slice(0, 50));
       setHistIdx(-1);
       setInput("");
@@ -152,19 +150,32 @@ export function SerialMonitor() {
             <option value={b}>{b}</option>
           ))}
         </select>
-        <select
-          class="sm-select"
-          value={serialLineEnding.value}
-          onChange={(e) =>
-            (serialLineEnding.value = (e.target as HTMLSelectElement)
-              .value as typeof serialLineEnding.value)
-          }
-        >
-          <option value={"\n"}>LF</option>
-          <option value={"\r\n"}>CRLF</option>
-          <option value={"\r"}>CR</option>
-          <option value={""}>No line ending</option>
-        </select>
+        <div class="sm-seg-group" role="group" aria-label="Line ending">
+          {(
+            [
+              { label: "LF", value: "\n", title: "Line feed (\\n)" },
+              { label: "CRLF", value: "\r\n", title: "Carriage return + line feed (\\r\\n)" },
+              { label: "CR", value: "\r", title: "Carriage return (\\r)" },
+              { label: "None", value: "", title: "No line ending appended" },
+            ] as const
+          ).map((opt) => {
+            const active = serialLineEnding.value === opt.value;
+            return (
+              <button
+                key={opt.label}
+                type="button"
+                class={`sm-seg${active ? " active" : ""}`}
+                title={opt.title}
+                aria-pressed={active}
+                onClick={() =>
+                  (serialLineEnding.value = opt.value as typeof serialLineEnding.value)
+                }
+              >
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
         <div class="sm-spacer" />
         <button class="sm-btn-ghost" onClick={() => (serialLog.value = [])}>
           Clear
@@ -174,12 +185,12 @@ export function SerialMonitor() {
       <div class="sm-log">
         {serialLog.value.length === 0 && (
           <div class="sm-empty">
-            No serial output. Click Connect to open {connectedPort.value ?? "a port"}.
+            no output &middot; connect to {connectedPort.value ?? "a port"} to begin
           </div>
         )}
         {serialLog.value.map((entry, i) => (
           <div key={i} class={`sm-entry sm-${entry.kind}`}>
-            <span class="sm-ts">[{formatTime(entry.ts)}]</span>
+            <span class="sm-ts">{formatTime(entry.ts)}</span>
             {entry.text}
           </div>
         ))}
@@ -193,15 +204,15 @@ export function SerialMonitor() {
           value={input}
           placeholder={
             serialConnected.value
-              ? "type a message, Enter to send"
-              : "connect to a port first…"
+              ? "type a message and press Enter"
+              : "connect first"
           }
           disabled={!serialConnected.value}
           onInput={(e) => setInput((e.target as HTMLInputElement).value)}
           onKeyDown={onKeyDown}
         />
         <button class="sm-send" onClick={sendInput} disabled={!serialConnected.value}>
-          Send
+          Send &crarr;
         </button>
       </div>
     </div>

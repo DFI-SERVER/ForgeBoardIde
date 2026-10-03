@@ -48,6 +48,26 @@ describe("editor-groups — mirror sync", () => {
     expect(openTabs.value).toEqual([TAB_B, TAB_C]);
     expect(activeTabIndex.value).toBe(1);
   });
+
+  it("self-heals a stale activeGroupIndex when the group list shrinks", () => {
+    // A rogue path replaces editorGroups with a single group while the index
+    // still points at the (now gone) second group — e.g. a sketch-load that
+    // collapses a split without re-pointing the index.
+    editorGroups.value = [
+      { id: "g0", tabs: [TAB_A], activeTabIndex: 0 },
+      { id: "g1", tabs: [TAB_B], activeTabIndex: 0 },
+    ];
+    activeGroupIndex.value = 1;
+    editorGroups.value = [{ id: "g0", tabs: [TAB_A], activeTabIndex: 0 }];
+
+    // The sync effect must snap the index back to the surviving group...
+    expect(activeGroupIndex.value).toBe(0);
+    expect(openTabs.value).toEqual([TAB_A]);
+    // ...so tab operations keep working instead of silently no-opping.
+    updateActiveGroup({ tabs: [TAB_A, TAB_C], activeTabIndex: 1 });
+    expect(editorGroups.value[0].tabs).toHaveLength(2);
+    expect(activeTabIndex.value).toBe(1);
+  });
 });
 
 describe("splitEditorRight", () => {

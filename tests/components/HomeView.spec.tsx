@@ -36,21 +36,21 @@ afterEach(() => {
 });
 
 describe("HomeView", () => {
-  it("renders the Home header", async () => {
+  it("renders the Quick start section header", async () => {
     render(<HomeView />);
-    expect(screen.getByText("Home")).toBeInTheDocument();
+    expect(screen.getByText("$ QUICK START")).toBeInTheDocument();
     await waitFor(() => expect(projectApi.listRecent).toHaveBeenCalled());
   });
 
   it("starts a new sketch when New sketch is clicked", () => {
     render(<HomeView />);
-    fireEvent.click(screen.getByText("New sketch").closest("button")!);
+    fireEvent.click(screen.getByText("NEW SKETCH").closest("button")!);
     expect(newSketch).toHaveBeenCalled();
   });
 
   it("opens a sketch when Open sketch is clicked", () => {
     render(<HomeView />);
-    fireEvent.click(screen.getByText("Open sketch").closest("button")!);
+    fireEvent.click(screen.getByText("OPEN SKETCH").closest("button")!);
     expect(openSketch).toHaveBeenCalled();
   });
 
@@ -58,7 +58,8 @@ describe("HomeView", () => {
     vi.spyOn(projectApi, "listRecent").mockResolvedValue(RECENT);
     render(<HomeView />);
 
-    const row = await screen.findByText("wifi-scan");
+    // File names render uppercase per Direction C's mono-uppercase rule.
+    const row = await screen.findByText("WIFI-SCAN");
     fireEvent.click(row.closest("button")!);
 
     expect(openRecentSketch).toHaveBeenCalledWith("C:\\sketches\\wifi-scan");
@@ -67,7 +68,7 @@ describe("HomeView", () => {
   it("shows an empty state when there are no recent sketches", async () => {
     render(<HomeView />);
     expect(
-      await screen.findByText(/No recent sketches/i),
+      await screen.findByText(/no recent sketches/i),
     ).toBeInTheDocument();
   });
 
@@ -75,12 +76,12 @@ describe("HomeView", () => {
     connectedPort.value = "COM4";
     connectedBoard.value = "ESP32-S3 Dev Module";
     render(<HomeView />);
-    expect(screen.getByText("ESP32-S3 Dev Module")).toBeInTheDocument();
+    expect(screen.getByText("ESP32-S3 DEV MODULE")).toBeInTheDocument();
     expect(screen.getByText(/COM4/)).toBeInTheDocument();
   });
 
   it("shows a no-board state when nothing is connected", () => {
     render(<HomeView />);
-    expect(screen.getByText(/No board connected/i)).toBeInTheDocument();
+    expect(screen.getByText(/no board/i)).toBeInTheDocument();
   });
 });

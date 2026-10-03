@@ -1,0 +1,1676 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>FB-IDE-AND · v5</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg-0: #0D0D0C;
+    --bg-1: #131311;
+    --bg-2: #1A1A18;
+    --bg-3: #232320;
+    --line: #2A2A27;
+    --line-soft: #1F1F1C;
+    --ink-0: #F4F1E8;
+    --ink-1: #B6B2A7;
+    --ink-2: #807C74;
+    --ink-3: #56544E;
+    --ink-4: #33312D;
+
+    /* screen interior (subtly different) */
+    --scr-0: #0C0C0B;
+    --scr-1: #161614;
+    --scr-2: #1F1F1C;
+    --scr-line: #262623;
+    --scr-ink: #F2EFE6;
+    --scr-ink-2: #918C82;
+    --scr-ink-3: #534F49;
+    --scr-ink-4: #2E2C29;
+
+    --mono: "JetBrains Mono", "SF Mono", Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+
+  html, body {
+    background: var(--bg-0);
+    color: var(--ink-0);
+    font-family: var(--mono);
+    font-weight: 400;
+    font-size: 13px;
+    line-height: 1.55;
+    min-height: 100vh;
+    font-feature-settings: "calt", "liga", "ss02", "ss19";
+  }
+
+  /* ========================================
+     PAGE LAYOUT — ruler + main column + notes
+     ======================================== */
+  body {
+    display: grid;
+    grid-template-columns: 88px 1fr;
+  }
+
+  /* RULER (left margin, sticky, line-numbered) */
+  .ruler {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    border-right: 1px solid var(--line);
+    padding: 24px 0;
+    overflow: hidden;
+    background: var(--bg-0);
+    display: flex;
+    flex-direction: column;
+  }
+  .ruler .mark {
+    font-size: 10px;
+    color: var(--ink-3);
+    padding: 6px 16px 6px 18px;
+    line-height: 1;
+    letter-spacing: 0.06em;
+    border-bottom: 1px solid transparent;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .ruler .mark .n { color: var(--ink-3); }
+  .ruler .mark.sec {
+    color: var(--ink-0);
+    font-weight: 600;
+    padding: 18px 16px 8px 18px;
+    margin-top: 12px;
+    font-size: 10.5px;
+    letter-spacing: 0.16em;
+    border-top: 1px solid var(--line);
+    border-bottom: none;
+    text-transform: uppercase;
+  }
+  .ruler .mark.sec .n { color: var(--ink-0); }
+  .ruler .mark.cur {
+    color: var(--ink-0);
+    border-bottom: 1px solid var(--ink-0);
+    background: var(--bg-1);
+  }
+  .ruler .mark.cur .n { color: var(--ink-0); font-weight: 600; }
+  .ruler .grow { flex: 1; }
+  .ruler .meta-foot {
+    padding: 14px 16px;
+    border-top: 1px solid var(--line);
+    font-size: 9px;
+    color: var(--ink-3);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    line-height: 1.7;
+  }
+  .ruler .meta-foot b { color: var(--ink-0); font-weight: 600; display: block; }
+
+  /* MAIN COLUMN */
+  main {
+    padding: 56px 64px 96px;
+    max-width: 1280px;
+    position: relative;
+  }
+
+  /* ========================================
+     HEADER
+     ======================================== */
+  .head {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 56px;
+    padding-bottom: 40px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 80px;
+  }
+  .head .id {
+    font-size: 11px;
+    color: var(--ink-2);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    line-height: 1.8;
+  }
+  .head .id b { color: var(--ink-0); font-weight: 600; }
+  .head .id .sep { color: var(--ink-3); }
+  .head .ver {
+    font-size: 11px;
+    color: var(--ink-2);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    text-align: right;
+    line-height: 1.8;
+  }
+  .head .ver b { color: var(--ink-0); font-weight: 600; }
+  .head .ver .stamp {
+    display: inline-block;
+    border: 1px solid var(--ink-0);
+    padding: 4px 10px;
+    color: var(--ink-0);
+    font-weight: 600;
+    margin-top: 8px;
+  }
+
+  /* ========================================
+     HERO — type as architecture
+     ======================================== */
+  .hero {
+    display: grid;
+    grid-template-columns: 1fr;
+    margin-bottom: 96px;
+  }
+  .hero .row1 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: baseline;
+    margin-bottom: 8px;
+  }
+  .hero h1 {
+    font-family: var(--mono);
+    font-weight: 200;
+    font-size: clamp(80px, 13vw, 200px);
+    line-height: 0.86;
+    letter-spacing: -0.05em;
+    color: var(--ink-0);
+    text-transform: lowercase;
+  }
+  .hero h1 .ital {
+    font-style: italic;
+    font-weight: 300;
+    color: var(--ink-0);
+  }
+  .hero h1 .heavy {
+    font-weight: 700;
+    font-style: italic;
+    letter-spacing: -0.04em;
+  }
+  .hero h1 .underscore {
+    color: var(--ink-3);
+    font-weight: 100;
+  }
+  .hero h1 .small {
+    font-size: 0.4em;
+    vertical-align: super;
+    font-weight: 500;
+    color: var(--ink-2);
+    margin-left: -0.1em;
+    letter-spacing: 0;
+  }
+  .hero .lede-grid {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 64px;
+    align-items: end;
+    margin-top: 56px;
+  }
+  .hero .lede {
+    font-size: 17px;
+    line-height: 1.55;
+    color: var(--ink-1);
+    font-weight: 400;
+    max-width: 580px;
+    letter-spacing: -0.005em;
+  }
+  .hero .lede em { font-style: italic; color: var(--ink-0); font-weight: 500; }
+  .hero .lede .invert {
+    background: var(--ink-0);
+    color: var(--bg-0);
+    padding: 1px 8px;
+    font-weight: 500;
+  }
+  .hero .meta-block {
+    border-left: 1px solid var(--line);
+    padding-left: 24px;
+    font-size: 11px;
+    color: var(--ink-2);
+    letter-spacing: 0.1em;
+    line-height: 1.8;
+    text-transform: uppercase;
+  }
+  .hero .meta-block .row {
+    display: flex; justify-content: space-between;
+    padding: 4px 0;
+    border-bottom: 1px dashed var(--ink-4);
+  }
+  .hero .meta-block .row:last-child { border-bottom: none; }
+  .hero .meta-block .row .v { color: var(--ink-0); font-weight: 600; }
+
+  /* ========================================
+     BAR — strip between sections
+     ======================================== */
+  .bar {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    margin: 0 -64px 0 -64px;
+  }
+  .bar .cell {
+    padding: 18px 24px;
+    border-right: 1px solid var(--line);
+    font-size: 10.5px;
+    color: var(--ink-2);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .bar .cell:last-child { border-right: none; }
+  .bar .cell b { color: var(--ink-0); display: block; font-size: 13px; font-weight: 500; letter-spacing: -0.005em; text-transform: none; margin-top: 4px; }
+
+  /* ========================================
+     SECTION HEAD
+     ======================================== */
+  .sh {
+    padding: 96px 0 56px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .sh .id {
+    font-size: 11px;
+    color: var(--ink-2);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    display: flex; gap: 16px;
+  }
+  .sh .id .num {
+    color: var(--ink-0);
+    font-weight: 600;
+    border: 1px solid var(--ink-0);
+    padding: 3px 8px;
+    line-height: 1;
+  }
+  .sh h2 {
+    font-family: var(--mono);
+    font-weight: 200;
+    font-size: clamp(56px, 8vw, 112px);
+    line-height: 0.92;
+    letter-spacing: -0.04em;
+    color: var(--ink-0);
+    text-transform: lowercase;
+  }
+  .sh h2 .ital { font-style: italic; font-weight: 300; color: var(--ink-0); }
+  .sh h2 .heavy { font-weight: 700; font-style: italic; }
+  .sh h2 .underscore { color: var(--ink-3); font-weight: 100; }
+
+  /* ========================================
+     MANIFESTO — body prose
+     ======================================== */
+  .manifesto {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    padding-bottom: 96px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 64px;
+  }
+  .manifesto p {
+    font-size: 15.5px;
+    line-height: 1.6;
+    color: var(--ink-1);
+    margin-bottom: 18px;
+    letter-spacing: -0.005em;
+  }
+  .manifesto p em { font-style: italic; color: var(--ink-0); font-weight: 500; }
+  .manifesto p .marker { color: var(--ink-0); font-weight: 700; }
+  .manifesto p .invert {
+    background: var(--ink-0);
+    color: var(--bg-0);
+    padding: 1px 8px;
+    font-weight: 500;
+  }
+  .manifesto p:first-child::first-letter {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 64px;
+    line-height: 0.85;
+    float: left;
+    padding: 8px 14px 0 0;
+    color: var(--ink-0);
+  }
+
+  /* ========================================
+     ATLAS — phones as block elements
+     ======================================== */
+  .atlas { display: grid; grid-template-columns: 1fr; gap: 80px; }
+  .frame { position: relative; }
+
+  /* HERO FRAME (editor) — full width, phone left, callout column right */
+  .frame.hero-frame {
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    gap: 64px;
+    align-items: start;
+    border-top: 1px solid var(--line);
+    padding-top: 56px;
+  }
+  .frame.split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 64px;
+    border-top: 1px solid var(--line);
+    padding-top: 56px;
+  }
+  .frame.split.flip { grid-template-columns: 1fr 1fr; }
+  .frame .meta-top {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 24px;
+    align-items: baseline;
+    margin-bottom: 24px;
+  }
+  .frame .meta-top .num {
+    border: 1px solid var(--ink-0);
+    color: var(--ink-0);
+    padding: 3px 10px;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+  }
+  .frame .meta-top .nm {
+    font-size: 11px;
+    color: var(--ink-2);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+  .frame .meta-top .sz {
+    font-size: 10px;
+    color: var(--ink-3);
+    letter-spacing: 0.14em;
+  }
+  .frame h3 {
+    font-family: var(--mono);
+    font-weight: 200;
+    font-size: 56px;
+    line-height: 0.92;
+    letter-spacing: -0.04em;
+    color: var(--ink-0);
+    margin-bottom: 16px;
+    text-transform: lowercase;
+  }
+  .frame h3 .ital { font-style: italic; font-weight: 300; }
+  .frame h3 .heavy { font-weight: 700; font-style: italic; }
+
+  .frame .desc {
+    font-size: 15px;
+    color: var(--ink-1);
+    line-height: 1.55;
+    margin-bottom: 32px;
+    max-width: 480px;
+    letter-spacing: -0.005em;
+  }
+  .frame .desc em { font-style: italic; color: var(--ink-0); font-weight: 500; }
+
+  /* callout list (key=value with line above) */
+  .callouts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+  }
+  .co {
+    border-top: 1px solid var(--line);
+    padding: 18px 24px 18px 0;
+    border-right: 1px solid var(--line);
+  }
+  .co:nth-child(2n) { border-right: none; padding-right: 0; padding-left: 24px; }
+  .co .ix {
+    font-size: 10px;
+    color: var(--ink-3);
+    letter-spacing: 0.18em;
+    margin-bottom: 10px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .co .ix .n {
+    border: 1px solid var(--ink-1);
+    color: var(--ink-1);
+    padding: 1px 6px;
+    font-size: 9.5px;
+    font-weight: 600;
+  }
+  .co h5 {
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--ink-0);
+    margin-bottom: 6px;
+    letter-spacing: -0.01em;
+  }
+  .co h5 em { font-style: italic; color: var(--ink-0); }
+  .co .t { font-size: 13.5px; color: var(--ink-1); line-height: 1.55; letter-spacing: -0.005em; }
+
+  /* ========================================
+     PHONE
+     ======================================== */
+  .ph {
+    background: #000;
+    padding: 6px;
+    border: 1px solid var(--ink-4);
+    margin: 0 auto;
+    width: 340px;
+    height: 720px;
+    position: relative;
+  }
+  .ph::before {
+    content: ""; position: absolute;
+    top: 16px; left: 50%; transform: translateX(-50%);
+    width: 6px; height: 6px;
+    border: 1px solid #1a1a1a;
+  }
+  .ph.m {
+    width: 320px;
+    height: 680px;
+  }
+  .scr {
+    width: 100%;
+    height: 100%;
+    background: var(--scr-0);
+    color: var(--scr-ink);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    font-family: var(--mono);
+    font-size: 13px;
+    position: relative;
+  }
+  .b-stat {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 14px 22px 6px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--scr-ink);
+    letter-spacing: 0.04em;
+  }
+  .b-stat .r { display: flex; gap: 8px; align-items: center; }
+  .b-stat .r .s { font-size: 9.5px; color: var(--scr-ink-2); letter-spacing: 0.06em; }
+
+  .b-head {
+    display: grid;
+    grid-template-columns: 18px 1fr 18px;
+    align-items: center;
+    padding: 12px 22px 14px;
+    border-bottom: 1px solid var(--scr-line);
+    gap: 14px;
+  }
+  .b-head .men {
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .b-head .men span {
+    display: block; width: 16px; height: 1.2px; background: var(--scr-ink);
+  }
+  .b-head .men span:nth-child(2) { width: 10px; }
+  .b-head .ttl {
+    text-align: left;
+    font-family: var(--mono);
+    font-weight: 300;
+    font-size: 22px;
+    color: var(--scr-ink);
+    letter-spacing: -0.025em;
+    line-height: 1;
+    text-transform: lowercase;
+  }
+  .b-head .ttl em { font-style: italic; font-weight: 400; }
+  .b-head .ttl .heavy { font-weight: 700; font-style: italic; }
+  .b-head .info {
+    width: 18px; height: 18px;
+    border: 1px solid var(--scr-ink-3);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px;
+    color: var(--scr-ink-2);
+  }
+
+  .b-body { flex: 1; overflow: hidden; padding: 16px 22px; position: relative; }
+
+  /* board status strip */
+  .board-strip {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 12px;
+    align-items: center;
+    padding: 10px 14px;
+    border: 1px solid var(--scr-line);
+    margin-bottom: 24px;
+  }
+  .board-strip .dot {
+    width: 8px; height: 8px;
+    border: 1.5px solid var(--scr-ink);
+    background: var(--scr-ink);
+    animation: breathe 2.2s ease-in-out infinite;
+  }
+  .board-strip .info .n { font-size: 12.5px; font-weight: 500; color: var(--scr-ink); letter-spacing: -0.005em; }
+  .board-strip .info .d { font-size: 9.5px; color: var(--scr-ink-2); letter-spacing: 0.04em; margin-top: 3px; }
+  .board-strip .swap {
+    font-size: 9px;
+    color: var(--scr-ink-2);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    padding: 4px 8px;
+    border: 1px solid var(--scr-line);
+  }
+
+  .sec-c {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 10px;
+    color: var(--scr-ink-3);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .sec-c::after { content: ""; flex: 1; height: 1px; background: var(--scr-line); }
+
+  .sk-row {
+    display: grid;
+    grid-template-columns: 26px 1fr auto;
+    gap: 12px;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--scr-line);
+  }
+  .sk-row:last-child { border-bottom: none; }
+  .sk-row.act { background: var(--scr-ink); color: var(--scr-0); margin: 0 -10px; padding: 10px; }
+  .sk-row.act .n,
+  .sk-row.act .ix,
+  .sk-row.act .s,
+  .sk-row.act .t { color: var(--scr-0); }
+  .sk-row .ix {
+    font-size: 10px;
+    color: var(--scr-ink-3);
+    letter-spacing: 0.08em;
+  }
+  .sk-row .info .n {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--scr-ink);
+    letter-spacing: -0.005em;
+  }
+  .sk-row .info .n em { font-style: italic; font-weight: 400; }
+  .sk-row .info .s {
+    font-size: 9.5px;
+    color: var(--scr-ink-2);
+    margin-top: 3px;
+    letter-spacing: 0.02em;
+  }
+  .sk-row .t { font-size: 10px; color: var(--scr-ink-3); letter-spacing: 0.04em; }
+
+  /* primary action — inverted block at bottom */
+  .b-fab {
+    position: absolute;
+    left: 22px;
+    right: 22px;
+    bottom: 22px;
+    background: var(--scr-ink);
+    color: var(--scr-0);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    padding: 14px 16px;
+  }
+  .b-fab .lb {
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: -0.005em;
+  }
+  .b-fab .lb em { font-style: italic; font-weight: 400; }
+  .b-fab .ar {
+    font-size: 18px;
+    line-height: 1;
+    margin-top: -2px;
+  }
+
+  /* ========================================
+     EDITOR SCREEN
+     ======================================== */
+  .ed-tabs {
+    display: flex;
+    padding: 8px 20px 0;
+    border-bottom: 1px solid var(--scr-line);
+    overflow-x: auto;
+  }
+  .ed-tabs::-webkit-scrollbar { display: none; }
+  .ed-tab {
+    padding: 10px 14px 12px;
+    font-size: 11px;
+    color: var(--scr-ink-2);
+    border-bottom: 1.5px solid transparent;
+    margin-bottom: -1px;
+    white-space: nowrap;
+    letter-spacing: -0.005em;
+  }
+  .ed-tab.act { color: var(--scr-ink); border-bottom-color: var(--scr-ink); }
+  .ed-tab .d { color: var(--scr-ink); margin-left: 4px; }
+  .ed-code {
+    flex: 1;
+    overflow: hidden;
+    padding: 12px 0;
+    font-size: 11.5px;
+    line-height: 1.75;
+    color: var(--scr-ink-2);
+  }
+  .ln { display: flex; padding: 0 8px; }
+  .ln-n { width: 26px; color: var(--scr-ink-3); text-align: right; padding-right: 10px; font-size: 9.5px; user-select: none; }
+  .ln-t { white-space: pre; flex: 1; }
+  .ln.act { background: var(--scr-ink); color: var(--scr-0); }
+  .ln.act .ln-n { color: var(--scr-0); }
+  .kw { color: var(--scr-ink); font-weight: 600; }
+  .ty { color: var(--scr-ink); font-style: italic; }
+  .st { color: var(--scr-ink-2); }
+  .nm { color: var(--scr-ink); font-weight: 600; }
+  .cm { color: var(--scr-ink-3); font-style: italic; }
+  .fn { color: var(--scr-ink); font-style: italic; }
+  .vr { color: var(--scr-ink); }
+  .pin-hi {
+    border: 1px solid var(--scr-ink);
+    padding: 0 3px;
+    margin: 0 -3px;
+    color: var(--scr-ink);
+    font-weight: 700;
+  }
+  .ln.act .pin-hi { border-color: var(--scr-0); color: var(--scr-0); }
+
+  /* editor bottom action — inverted */
+  .ed-act {
+    border-top: 1px solid var(--scr-line);
+    padding: 16px 22px 18px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 16px;
+  }
+  .ed-act .lb { line-height: 1.1; }
+  .ed-act .lb .v {
+    font-size: 24px;
+    font-weight: 400;
+    font-style: italic;
+    color: var(--scr-ink);
+    letter-spacing: -0.025em;
+    display: block;
+    text-transform: lowercase;
+  }
+  .ed-act .lb .m {
+    font-size: 9.5px;
+    color: var(--scr-ink-2);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-top: 5px;
+  }
+  .ed-act .btn {
+    background: var(--scr-ink);
+    color: var(--scr-0);
+    padding: 14px 22px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .ed-act .btn .arr { font-size: 16px; }
+
+  /* ========================================
+     PINOUT — ASCII PCB
+     ======================================== */
+  .pin-shell {
+    padding: 20px 22px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .ascii-pcb {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    line-height: 1.4;
+    color: var(--scr-ink-2);
+    white-space: pre;
+    letter-spacing: 0;
+    margin-bottom: 24px;
+  }
+  .ascii-pcb .star { color: var(--scr-ink); font-weight: 700; }
+  .ascii-pcb .high { color: var(--scr-ink); font-weight: 600; }
+  .ascii-pcb .label { color: var(--scr-ink-3); font-style: italic; }
+
+  .pin-name {
+    text-align: center;
+    border-top: 1px solid var(--scr-line);
+    padding-top: 24px;
+    width: 100%;
+  }
+  .pin-name .nm {
+    font-family: var(--mono);
+    font-weight: 300;
+    font-size: 30px;
+    line-height: 1.05;
+    color: var(--scr-ink);
+    margin-bottom: 8px;
+    letter-spacing: -0.025em;
+    text-transform: lowercase;
+  }
+  .pin-name .nm em { font-style: italic; font-weight: 400; }
+  .pin-name .nm .heavy { font-weight: 700; font-style: italic; }
+  .pin-name .desc {
+    font-size: 11.5px;
+    color: var(--scr-ink-2);
+    line-height: 1.5;
+    letter-spacing: -0.005em;
+    max-width: 240px;
+    margin: 0 auto;
+  }
+  .pin-name .desc code { color: var(--scr-ink); font-weight: 500; }
+
+  /* ========================================
+     BOARDS PICKER
+     ======================================== */
+  .br-section {
+    font-size: 10px;
+    color: var(--scr-ink-3);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin: 18px 0 8px;
+    display: flex; align-items: baseline; gap: 10px;
+  }
+  .br-section::after { content: ""; flex: 1; height: 1px; background: var(--scr-line); }
+  .br-section:first-child { margin-top: 0; }
+  .br-row {
+    display: grid;
+    grid-template-columns: 32px 1fr auto;
+    gap: 12px;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--scr-line);
+  }
+  .br-row:last-child { border-bottom: none; }
+  .br-row.sel {
+    background: var(--scr-ink);
+    color: var(--scr-0);
+    margin: 0 -10px;
+    padding: 12px 10px;
+  }
+  .br-row.sel .info .n,
+  .br-row.sel .info .d,
+  .br-row.sel .via { color: var(--scr-0); }
+  .br-row .ic {
+    width: 32px; height: 32px;
+    border: 1px solid var(--scr-line);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px;
+    color: var(--scr-ink-2);
+  }
+  .br-row.sel .ic { border-color: var(--scr-0); color: var(--scr-0); }
+  .br-row .info .n { font-size: 13px; font-weight: 500; color: var(--scr-ink); letter-spacing: -0.005em; }
+  .br-row .info .d { font-size: 9.5px; color: var(--scr-ink-2); margin-top: 3px; letter-spacing: 0.02em; }
+  .br-row .via { font-size: 9px; color: var(--scr-ink-2); letter-spacing: 0.18em; text-transform: uppercase; }
+
+  /* ========================================
+     MONITOR
+     ======================================== */
+  .mon-h {
+    padding: 8px 0 16px;
+    display: flex; gap: 12px; align-items: center;
+  }
+  .mon-pill {
+    display: flex; align-items: center; gap: 7px;
+    padding: 4px 9px;
+    background: var(--scr-ink);
+    color: var(--scr-0);
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+  }
+  .mon-pill::before { content: ""; width: 5px; height: 5px; background: var(--scr-0); animation: breathe 1.1s ease-in-out infinite; }
+  .mon-meta { font-size: 10px; color: var(--scr-ink-2); letter-spacing: 0.06em; }
+  .mon-log {
+    flex: 1; overflow: hidden;
+    font-size: 10.5px;
+    line-height: 1.8;
+    color: var(--scr-ink-2);
+  }
+  .lg { display: grid; grid-template-columns: 54px 32px 1fr; gap: 8px; }
+  .lg .ts { color: var(--scr-ink-3); font-size: 9.5px; }
+  .lg .lv { font-size: 9.5px; font-weight: 700; letter-spacing: 0.18em; color: var(--scr-ink); }
+  .lg .lv.w { font-style: italic; }
+  .lg .lv.d { color: var(--scr-ink-3); }
+  .lg .nu { color: var(--scr-ink); font-weight: 600; }
+  .lg .ms { color: var(--scr-ink); }
+  .cur { display: inline-block; width: 6px; height: 11px; background: var(--scr-ink); margin-left: 3px; animation: blink 1s steps(2) infinite; vertical-align: middle; }
+  .mon-in {
+    border-top: 1px solid var(--scr-line);
+    padding: 12px 22px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    align-items: center;
+  }
+  .mon-in input {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--scr-line);
+    padding: 6px 0;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--scr-ink);
+    outline: none;
+  }
+  .mon-in input::placeholder { color: var(--scr-ink-3); font-style: italic; }
+  .mon-in .sd {
+    width: 32px; height: 32px;
+    background: var(--scr-ink);
+    color: var(--scr-0);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  /* ========================================
+     STUDIES — three signature blocks
+     ======================================== */
+  .studies {
+    margin-top: 64px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border: 1px solid var(--line);
+    border-bottom: none;
+  }
+  .study {
+    border-bottom: 1px solid var(--line);
+    border-right: 1px solid var(--line);
+    padding: 40px 32px;
+    position: relative;
+  }
+  .study:last-child { border-right: none; }
+  .study .ix {
+    font-size: 10px;
+    color: var(--ink-3);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+    display: flex; gap: 10px;
+    align-items: center;
+  }
+  .study .ix .n {
+    border: 1px solid var(--ink-0);
+    color: var(--ink-0);
+    padding: 2px 8px;
+    font-weight: 600;
+  }
+  .study h4 {
+    font-family: var(--mono);
+    font-weight: 300;
+    font-size: 30px;
+    line-height: 1.05;
+    letter-spacing: -0.025em;
+    color: var(--ink-0);
+    margin-bottom: 14px;
+    text-transform: lowercase;
+  }
+  .study h4 em { font-style: italic; font-weight: 400; }
+  .study h4 .heavy { font-weight: 700; font-style: italic; }
+  .study .desc {
+    font-size: 14px;
+    color: var(--ink-1);
+    line-height: 1.55;
+    margin-bottom: 28px;
+    letter-spacing: -0.005em;
+  }
+  .study .desc em { font-style: italic; color: var(--ink-0); font-weight: 500; }
+  .demo {
+    background: var(--scr-0);
+    border: 1px solid var(--line-soft);
+    padding: 24px 20px;
+    min-height: 80px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .wave {
+    width: 100%; height: 2px;
+    background: var(--scr-ink-4);
+    position: relative; overflow: hidden;
+  }
+  .wave::after {
+    content: ""; position: absolute; top: 0; left: -40%;
+    width: 40%; height: 100%;
+    background: linear-gradient(90deg, transparent, var(--scr-ink), transparent);
+    animation: wave 1.8s ease-in-out infinite;
+  }
+  .keys { display: flex; gap: 4px; width: 100%; }
+  .key {
+    flex: 1;
+    background: var(--scr-1);
+    border: 1px solid var(--scr-line);
+    color: var(--scr-ink);
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 500;
+    padding: 9px 0;
+    text-align: center;
+  }
+  .pills { display: flex; flex-direction: column; gap: 7px; width: 100%; }
+  .pill {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 12px;
+    background: var(--scr-1);
+    border-left: 1.5px solid var(--scr-ink-3);
+    font-size: 10.5px;
+    color: var(--scr-ink);
+    width: fit-content;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .pill.ok { border-left-color: var(--scr-ink); background: var(--scr-2); }
+  .pill.ok .dt { background: var(--scr-ink); }
+  .pill.fl { background: var(--scr-ink); color: var(--scr-0); border-left-color: var(--scr-ink); }
+  .pill.fl .dt { background: var(--scr-0); animation: breathe 1s ease-in-out infinite; }
+  .pill.er .dt { background: var(--scr-ink-2); }
+  .pill .dt { width: 5px; height: 5px; }
+
+  /* ========================================
+     SPECIMEN — type & palette
+     ======================================== */
+  .spec {
+    margin-top: 96px;
+    border-top: 1px solid var(--line);
+    padding-top: 64px;
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 64px;
+  }
+  .spec .ts-row {
+    display: grid;
+    grid-template-columns: 130px 1fr;
+    gap: 32px;
+    padding: 24px 0;
+    border-bottom: 1px solid var(--line-soft);
+    align-items: baseline;
+  }
+  .spec .ts-row:last-child { border-bottom: none; }
+  .spec .ts-row .lab {
+    font-size: 10px;
+    color: var(--ink-2);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    line-height: 1.6;
+  }
+  .spec .ts-row .lab b { color: var(--ink-0); display: block; font-weight: 600; margin-bottom: 6px; }
+  .ts-display {
+    font-family: var(--mono);
+    font-weight: 200;
+    font-size: 64px;
+    line-height: 0.92;
+    letter-spacing: -0.04em;
+    color: var(--ink-0);
+    text-transform: lowercase;
+  }
+  .ts-display em { font-style: italic; font-weight: 300; }
+  .ts-display .heavy { font-weight: 700; font-style: italic; }
+  .ts-title {
+    font-family: var(--mono);
+    font-weight: 400;
+    font-size: 28px;
+    line-height: 1.1;
+    color: var(--ink-0);
+    letter-spacing: -0.02em;
+    text-transform: lowercase;
+  }
+  .ts-title em { font-style: italic; }
+  .ts-body {
+    font-family: var(--mono);
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--ink-1);
+    letter-spacing: -0.005em;
+  }
+  .ts-body em { font-style: italic; color: var(--ink-0); font-weight: 500; }
+  .ts-code {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--ink-0);
+    background: var(--bg-1);
+    border: 1px solid var(--line);
+    padding: 8px 12px;
+    display: inline-block;
+    letter-spacing: 0.02em;
+  }
+
+  .weights-row {
+    margin-top: 24px;
+    padding-top: 28px;
+    border-top: 1px dashed var(--line);
+  }
+  .weights-row .h {
+    font-size: 10px;
+    color: var(--ink-2);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .weights-row .demo-w {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px 24px;
+  }
+  .weights-row .w-item {
+    font-family: var(--mono);
+    color: var(--ink-1);
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 16px;
+    padding: 6px 0;
+    border-bottom: 1px dashed var(--line-soft);
+  }
+  .weights-row .w-item .l { font-size: 22px; }
+  .weights-row .w-item .lab {
+    font-size: 9.5px;
+    color: var(--ink-3);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .w1 { font-weight: 100; }
+  .w2 { font-weight: 200; }
+  .w3 { font-weight: 300; }
+  .w4 { font-weight: 400; }
+  .w5 { font-weight: 500; }
+  .w6 { font-weight: 600; }
+  .w7 { font-weight: 700; }
+  .w8 { font-weight: 800; }
+  .wi { font-style: italic; }
+
+  .spec-pal h3 {
+    font-family: var(--mono);
+    font-weight: 300;
+    font-size: 32px;
+    line-height: 1;
+    letter-spacing: -0.025em;
+    color: var(--ink-0);
+    text-transform: lowercase;
+    margin-bottom: 24px;
+  }
+  .pal-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    border-top: 1px solid var(--line);
+  }
+  .pal-row {
+    display: grid;
+    grid-template-columns: 56px 1fr auto;
+    gap: 16px;
+    align-items: center;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--line);
+  }
+  .pal-row .sq {
+    width: 44px; height: 28px;
+    border: 1px solid rgba(255,255,255,0.05);
+  }
+  .pal-row .info .n { font-size: 13px; color: var(--ink-0); letter-spacing: -0.005em; font-weight: 500; }
+  .pal-row .info .role { font-size: 10.5px; color: var(--ink-2); letter-spacing: 0.06em; margin-top: 3px; }
+  .pal-row .hx { font-size: 11px; color: var(--ink-2); letter-spacing: 0.04em; }
+  .pal-note {
+    font-size: 13.5px;
+    color: var(--ink-1);
+    line-height: 1.55;
+    margin-top: 24px;
+    letter-spacing: -0.005em;
+  }
+  .pal-note em { font-style: italic; color: var(--ink-0); font-weight: 500; }
+
+  /* ========================================
+     FOOTER
+     ======================================== */
+  .ftr {
+    margin-top: 96px;
+    padding-top: 32px;
+    border-top: 1px solid var(--line);
+    display: grid;
+    grid-template-columns: 1fr auto auto auto auto;
+    gap: 32px;
+    align-items: baseline;
+    font-size: 10.5px;
+    color: var(--ink-2);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .ftr .l {
+    font-family: var(--mono);
+    font-weight: 400;
+    font-size: 16px;
+    color: var(--ink-0);
+    text-transform: none;
+    letter-spacing: -0.005em;
+  }
+  .ftr .l em { font-style: italic; color: var(--ink-0); }
+  .ftr .v { color: var(--ink-0); font-weight: 600; }
+
+  /* ========================================
+     ANIMATIONS
+     ======================================== */
+  @keyframes breathe { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  @keyframes blink { 50% { opacity: 0; } }
+  @keyframes wave { 0% { left: -40%; } 100% { left: 100%; } }
+
+  @media (max-width: 1200px) {
+    body { grid-template-columns: 1fr; }
+    .ruler { display: none; }
+    .frame.hero-frame, .frame.split { grid-template-columns: 1fr; }
+    .callouts { grid-template-columns: 1fr; }
+    .co { border-right: none; padding: 18px 0; }
+    .manifesto, .spec { grid-template-columns: 1fr; gap: 32px; }
+    .studies { grid-template-columns: 1fr; border: 1px solid var(--line); border-bottom: none; }
+    .study { border-right: none; }
+    .bar { grid-template-columns: 1fr 1fr; margin: 0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- RULER (left margin) -->
+<aside class="ruler">
+  <div class="mark sec"><span>§ 1</span><span class="n">001</span></div>
+  <div class="mark"><span>head</span><span class="n">.012</span></div>
+  <div class="mark"><span>hero</span><span class="n">.018</span></div>
+  <div class="mark"><span>bar</span><span class="n">.064</span></div>
+  <div class="mark sec"><span>§ 2</span><span class="n">072</span></div>
+  <div class="mark"><span>brief</span><span class="n">.072</span></div>
+  <div class="mark sec"><span>§ 3</span><span class="n">120</span></div>
+  <div class="mark"><span>atlas</span><span class="n">.121</span></div>
+  <div class="mark cur"><span>edit</span><span class="n">.122</span></div>
+  <div class="mark"><span>sketch</span><span class="n">.140</span></div>
+  <div class="mark"><span>probe</span><span class="n">.158</span></div>
+  <div class="mark"><span>pick</span><span class="n">.176</span></div>
+  <div class="mark"><span>obsrv</span><span class="n">.194</span></div>
+  <div class="mark sec"><span>§ 4</span><span class="n">212</span></div>
+  <div class="mark"><span>studies</span><span class="n">.213</span></div>
+  <div class="mark sec"><span>§ 5</span><span class="n">240</span></div>
+  <div class="mark"><span>spec</span><span class="n">.241</span></div>
+  <div class="grow"></div>
+  <div class="meta-foot">
+    <b>FB-IDE-AND</b>
+    Issue 01<br/>
+    Rev. E<br/>
+    28.05.26
+  </div>
+</aside>
+
+<main>
+
+  <!-- HEAD -->
+  <header class="head">
+    <div class="id">
+      <b>Defence Forge Industries</b><br/>
+      ForgeBoard <span class="sep">/</span> IDE <span class="sep">/</span> Android Client<br/>
+      Document FB-IDE-AND-001 <span class="sep">·</span> Direction
+    </div>
+    <div class="ver">
+      v . 5<br/>
+      iteration five<br/>
+      <span class="stamp">28 . 05 . 26</span>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero">
+    <h1>
+      code <span class="ital">&amp;</span><br/>
+      <span class="heavy">ship</span><span class="underscore">_</span><br/>
+      in <span class="ital">hand</span><span class="small">[v5]</span>
+    </h1>
+
+    <div class="lede-grid">
+      <p class="lede">
+        ForgeBoard's Android client takes the desktop workflow — <em>write, compile, flash, observe</em> — and rebuilds it for one thumb, one cable, one board on the bench. The bench is wherever the operator is. <span class="invert">the IDE follows</span>.
+      </p>
+      <div class="meta-block">
+        <div class="row"><span>typeface</span><span class="v">JBM</span></div>
+        <div class="row"><span>weights</span><span class="v">100 → 800</span></div>
+        <div class="row"><span>palette</span><span class="v">06 mono</span></div>
+        <div class="row"><span>corners</span><span class="v">0 px</span></div>
+        <div class="row"><span>frames</span><span class="v">05</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DIVIDER BAR -->
+  <div class="bar">
+    <div class="cell">type <b>JetBrains Mono</b></div>
+    <div class="cell">tone <b>warm grayscale</b></div>
+    <div class="cell">corner <b>0px hard</b></div>
+    <div class="cell">accent <b>inversion only</b></div>
+  </div>
+
+  <!-- ========================================
+       § II — MANIFESTO
+       ======================================== -->
+  <div class="sh">
+    <div class="id"><span class="num">§ 2</span><span>Brief</span><span>· Three pages</span></div>
+    <h2>one <span class="ital">verb</span>, one <span class="heavy">surface</span>.</h2>
+  </div>
+
+  <section class="manifesto">
+    <div>
+      <p>An Arduino IDE for the phone is a strange thing to want. Cables are for desks, and phones are for elsewhere — <em>which is the point</em>. The bench is wherever the board is. A vehicle bay, a hangar floor, the back of a Land Cruiser on the perimeter. The IDE follows.</p>
+      <p>The brief is small. <span class="marker">Five screens. One verb each.</span> Sketch. Edit. Probe. Pick. Observe. The trick is the same as it was on the desktop — keep the chassis quiet so the operator can hear the board.</p>
+    </div>
+    <div>
+      <p>This document fixes the form. One typeface — <em>JetBrains Mono</em>, the language of the thing it edits. Weights from one hundred to eight hundred. Italics where the verb is. The chassis is warm graphite, the ink is warm cream, and there is no other colour. Status is communicated by <span class="invert">inversion</span>, not hue.</p>
+      <p>What is hidden is as important as what is shown. No gradients. No grain. No atmosphere. The page is a source file. The screen is its photograph. <em>The type does the work</em>.</p>
+    </div>
+  </section>
+
+  <!-- ========================================
+       § III — ATLAS
+       ======================================== -->
+  <div class="sh">
+    <div class="id"><span class="num">§ 3</span><span>Atlas</span><span>· Five frames</span></div>
+    <h2>five <span class="ital">surfaces</span><span class="underscore">_</span></h2>
+  </div>
+
+  <div class="atlas">
+
+    <!-- =================== FRAME 1: EDITOR (hero) =================== -->
+    <div class="frame hero-frame">
+      <div class="ph"><div class="scr">
+        <div class="b-stat"><span>09:41</span><div class="r">
+          <span class="s">5G</span><span class="s">62%</span>
+        </div></div>
+        <div class="b-head">
+          <div class="men"><span></span><span></span></div>
+          <div class="ttl"><em>blink</em>_amber</div>
+          <div class="info">i</div>
+        </div>
+        <div class="ed-tabs">
+          <div class="ed-tab act">blink_amber.ino<span class="d">·</span></div>
+          <div class="ed-tab">pins.h</div>
+          <div class="ed-tab">README</div>
+        </div>
+        <div class="ed-code">
+          <div class="ln"><span class="ln-n">1</span><span class="ln-t"><span class="cm">// ForgeBoard · breath</span></span></div>
+          <div class="ln"><span class="ln-n">2</span><span class="ln-t"><span class="kw">#include</span> <span class="st">&lt;Arduino.h&gt;</span></span></div>
+          <div class="ln"><span class="ln-n">3</span><span class="ln-t"> </span></div>
+          <div class="ln"><span class="ln-n">4</span><span class="ln-t"><span class="kw">constexpr</span> <span class="ty">uint8_t</span> <span class="vr">LED</span> = <span class="pin-hi">16</span>;</span></div>
+          <div class="ln"><span class="ln-n">5</span><span class="ln-t"><span class="kw">constexpr</span> <span class="ty">uint16_t</span> <span class="vr">PERIOD</span> = <span class="nm">2400</span>;</span></div>
+          <div class="ln"><span class="ln-n">6</span><span class="ln-t"> </span></div>
+          <div class="ln"><span class="ln-n">7</span><span class="ln-t"><span class="ty">void</span> <span class="fn">setup</span>() {</span></div>
+          <div class="ln"><span class="ln-n">8</span><span class="ln-t">  <span class="fn">pinMode</span>(<span class="vr">LED</span>, <span class="kw">OUTPUT</span>);</span></div>
+          <div class="ln"><span class="ln-n">9</span><span class="ln-t">  <span class="vr">Serial</span>.<span class="fn">begin</span>(<span class="nm">115200</span>);</span></div>
+          <div class="ln"><span class="ln-n">10</span><span class="ln-t">}</span></div>
+          <div class="ln"><span class="ln-n">11</span><span class="ln-t"> </span></div>
+          <div class="ln act"><span class="ln-n">12</span><span class="ln-t"><span class="ty">void</span> <span class="fn">loop</span>() {</span></div>
+          <div class="ln"><span class="ln-n">13</span><span class="ln-t">  <span class="ty">float</span> <span class="vr">t</span> = <span class="fn">millis</span>()/<span class="nm">1000.0f</span>;</span></div>
+          <div class="ln"><span class="ln-n">14</span><span class="ln-t">  <span class="fn">analogWrite</span>(<span class="vr">LED</span>,</span></div>
+          <div class="ln"><span class="ln-n">15</span><span class="ln-t">    <span class="fn">sin</span>(<span class="vr">t</span>)*<span class="nm">127</span>+<span class="nm">128</span>);</span></div>
+          <div class="ln"><span class="ln-n">16</span><span class="ln-t">  <span class="fn">delay</span>(<span class="nm">8</span>);</span></div>
+          <div class="ln"><span class="ln-n">17</span><span class="ln-t">}</span></div>
+        </div>
+        <div class="ed-act">
+          <div class="lb">
+            <span class="v"><em>flash</em></span>
+            <span class="m">A4F2 · USB · 921600</span>
+          </div>
+          <div class="btn">SEND <span class="arr">→</span></div>
+        </div>
+      </div></div>
+
+      <div>
+        <div class="meta-top">
+          <span class="num">U2</span>
+          <span class="nm">Editor · core surface</span>
+          <span class="sz">340 × 720</span>
+        </div>
+        <h3><span class="ital">edit</span>.</h3>
+        <p class="desc">The primary surface. Tabs, gutter, source. <em>Pin literals</em> matching the connected board's pinmap pick up a thin hairline ring — tap one to open the probe. The active line inverts: cream block, dark text. <em>The flash button reads as a verb, not a chip</em>.</p>
+        <div class="callouts">
+          <div class="co">
+            <div class="ix"><span class="n">01</span><span>pin literal</span></div>
+            <h5>auto-<em>recognised</em>.</h5>
+            <div class="t">Numeric literals that match an entry in the connected board's pinmap get a one-pixel cream ring. Tap to open Probe.</div>
+          </div>
+          <div class="co">
+            <div class="ix"><span class="n">02</span><span>active line</span></div>
+            <h5>inversion, not <em>rule</em>.</h5>
+            <div class="t">Cursor row inverts entirely — cream block, dark text. Replaces every hover state from the desktop with a single language of selection.</div>
+          </div>
+          <div class="co">
+            <div class="ix"><span class="n">03</span><span>flash</span></div>
+            <h5>verb, in <em>italic</em>.</h5>
+            <div class="t">The only inverted surface that isn't a selection is the action verb itself. Italic, lowercase. Saturation is communicated by typography, not by colour.</div>
+          </div>
+          <div class="co">
+            <div class="ix"><span class="n">04</span><span>target</span></div>
+            <h5>always <em>visible</em>.</h5>
+            <div class="t">Board ID, transport, baud — printed under the verb in mono small caps. Operator never has to ask "what am I writing to".</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- =================== FRAME 2: SKETCHES =================== -->
+    <div class="frame split">
+      <div>
+        <div class="meta-top">
+          <span class="num">U3</span>
+          <span class="nm">Sketches · entry</span>
+          <span class="sz">320 × 680</span>
+        </div>
+        <h3><span class="ital">sketch</span>.</h3>
+        <p class="desc">Sketchbook. A breathing dot for the linked board, a list keyed by reference designator (<em>SK1, SK2…</em>) — the same indexing convention used on the board itself. Selected sketch inverts. New sketch is a block at the foot.</p>
+        <div class="callouts">
+          <div class="co">
+            <div class="ix"><span class="n">01</span><span>refdes</span></div>
+            <h5>SK<em>n</em>, like the board.</h5>
+            <div class="t">Sketches carry reference designators in the gutter — same convention as silkscreen on a PCB. Tools should speak the language of their domain.</div>
+          </div>
+          <div class="co">
+            <div class="ix"><span class="n">02</span><span>state</span></div>
+            <h5>by <em>typeface</em>.</h5>
+            <div class="t">"flashed" is italic, "draft" is regular. State is read; not coloured.</div>
+          </div>
+        </div>
+      </div>
+      <div class="ph m"><div class="scr">
+        <div class="b-stat"><span>09:41</span><div class="r"><span class="s">5G</span><span class="s">62%</span></div></div>
+        <div class="b-head"><div class="men"><span></span><span></span></div><div class="ttl"><em>sketches.</em></div><div class="info">i</div></div>
+        <div class="b-body">
+          <div class="board-strip">
+            <div class="dot"></div>
+            <div class="info"><div class="n">ForgeBoard A4F2</div><div class="d">ESP32-S3 · USB OTG · 303A:1001</div></div>
+            <div class="swap">SWAP</div>
+          </div>
+          <div class="sec-c">Today · 02</div>
+          <div class="sk-row act"><div class="ix">SK1</div><div class="info"><div class="n"><em>blink</em>_amber</div><div class="s">LED · pin 16 · flashed 4m</div></div><div class="t">04m</div></div>
+          <div class="sk-row"><div class="ix">SK2</div><div class="info"><div class="n">telemetry_dht</div><div class="s">DHT11 → serial · draft</div></div><div class="t">22m</div></div>
+          <div class="sec-c" style="margin-top:18px;">This week · 02</div>
+          <div class="sk-row"><div class="ix">SK3</div><div class="info"><div class="n">rgb_breath</div><div class="s">pin 3 · HSV · draft</div></div><div class="t">2d</div></div>
+          <div class="sk-row"><div class="ix">SK4</div><div class="info"><div class="n">peripheral_test</div><div class="s">bundled example</div></div><div class="t">3d</div></div>
+          <div class="b-fab">
+            <div class="lb"><em>new</em> sketch</div>
+            <div class="ar">→</div>
+          </div>
+        </div>
+      </div></div>
+    </div>
+
+    <!-- =================== FRAME 3: PROBE (ASCII PCB) =================== -->
+    <div class="frame split">
+      <div class="ph m"><div class="scr">
+        <div class="b-stat"><span>09:41</span><div class="r"><span class="s">5G</span><span class="s">62%</span></div></div>
+        <div class="b-head"><div class="men"><span></span><span></span></div><div class="ttl"><em>probe.</em></div><div class="info">×</div></div>
+
+        <div class="pin-shell">
+          <pre class="ascii-pcb">
+   <span class="label">3V3</span> ┤■    ┌──────────┐    ■├ <span class="label">5V</span>
+   <span class="label">GND</span> ┤■    │  ESP32   │    ■├ <span class="label">GND</span>
+ <span class="star">P16</span> ┤<span class="star">★</span>    │  S3 W1   │    ■├ <span class="label">P03</span>
+   <span class="label">P17</span> ┤■    │          │    ■├ <span class="label">P04</span>
+   <span class="label">P21</span> ┤■    │  N16R8   │    ■├ <span class="label">P05</span>
+   <span class="label">P45</span> ┤■    │          │    ■├ <span class="label">P47</span>
+   <span class="label">P46</span> ┤■    └──────────┘    ■├ <span class="label">P48</span>
+
+       <span class="label">·    ·    ·    ·</span>
+          <span class="high">FB · A4F2</span>
+       <span class="label">·    ·    ·    ·</span>      </pre>
+
+          <div class="pin-name">
+            <div class="nm"><span class="heavy">pin 16</span><em>, onboard LED</em></div>
+            <div class="desc">digital, PWM-capable. currently driven by <code>analogWrite()</code> at 8 ms ticks.</div>
+          </div>
+        </div>
+      </div></div>
+
+      <div>
+        <div class="meta-top">
+          <span class="num">U4</span>
+          <span class="nm">Probe · live pinout</span>
+          <span class="sz">320 × 680</span>
+        </div>
+        <h3><span class="ital">probe</span>.</h3>
+        <p class="desc">The board, rendered in <em>box-drawing characters</em> — the same language as a netlist printout. The active pin is a ★. Pin name in heavy italic below; the function in body. <em>An IDE for embedded code, rendered in the typeface of embedded code</em>.</p>
+        <div class="callouts">
+          <div class="co">
+            <div class="ix"><span class="n">01</span><span>diagram</span></div>
+            <h5>ASCII PCB.</h5>
+            <div class="t">Box-drawing characters render the board in monospaced columns. The diagram exports as text — paste it in a serial log; it still reads. <em>This is the move</em>.</div>
+          </div>
+          <div class="co">
+            <div class="ix"><span class="n">02</span><span>active pin</span></div>
+            <h5>a <em>star</em>, not a glow.</h5>
+            <div class="t">The active pin is rendered as ★. Pulses through opacity, not colour. Type-led signal. No CSS gradient required.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- =================== FRAME 4: BOARDS =================== -->
+    <div class="frame split flip">
+      <div>
+        <div class="meta-top">
+          <span class="num">U5</span>
+          <span class="nm">Boards · select transport</span>
+          <span class="sz">320 × 680</span>
+        </div>
+        <h3><span class="ital">pick</span>.</h3>
+        <p class="desc">USB and WiFi share one surface. Selected device inverts entirely — <em>black ink on cream</em>. No checkmark, no chip, no fill — the row itself becomes the signal.</p>
+        <div class="callouts">
+          <div class="co">
+            <div class="ix"><span class="n">01</span><span>selection</span></div>
+            <h5>row, <em>inverted</em>.</h5>
+            <div class="t">Selected device is a cream block. No indicator badge — the whole row is the indicator.</div>
+          </div>
+          <div class="co">
+            <div class="ix"><span class="n">02</span><span>identity</span></div>
+            <h5>VID:PID, <em>not</em> "Device".</h5>
+            <div class="t">Hardware addresses are surfaced in mono. Operator never has to translate "Device 3" into reality.</div>
+          </div>
+        </div>
+      </div>
+      <div class="ph m"><div class="scr">
+        <div class="b-stat"><span>09:41</span><div class="r"><span class="s">5G</span><span class="s">62%</span></div></div>
+        <div class="b-head"><div class="men"><span></span><span></span></div><div class="ttl"><em>boards.</em></div><div class="info">×</div></div>
+        <div class="b-body">
+          <div class="br-section">USB · OTG</div>
+          <div class="br-row sel">
+            <div class="ic">U</div>
+            <div class="info"><div class="n">ForgeBoard · A4F2</div><div class="d">303A:1001 · /001/006</div></div>
+            <div class="via">USB</div>
+          </div>
+          <div class="br-section">WiFi · mDNS</div>
+          <div class="br-row">
+            <div class="ic">W</div>
+            <div class="info"><div class="n">forgeboard-91b3</div><div class="d">192.168.1.42 · 12s</div></div>
+            <div class="via">WIFI</div>
+          </div>
+          <div class="br-row">
+            <div class="ic">W</div>
+            <div class="info"><div class="n">forgeboard-bench</div><div class="d">192.168.1.51 · 03m</div></div>
+            <div class="via">WIFI</div>
+          </div>
+          <div class="br-section">Recent</div>
+          <div class="br-row">
+            <div class="ic">A</div>
+            <div class="info"><div class="n">Arduino Uno R3</div><div class="d">avr · 14h</div></div>
+            <div class="via">USB</div>
+          </div>
+        </div>
+      </div></div>
+    </div>
+
+    <!-- =================== FRAME 5: MONITOR =================== -->
+    <div class="frame split">
+      <div class="ph m"><div class="scr">
+        <div class="b-stat"><span>09:41</span><div class="r"><span class="s">5G</span><span class="s">62%</span></div></div>
+        <div class="b-head"><div class="men"><span></span><span></span></div><div class="ttl"><em>monitor.</em></div><div class="info">×</div></div>
+        <div class="b-body">
+          <div class="mon-h">
+            <div class="mon-pill">LIVE</div>
+            <div class="mon-meta">A4F2 · 115200 · 8N1</div>
+          </div>
+          <div class="mon-log">
+            <div class="lg"><span class="ts">00:00.124</span><span class="lv">INF</span><span class="ms">boot fw v2.3.1-rc1</span></div>
+            <div class="lg"><span class="ts">00:00.156</span><span class="lv">INF</span><span class="ms">wifi rssi <span class="nu">-46</span> dBm</span></div>
+            <div class="lg"><span class="ts">00:00.302</span><span class="lv d">DBG</span><span class="ms">DHT ok · LDR ok</span></div>
+            <div class="lg"><span class="ts">00:01.000</span><span class="lv">INF</span><span class="ms">t=<span class="nu">24.6</span>C h=<span class="nu">58</span>%</span></div>
+            <div class="lg"><span class="ts">00:02.000</span><span class="lv">INF</span><span class="ms">t=<span class="nu">24.6</span>C h=<span class="nu">58</span>%</span></div>
+            <div class="lg"><span class="ts">00:03.000</span><span class="lv w">WRN</span><span class="ms">heap wm <span class="nu">3220</span> B</span></div>
+            <div class="lg"><span class="ts">00:04.000</span><span class="lv">INF</span><span class="ms">t=<span class="nu">24.7</span>C<span class="cur"></span></span></div>
+          </div>
+        </div>
+        <div class="mon-in">
+          <input placeholder="send…" />
+          <div class="sd">→</div>
+        </div>
+      </div></div>
+
+      <div>
+        <div class="meta-top">
+          <span class="num">U6</span>
+          <span class="nm">Monitor · serial</span>
+          <span class="sz">320 × 680</span>
+        </div>
+        <h3><span class="ital">observe</span>.</h3>
+        <p class="desc">Live serial. The "LIVE" pill is inverted; <em>level codes</em> (INF, DBG, WRN) carry weight rather than colour. Italic for warnings. The cursor breathes via opacity. <em>Reading is primary; sending is below the fold</em>.</p>
+        <div class="callouts">
+          <div class="co">
+            <div class="ix"><span class="n">01</span><span>level</span></div>
+            <h5>by <em>weight</em>, by <em>case</em>.</h5>
+            <div class="t">INF is regular. DBG is muted. WRN is italic. ERR is heavy italic. Level is encoded in the typeface itself.</div>
+          </div>
+          <div class="co">
+            <div class="ix"><span class="n">02</span><span>cursor</span></div>
+            <h5>breathing, <em>not</em> blinking.</h5>
+            <div class="t">Opacity oscillation at 1.1s. Calmer than a hard blink; reads as alive without demanding attention.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ========================================
+       § IV — STUDIES
+       ======================================== -->
+  <div class="sh">
+    <div class="id"><span class="num">§ 4</span><span>Studies</span><span>· Three signatures</span></div>
+    <h2>what <span class="ital">carries</span> between.</h2>
+  </div>
+
+  <div class="studies">
+    <div class="study">
+      <div class="ix"><span class="n">R1</span><span>Progress</span></div>
+      <h4>progress as <span class="ital">horizon</span>.</h4>
+      <div class="desc">Compile and flash are indeterminate; their duration is a function of cable length and karma. A cream wave traces the toolbar. <em>Readable in the periphery</em>.</div>
+      <div class="demo"><div class="wave"></div></div>
+    </div>
+    <div class="study">
+      <div class="ix"><span class="n">R2</span><span>Keyboard</span></div>
+      <h4>keys above the <span class="ital">keys</span>.</h4>
+      <div class="desc">Soft-keyboard accessory bar with the characters one actually writes in C++. Single tap, no shift. The shape of the input <em>adapts to the shape of the language</em>.</div>
+      <div class="demo"><div class="keys"><div class="key">{</div><div class="key">}</div><div class="key">;</div><div class="key">&lt;</div><div class="key">&gt;</div><div class="key">/</div><div class="key">⇥</div></div></div>
+    </div>
+    <div class="study">
+      <div class="ix"><span class="n">R3</span><span>State</span></div>
+      <h4>state is <span class="ital">weight</span>.</h4>
+      <div class="desc">Link is muted. Flash is inverted. Severance is hairline. <em>The pill itself</em> — and how it sits in the chassis — communicates without colour.</div>
+      <div class="demo"><div class="pills">
+        <div class="pill ok"><span class="dt"></span>LINK A4F2</div>
+        <div class="pill fl"><span class="dt"></span>FLASHING 64%</div>
+        <div class="pill er"><span class="dt"></span>USB DETACHED</div>
+      </div></div>
+    </div>
+  </div>
+
+  <!-- ========================================
+       § V — SPECIMEN
+       ======================================== -->
+  <div class="sh">
+    <div class="id"><span class="num">§ 5</span><span>Specimen</span><span>· One face, full range</span></div>
+    <h2>one face, <span class="ital">full</span> <span class="heavy">range</span>.</h2>
+  </div>
+
+  <div class="spec">
+    <div>
+      <div class="ts-row">
+        <div class="lab"><b>Display</b>JBM<br/>200 · 144 px</div>
+        <div class="ts-display">code <em>&amp;</em> <span class="heavy">ship</span></div>
+      </div>
+      <div class="ts-row">
+        <div class="lab"><b>Title</b>JBM<br/>400 · 28 px</div>
+        <div class="ts-title">recent <em>sketches</em></div>
+      </div>
+      <div class="ts-row">
+        <div class="lab"><b>Body</b>JBM<br/>400 · 15 px</div>
+        <div class="ts-body">plug in the board, pick a sketch, ship a binary in three taps. <em>the bench is wherever the operator is</em>.</div>
+      </div>
+      <div class="ts-row">
+        <div class="lab"><b>Code</b>JBM<br/>500 · 12 px</div>
+        <div class="ts-code">esptool · 921600 · 0x1000 → 0x8000 OK</div>
+      </div>
+
+      <div class="weights-row">
+        <div class="h">Weights · the entire system is one face at different weights</div>
+        <div class="demo-w">
+          <div class="w-item"><span class="l w1">Aa Bb 16</span><span class="lab">100 thin</span></div>
+          <div class="w-item"><span class="l w2">Aa Bb 16</span><span class="lab">200 light</span></div>
+          <div class="w-item"><span class="l w3">Aa Bb 16</span><span class="lab">300 book</span></div>
+          <div class="w-item"><span class="l w4">Aa Bb 16</span><span class="lab">400 regular</span></div>
+          <div class="w-item"><span class="l w5">Aa Bb 16</span><span class="lab">500 medium</span></div>
+          <div class="w-item"><span class="l w6">Aa Bb 16</span><span class="lab">600 semi</span></div>
+          <div class="w-item"><span class="l w7">Aa Bb 16</span><span class="lab">700 bold</span></div>
+          <div class="w-item"><span class="l w8">Aa Bb 16</span><span class="lab">800 black</span></div>
+          <div class="w-item"><span class="l w3 wi">Aa Bb 16</span><span class="lab">300 ital</span></div>
+          <div class="w-item"><span class="l w7 wi">Aa Bb 16</span><span class="lab">700 ital</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="spec-pal">
+      <h3>palette.</h3>
+      <div class="pal-grid">
+        <div class="pal-row">
+          <div class="sq" style="background:var(--bg-0);"></div>
+          <div class="info"><div class="n">chassis</div><div class="role">page background</div></div>
+          <div class="hx">#0D0D0C</div>
+        </div>
+        <div class="pal-row">
+          <div class="sq" style="background:var(--bg-2);"></div>
+          <div class="info"><div class="n">surface</div><div class="role">card, divider region</div></div>
+          <div class="hx">#1A1A18</div>
+        </div>
+        <div class="pal-row">
+          <div class="sq" style="background:var(--line);"></div>
+          <div class="info"><div class="n">rule</div><div class="role">hairline divider</div></div>
+          <div class="hx">#2A2A27</div>
+        </div>
+        <div class="pal-row">
+          <div class="sq" style="background:var(--ink-2);"></div>
+          <div class="info"><div class="n">ink · secondary</div><div class="role">body, marginalia</div></div>
+          <div class="hx">#807C74</div>
+        </div>
+        <div class="pal-row">
+          <div class="sq" style="background:var(--ink-1);"></div>
+          <div class="info"><div class="n">ink · primary</div><div class="role">titles, body emphasis</div></div>
+          <div class="hx">#B6B2A7</div>
+        </div>
+        <div class="pal-row">
+          <div class="sq" style="background:var(--ink-0);"></div>
+          <div class="info"><div class="n">cream · the only highlight</div><div class="role">verbs, inversion blocks</div></div>
+          <div class="hx">#F4F1E8</div>
+        </div>
+      </div>
+      <div class="pal-note">
+        Six tones, all warm. <em>The brightest is the most saturated</em>; it is reserved for verbs and selections. Status is communicated by inversion — never by hue. Add a colour, and you must defend it against four other readings on the same screen. Don't.
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="ftr">
+    <div class="l">ForgeBoard <em>/</em> Android <em>/</em> Direction <em>v5</em></div>
+    <span class="v">FB-IDE-AND-001</span>
+    <span>ISS 01 · REV E</span>
+    <span>28 · 05 · 2026</span>
+    <span class="v">DFI</span>
+  </div>
+
+</main>
+
+</body>
+</html>

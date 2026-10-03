@@ -1,0 +1,1564 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>FB-IDE-AND · Reference · ISS-01 / REV-A</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Boldonse&family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,500;12..96,600;12..96,700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    /* Paper */
+    --paper: #EDE6D6;
+    --paper-warm: #E4DBC7;
+    --paper-deep: #D9CFB5;
+    --paper-shadow: #B8AC8E;
+    /* Ink */
+    --ink: #1A1612;
+    --ink-soft: #3A332A;
+    --ink-mid: #6B6052;
+    --ink-fade: #9A8E78;
+    --ink-line: #BFB39A;
+    /* Signal */
+    --rev: #B8401C;        /* MIL revision red-orange */
+    --rev-soft: #E6C5B0;
+    --classify: #2C4A28;   /* classification green */
+    --classify-soft: #A8B89C;
+    --ink-mark: #1A1612;
+    /* Screen (the dark IDE inside the phone) */
+    --scr-bg: #0B0F14;
+    --scr-1: #121822;
+    --scr-2: #1A2230;
+    --scr-3: #283344;
+    --scr-line: #1F2937;
+    --scr-ink: #E8ECF2;
+    --scr-ink-2: #8A95A8;
+    --scr-ink-3: #525C70;
+    --scr-amber: #E8A356;
+    --scr-amber-soft: rgba(232, 163, 86, 0.15);
+    --scr-good: #5DD394;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+
+  html, body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Bricolage Grotesque", -apple-system, sans-serif;
+    font-weight: 400;
+    line-height: 1.5;
+    font-variation-settings: "wdth" 100;
+    min-height: 100vh;
+  }
+
+  /* paper grain + slight fiber texture */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(rgba(26,22,18,0.04) 1px, transparent 1px),
+      radial-gradient(rgba(26,22,18,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, transparent 0%, rgba(26,22,18,0.015) 50%, transparent 100%);
+    background-size: 4px 4px, 9px 9px, 100% 100%;
+    background-position: 0 0, 2px 3px, 0 0;
+    pointer-events: none;
+    z-index: 0;
+    mix-blend-mode: multiply;
+  }
+  /* warm vignette like edge of paper */
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 50% 50%, transparent 60%, rgba(120,95,40,0.10) 100%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* === SHEET (the whole "page") === */
+  .sheet {
+    position: relative;
+    z-index: 1;
+    max-width: 1480px;
+    margin: 32px auto;
+    padding: 0;
+    background: var(--paper);
+    border: 1px solid var(--paper-shadow);
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.5) inset,
+      0 0 0 12px var(--paper),
+      0 0 0 13px var(--paper-shadow),
+      0 30px 80px -30px rgba(40,30,10,0.3);
+  }
+
+  /* === PAGE HEAD STRIP === */
+  .head-strip {
+    display: grid;
+    grid-template-columns: 1fr auto auto auto auto;
+    align-items: stretch;
+    border-bottom: 2px solid var(--ink);
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .head-strip > div { padding: 12px 18px; border-right: 1px solid var(--ink-line); display: flex; flex-direction: column; gap: 4px; }
+  .head-strip > div:last-child { border-right: none; }
+  .head-strip .k { color: var(--ink-fade); font-size: 9px; letter-spacing: 0.14em; }
+  .head-strip .v { color: var(--ink); font-weight: 600; letter-spacing: 0.08em; }
+  .head-doc .v { font-size: 12.5px; letter-spacing: 0.1em; }
+  .head-classify .v { color: var(--classify); }
+  .head-rev .v { color: var(--rev); }
+
+  /* === TITLE BLOCK === */
+  .title-block {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0;
+    border-bottom: 1px solid var(--ink-line);
+    padding: 56px 56px 48px;
+    position: relative;
+  }
+  .title-block::before {
+    content: "FILE§ FB-IDE-AND-001";
+    position: absolute;
+    top: 18px;
+    left: 56px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: var(--ink-fade);
+  }
+  .title-block h1 {
+    font-family: "Boldonse", serif;
+    font-weight: 400;
+    font-size: clamp(72px, 9vw, 148px);
+    line-height: 0.86;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    margin-top: 28px;
+    text-transform: uppercase;
+  }
+  .title-block h1 .em {
+    color: var(--rev);
+    font-style: normal;
+  }
+  .title-block .subtitle {
+    font-family: "Bricolage Grotesque", sans-serif;
+    font-variation-settings: "wdth" 85;
+    font-size: 17px;
+    line-height: 1.4;
+    color: var(--ink-soft);
+    max-width: 560px;
+    margin-top: 32px;
+    letter-spacing: -0.005em;
+  }
+  .title-block .subtitle .em {
+    color: var(--ink);
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-color: var(--rev);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 4px;
+  }
+  .title-block .badge-col {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding-top: 8px;
+    gap: 24px;
+  }
+  .stamp {
+    border: 2px solid var(--rev);
+    color: var(--rev);
+    padding: 8px 14px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    transform: rotate(-3deg);
+    background: rgba(184,64,28,0.04);
+  }
+  .barcode-block { font-family: "JetBrains Mono", monospace; font-size: 9px; letter-spacing: 0.1em; color: var(--ink-soft); text-align: right; line-height: 1.6; }
+  .barcode-block .bars {
+    display: flex; gap: 1px; justify-content: flex-end;
+    margin-top: 6px;
+  }
+  .barcode-block .bars span { display: inline-block; background: var(--ink); height: 32px; }
+  .barcode-block .bars span:nth-child(odd) { width: 2px; }
+  .barcode-block .bars span:nth-child(3n) { width: 4px; }
+  .barcode-block .bars span:nth-child(7n) { width: 1px; }
+  .barcode-block .bars span:nth-child(5) { width: 6px; }
+  .barcode-block .bars span:nth-child(11) { width: 5px; }
+
+  /* === SECTION HEAD === */
+  .sec-head {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 24px;
+    border-bottom: 1px solid var(--ink);
+    padding: 24px 56px;
+    background: var(--paper-warm);
+  }
+  .sec-head .num {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    color: var(--rev);
+    padding: 4px 10px;
+    border: 1.5px solid var(--rev);
+  }
+  .sec-head h2 {
+    font-family: "Boldonse", serif;
+    font-weight: 400;
+    font-size: 28px;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+    color: var(--ink);
+    line-height: 1;
+  }
+  .sec-head .right {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-mid);
+  }
+
+  /* === SECTION I — DIRECTIVE === */
+  .directive {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 56px;
+    padding: 56px;
+    border-bottom: 1px solid var(--ink-line);
+    background:
+      linear-gradient(90deg, transparent 0, transparent 80px, var(--ink-line) 80px, var(--ink-line) 81px, transparent 81px);
+  }
+  .directive .margin {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-mid);
+    width: 32px;
+    line-height: 1.6;
+    text-align: right;
+  }
+  .directive .margin .row { margin-bottom: 18px; }
+  .directive .margin .row b { display: block; color: var(--rev); font-weight: 600; }
+  .directive .body-col { max-width: 720px; }
+  .directive p {
+    font-family: "Bricolage Grotesque";
+    font-variation-settings: "wdth" 95;
+    font-size: 18px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    letter-spacing: -0.005em;
+    margin-bottom: 18px;
+  }
+  .directive p:first-child::first-letter {
+    font-family: "Boldonse";
+    font-size: 64px;
+    line-height: 0.85;
+    float: left;
+    padding: 6px 14px 0 0;
+    color: var(--ink);
+  }
+  .directive p .em { color: var(--ink); font-weight: 600; }
+  .directive .axioms {
+    margin-top: 32px;
+    border-top: 1px dashed var(--ink-line);
+    padding-top: 24px;
+    display: grid;
+    gap: 16px;
+  }
+  .axiom {
+    display: grid;
+    grid-template-columns: 50px 1fr;
+    gap: 18px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 12px;
+    letter-spacing: 0.02em;
+    color: var(--ink-soft);
+  }
+  .axiom .code { color: var(--rev); font-weight: 600; letter-spacing: 0.1em; }
+  .axiom .text { color: var(--ink); font-weight: 500; }
+
+  /* === SECTION II — ATLAS (PHONES) === */
+  .atlas {
+    padding: 64px 56px 80px;
+    border-bottom: 1px solid var(--ink-line);
+    background:
+      /* light grid */
+      linear-gradient(0deg, rgba(26,22,18,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(26,22,18,0.025) 1px, transparent 1px);
+    background-size: 48px 48px;
+    background-position: -1px -1px;
+  }
+  .atlas-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 56px 48px;
+  }
+  /* big featured phone gets 2 cols */
+  .atlas-grid .frame-block.featured { grid-column: span 2; display: grid; grid-template-columns: 360px 1fr; gap: 48px; align-items: start; }
+  .atlas-grid .frame-block.tall { grid-row: span 2; }
+
+  .frame-block {
+    position: relative;
+  }
+  .frame-id {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-mid);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .frame-id .code {
+    color: var(--rev);
+    padding: 2px 6px;
+    border: 1px solid var(--rev);
+    font-size: 9.5px;
+  }
+  .frame-id .label { color: var(--ink); letter-spacing: 0.08em; font-weight: 600; }
+  .frame-id .sub { color: var(--ink-fade); }
+
+  .frame-foot {
+    margin-top: 20px;
+    padding-top: 14px;
+    border-top: 1px solid var(--ink-line);
+    display: grid;
+    gap: 8px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.02em;
+    color: var(--ink-mid);
+  }
+  .frame-foot .row { display: flex; gap: 8px; align-items: baseline; }
+  .frame-foot .row .k { color: var(--ink-fade); min-width: 56px; letter-spacing: 0.08em; }
+  .frame-foot .row .v { color: var(--ink); font-weight: 500; }
+
+  /* PHONE (rendered as a document-pinned device) */
+  .phone {
+    width: 100%;
+    max-width: 320px;
+    aspect-ratio: 9 / 19.5;
+    margin: 0 auto;
+    background: #050709;
+    border-radius: 38px;
+    padding: 6px;
+    box-shadow:
+      0 0 0 1px #1a1f26,
+      0 1px 0 rgba(255,255,255,0.04) inset,
+      0 24px 56px -24px rgba(40,30,10,0.45),
+      0 60px 120px -60px rgba(40,30,10,0.3);
+    position: relative;
+  }
+  .phone-screen {
+    width: 100%;
+    height: 100%;
+    border-radius: 32px;
+    background: var(--scr-bg);
+    color: var(--scr-ink);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    font-family: "Bricolage Grotesque", sans-serif;
+    font-variation-settings: "wdth" 100;
+  }
+  /* status bar */
+  .scr-status {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 22px 4px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10.5px;
+    font-weight: 500;
+    color: var(--scr-ink);
+    letter-spacing: 0.02em;
+  }
+  .scr-status .right { display: flex; gap: 5px; align-items: center; opacity: 0.85; }
+  .scr-status .right svg { width: 13px; height: 13px; }
+
+  /* === SCREEN 1: HOME === */
+  .scr1-header {
+    padding: 12px 22px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+    border-bottom: 1px solid var(--scr-line);
+  }
+  .scr1-header h2 {
+    font-family: "Boldonse", serif;
+    font-weight: 400;
+    font-size: 20px;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+    line-height: 1;
+  }
+  .scr1-header .meta { font-family: "JetBrains Mono", monospace; font-size: 9px; color: var(--scr-ink-2); letter-spacing: 0.12em; text-transform: uppercase; }
+
+  .scr-body { flex: 1; padding: 14px 22px; overflow: hidden; position: relative; }
+
+  .board-strip {
+    display: grid;
+    grid-template-columns: 14px 1fr auto;
+    gap: 12px;
+    align-items: center;
+    padding: 12px 14px;
+    border: 1px solid var(--scr-line);
+    background: var(--scr-1);
+    margin-bottom: 22px;
+  }
+  .live-dot { width: 7px; height: 7px; background: var(--scr-good); border-radius: 50%; box-shadow: 0 0 0 4px rgba(93,211,148,0.16); animation: breathe 2.2s ease-in-out infinite; }
+  .board-strip .label { line-height: 1.2; }
+  .board-strip .label .l1 { font-size: 12.5px; font-weight: 600; color: var(--scr-ink); letter-spacing: -0.005em; }
+  .board-strip .label .l2 { font-family: "JetBrains Mono", monospace; font-size: 9.5px; color: var(--scr-ink-2); letter-spacing: 0.04em; margin-top: 2px; }
+  .board-strip .swap {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    color: var(--scr-ink-2);
+    padding: 4px 8px;
+    border: 1px solid var(--scr-line);
+    text-transform: uppercase;
+  }
+
+  .scr-divider {
+    display: flex; align-items: center; gap: 10px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 9.5px;
+    color: var(--scr-ink-3);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .scr-divider::after { content: ""; flex: 1; height: 1px; background: var(--scr-line); }
+
+  .sk-list { display: flex; flex-direction: column; gap: 8px; }
+  .sk-row { display: grid; grid-template-columns: 30px 1fr auto; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--scr-line); }
+  .sk-row:last-child { border-bottom: none; }
+  .sk-thumb {
+    width: 30px; height: 30px;
+    background: var(--scr-1);
+    border: 1px solid var(--scr-line);
+    display: flex; align-items: center; justify-content: center;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    color: var(--scr-amber);
+    font-weight: 600;
+  }
+  .sk-info .nm { font-size: 12.5px; font-weight: 500; color: var(--scr-ink); }
+  .sk-info .mt { font-family: "JetBrains Mono", monospace; font-size: 9.5px; color: var(--scr-ink-2); margin-top: 2px; letter-spacing: 0.02em; }
+  .sk-pill {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 8.5px;
+    letter-spacing: 0.14em;
+    color: var(--scr-ink-2);
+    padding: 3px 6px;
+    border: 1px solid var(--scr-line);
+    text-transform: uppercase;
+  }
+  .sk-pill.flashed { color: var(--scr-amber); border-color: var(--scr-amber); background: var(--scr-amber-soft); }
+
+  .scr-fab {
+    position: absolute;
+    bottom: 18px;
+    right: 18px;
+    width: 50px; height: 50px;
+    background: var(--scr-amber);
+    color: #1A0F04;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 0;
+    /* asymmetric stamp shape — cut corner */
+    clip-path: polygon(0 0, 100% 0, 100% 75%, 75% 100%, 0 100%);
+    box-shadow: 0 8px 24px -8px rgba(232,163,86,0.5);
+  }
+  .scr-fab svg { width: 20px; height: 20px; stroke-width: 2.4; }
+
+  .scr-nav {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border-top: 1px solid var(--scr-line);
+    background: rgba(0,0,0,0.4);
+    padding: 6px 8px 14px;
+  }
+  .nav-i {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    padding: 8px 0 4px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--scr-ink-3);
+    position: relative;
+  }
+  .nav-i.act { color: var(--scr-ink); }
+  .nav-i.act::before { content:""; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 24px; height: 2px; background: var(--scr-amber); }
+  .nav-i svg { width: 17px; height: 17px; stroke-width: 1.4; }
+
+  /* === SCREEN 2: EDITOR === */
+  .scr2-tabs {
+    display: flex;
+    padding: 6px 14px 0;
+    border-bottom: 1px solid var(--scr-line);
+    overflow-x: auto;
+    gap: 0;
+  }
+  .scr2-tabs::-webkit-scrollbar { display: none; }
+  .scr2-tab {
+    padding: 9px 12px 11px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10.5px;
+    color: var(--scr-ink-2);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    white-space: nowrap;
+    letter-spacing: 0.02em;
+  }
+  .scr2-tab.act { color: var(--scr-ink); border-bottom-color: var(--scr-amber); }
+  .scr2-tab .dot { display: inline-block; width: 4px; height: 4px; background: var(--scr-amber); border-radius: 50%; margin-left: 5px; vertical-align: middle; }
+
+  .scr2-code {
+    flex: 1;
+    overflow: hidden;
+    padding: 10px 0;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11.5px;
+    line-height: 1.65;
+    color: var(--scr-ink-2);
+  }
+  .ln { display: flex; padding: 0 8px; }
+  .ln-n { width: 26px; color: var(--scr-ink-3); text-align: right; padding-right: 10px; font-size: 10px; user-select: none; }
+  .ln-t { white-space: pre; flex: 1; }
+  .ln.act { background: rgba(232,163,86,0.05); border-left: 2px solid var(--scr-amber); padding-left: 6px; }
+  .ln.act .ln-n { color: var(--scr-amber); }
+  .kw { color: #B89EFF; }
+  .ty { color: #7DB4E6; }
+  .st { color: #6DC290; }
+  .nm { color: var(--scr-amber); }
+  .cm { color: var(--scr-ink-3); font-style: italic; }
+  .fn { color: #7DB4E6; }
+  .vr { color: var(--scr-ink); }
+  .pin-hi {
+    background: rgba(232,163,86,0.22);
+    box-shadow: 0 0 0 1px var(--scr-amber);
+    color: var(--scr-amber);
+    padding: 0 3px;
+    margin: 0 -3px;
+  }
+
+  .scr2-bar {
+    display: flex; gap: 8px; padding: 10px 14px 12px;
+    border-top: 1px solid var(--scr-line);
+    background: var(--scr-1);
+    align-items: center;
+  }
+  .scr2-btn {
+    width: 36px; height: 36px;
+    background: var(--scr-bg);
+    border: 1px solid var(--scr-line);
+    color: var(--scr-ink-2);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .scr2-btn svg { width: 14px; height: 14px; stroke-width: 1.6; }
+  .scr2-flash {
+    flex: 1; height: 36px;
+    background: var(--scr-amber);
+    color: #1A0F04;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    display: flex; align-items: center; justify-content: center;
+    gap: 8px;
+    clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+  }
+  .scr2-flash svg { width: 13px; height: 13px; stroke-width: 2.4; }
+
+  /* === SCREEN 3: PINOUT (the moment) === */
+  .scr3-h {
+    padding: 14px 22px;
+    display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 1px solid var(--scr-line);
+  }
+  .scr3-h .t {
+    font-family: "Boldonse", serif;
+    font-weight: 400; font-size: 18px;
+    letter-spacing: 0.01em; text-transform: uppercase; line-height: 1;
+  }
+  .scr3-h .s {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 9.5px;
+    color: var(--scr-ink-2);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+  .scr3-h .x { width: 26px; height: 26px; border: 1px solid var(--scr-line); display: flex; align-items: center; justify-content: center; color: var(--scr-ink-2); font-size: 14px; }
+  .scr3-wrap {
+    flex: 1;
+    padding: 20px 22px 12px;
+    display: flex; align-items: center; justify-content: center;
+    background:
+      radial-gradient(ellipse 80% 80% at 50% 50%, rgba(232,163,86,0.05), transparent 70%),
+      repeating-linear-gradient(0deg, transparent, transparent 17px, rgba(255,255,255,0.012) 17px, rgba(255,255,255,0.012) 18px),
+      repeating-linear-gradient(90deg, transparent, transparent 17px, rgba(255,255,255,0.012) 17px, rgba(255,255,255,0.012) 18px);
+  }
+  .pcb {
+    width: 210px;
+    background:
+      linear-gradient(135deg, #3a2814, #5b3f20 50%, #2e1f10);
+    border: 1px solid #6b4a28;
+    border-radius: 14px;
+    padding: 18px 12px;
+    position: relative;
+    box-shadow:
+      0 0 0 2px rgba(232,163,86,0.06),
+      0 12px 32px -12px rgba(0,0,0,0.6);
+  }
+  .mcu {
+    background: #050505;
+    border: 1px solid #1a1a1a;
+    border-radius: 4px;
+    padding: 20px 10px;
+    margin: 4px 6px;
+    text-align: center;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 7.5px;
+    color: var(--scr-ink-2);
+    letter-spacing: 0.1em;
+  }
+  .mcu .mc1 { color: var(--scr-ink); font-size: 8.5px; font-weight: 600; margin-bottom: 4px; }
+  /* shielding "can" texture */
+  .mcu::before {
+    content: "";
+    position: absolute;
+    inset: 6px;
+    border: 1px dashed rgba(255,255,255,0.05);
+    pointer-events: none;
+  }
+  .pcb-side { position: absolute; top: 18px; bottom: 18px; display: flex; flex-direction: column; justify-content: space-around; }
+  .pcb-l { left: -7px; }
+  .pcb-r { right: -7px; }
+  .pn {
+    background: #c89a5c;
+    width: 16px; height: 7px;
+    position: relative;
+  }
+  .pn .lb {
+    position: absolute;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 8px;
+    letter-spacing: 0.04em;
+    color: var(--scr-ink-2);
+    white-space: nowrap;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  .pcb-l .pn .lb { right: 20px; }
+  .pcb-r .pn .lb { left: 20px; }
+  .pn.live {
+    background: var(--scr-amber);
+    box-shadow: 0 0 8px rgba(232,163,86,0.6), 0 0 0 1px var(--scr-amber);
+    animation: pinPulse 1.8s ease-in-out infinite;
+  }
+  .pn.live .lb { color: var(--scr-amber); font-weight: 600; }
+
+  .pin-table {
+    border-top: 1px solid var(--scr-line);
+    padding: 12px 22px 18px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 16px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    letter-spacing: 0.02em;
+  }
+  .pt-row { display: flex; gap: 8px; align-items: baseline; padding: 2px 0; }
+  .pt-row .pn-n { color: var(--scr-amber); font-weight: 600; min-width: 22px; }
+  .pt-row .pn-l { color: var(--scr-ink); }
+  .pt-row .pn-f { color: var(--scr-ink-2); }
+
+  /* === SCREEN 4: BOARDS SHEET === */
+  .scr4 { display: flex; flex-direction: column; height: 100%; position: relative; }
+  .scr4-back {
+    flex: 1;
+    position: relative;
+    background: var(--scr-bg);
+  }
+  .scr4-back::before {
+    content: "Editor · blink_amber.ino";
+    position: absolute;
+    top: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    color: var(--scr-ink-3);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .scr4-back::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      repeating-linear-gradient(180deg, transparent, transparent 18px, rgba(255,255,255,0.018) 18px, rgba(255,255,255,0.018) 19px);
+    opacity: 0.6;
+  }
+  .scr4-sheet {
+    background: var(--scr-bg);
+    border-top: 2px solid var(--scr-amber);
+    padding: 8px 0 18px;
+    z-index: 2;
+    position: relative;
+  }
+  .scr4-grab {
+    width: 36px; height: 3px;
+    background: var(--scr-ink-3);
+    margin: 0 auto 14px;
+  }
+  .scr4-title {
+    padding: 0 22px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-bottom: 1px solid var(--scr-line);
+  }
+  .scr4-title .t {
+    font-family: "Boldonse", serif;
+    font-weight: 400;
+    font-size: 17px;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+    line-height: 1;
+  }
+  .scr4-title .scan {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 9.5px;
+    color: var(--scr-amber);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .scr4-title .scan::before { content:""; width: 6px; height: 6px; background: var(--scr-amber); animation: breathe 1.1s ease-in-out infinite; }
+
+  .scr4-sec {
+    padding: 0 22px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 9px;
+    color: var(--scr-ink-3);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin: 14px 0 6px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .scr4-sec::after { content:""; flex: 1; height: 1px; background: var(--scr-line); }
+  .scr4-dev {
+    display: grid;
+    grid-template-columns: 34px 1fr auto;
+    gap: 12px;
+    align-items: center;
+    padding: 10px 22px;
+    border-bottom: 1px solid var(--scr-line);
+  }
+  .scr4-dev.sel { background: rgba(232,163,86,0.04); border-left: 2px solid var(--scr-amber); padding-left: 20px; }
+  .dv-ic {
+    width: 34px; height: 34px;
+    background: var(--scr-1);
+    border: 1px solid var(--scr-line);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--scr-ink-2);
+  }
+  .dv-ic svg { width: 16px; height: 16px; stroke-width: 1.5; }
+  .scr4-dev.sel .dv-ic { color: var(--scr-amber); border-color: var(--scr-amber); }
+  .dv-info .nm { font-size: 12.5px; font-weight: 500; color: var(--scr-ink); }
+  .dv-info .id { font-family: "JetBrains Mono", monospace; font-size: 9.5px; color: var(--scr-ink-2); letter-spacing: 0.04em; margin-top: 2px; }
+  .dv-via {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    color: var(--scr-ink-2);
+    padding: 3px 7px;
+    border: 1px solid var(--scr-line);
+    text-transform: uppercase;
+  }
+  .scr4-dev.sel .dv-via { color: var(--scr-amber); border-color: var(--scr-amber); }
+
+  /* === SCREEN 5: SERIAL === */
+  .scr5-h {
+    padding: 12px 22px 12px;
+    display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 1px solid var(--scr-line);
+  }
+  .scr5-h .l { display: flex; align-items: baseline; gap: 10px; }
+  .scr5-h .live-pill {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 9px;
+    color: var(--scr-amber);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    padding: 3px 7px;
+    border: 1px solid var(--scr-amber);
+    background: var(--scr-amber-soft);
+    display: flex; align-items: center; gap: 5px;
+  }
+  .scr5-h .live-pill::before { content:""; width: 5px; height: 5px; background: var(--scr-amber); animation: breathe 1.1s ease-in-out infinite; }
+  .scr5-h .nm { font-size: 12px; font-weight: 500; color: var(--scr-ink); }
+  .scr5-h .baud { font-family: "JetBrains Mono", monospace; font-size: 10px; color: var(--scr-ink-2); letter-spacing: 0.04em; }
+
+  .scr5-body {
+    flex: 1; overflow: hidden;
+    padding: 12px 22px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10.5px;
+    line-height: 1.7;
+    color: var(--scr-ink);
+    background:
+      repeating-linear-gradient(180deg, transparent, transparent 19px, rgba(255,255,255,0.012) 19px, rgba(255,255,255,0.012) 20px);
+  }
+  .lg { display: grid; grid-template-columns: 56px 28px 1fr; gap: 10px; }
+  .lg .ts { color: var(--scr-ink-3); font-size: 9.5px; }
+  .lg .lv { font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 600; }
+  .lg .lv.i { color: #7DB4E6; }
+  .lg .lv.w { color: var(--scr-amber); }
+  .lg .lv.d { color: var(--scr-ink-3); }
+  .lg .nu { color: var(--scr-amber); }
+  .cur {
+    display: inline-block;
+    width: 7px; height: 11px;
+    background: var(--scr-amber);
+    margin-left: 3px;
+    animation: blink 1s steps(2) infinite;
+    vertical-align: middle;
+  }
+
+  .scr5-in {
+    border-top: 1px solid var(--scr-line);
+    padding: 10px 22px 14px;
+    display: grid; grid-template-columns: 1fr 36px;
+    gap: 8px; align-items: center;
+    background: var(--scr-1);
+  }
+  .scr5-in input {
+    background: var(--scr-bg);
+    border: 1px solid var(--scr-line);
+    padding: 9px 12px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    color: var(--scr-ink);
+    outline: none;
+    letter-spacing: 0.02em;
+  }
+  .scr5-in input::placeholder { color: var(--scr-ink-3); letter-spacing: 0.06em; }
+  .scr5-in .sd {
+    width: 36px; height: 36px;
+    background: var(--scr-amber);
+    color: #1A0F04;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .scr5-in .sd svg { width: 14px; height: 14px; stroke-width: 2; }
+
+  /* === CALLOUT ANNOTATIONS (the engineering-document feel) === */
+  .callouts {
+    position: relative;
+    padding-left: 24px;
+  }
+  .callout {
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    gap: 14px;
+    align-items: start;
+    padding: 14px 0;
+    border-bottom: 1px dashed var(--ink-line);
+  }
+  .callout:last-child { border-bottom: none; }
+  .callout .ix {
+    width: 22px; height: 22px;
+    border: 1.5px solid var(--ink);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--ink);
+    background: var(--paper);
+  }
+  .callout .body .h {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+  .callout .body .h .red { color: var(--rev); }
+  .callout .body .t {
+    font-family: "Bricolage Grotesque";
+    font-variation-settings: "wdth" 95;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--ink-soft);
+    letter-spacing: -0.005em;
+  }
+
+  /* === SECTION III — COMPONENTS === */
+  .comp-grid {
+    padding: 48px 56px 64px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+    border-bottom: 1px solid var(--ink-line);
+  }
+  .comp {
+    background: var(--paper-warm);
+    border: 1px solid var(--ink-line);
+    padding: 28px 24px;
+    position: relative;
+  }
+  .comp .code {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    color: var(--rev);
+    margin-bottom: 18px;
+    text-transform: uppercase;
+  }
+  .comp h4 {
+    font-family: "Boldonse", serif;
+    font-weight: 400;
+    font-size: 22px;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+    line-height: 1.05;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+  .comp .desc {
+    font-family: "Bricolage Grotesque";
+    font-variation-settings: "wdth" 95;
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+    margin-bottom: 24px;
+  }
+  .stage {
+    background: var(--scr-bg);
+    border: 1px solid var(--scr-line);
+    padding: 18px;
+    min-height: 90px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  /* compile wave */
+  .wave {
+    width: 100%; height: 3px;
+    background: var(--scr-2);
+    position: relative; overflow: hidden;
+  }
+  .wave::after {
+    content: ""; position: absolute; top: 0; left: -40%;
+    width: 40%; height: 100%;
+    background: linear-gradient(90deg, transparent, var(--scr-amber), transparent);
+    animation: wave 1.8s ease-in-out infinite;
+  }
+  /* keyboard accessory */
+  .kb { display: flex; gap: 3px; width: 100%; }
+  .kk {
+    flex: 1;
+    background: var(--scr-2);
+    border: 1px solid var(--scr-line);
+    color: var(--scr-ink);
+    font-family: "JetBrains Mono", monospace;
+    font-size: 13px;
+    padding: 8px 0;
+    text-align: center;
+  }
+  /* status pills */
+  .pills { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+  .pill {
+    display: flex; align-items: center; gap: 9px;
+    padding: 8px 12px;
+    background: var(--scr-1);
+    border: 1px solid var(--scr-line);
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    color: var(--scr-ink);
+    width: fit-content;
+    letter-spacing: 0.04em;
+  }
+  .pill .dt { width: 6px; height: 6px; }
+  .pill.ok .dt { background: var(--scr-good); }
+  .pill.fl .dt { background: var(--scr-amber); animation: breathe 1s ease-in-out infinite; }
+  .pill.er .dt { background: #FF6B6B; }
+
+  /* === SECTION IV — SPEC === */
+  .spec {
+    padding: 48px 56px 64px;
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 56px;
+    border-bottom: 1px solid var(--ink-line);
+  }
+  .spec-type { }
+  .type-row {
+    display: grid;
+    grid-template-columns: 130px 1fr;
+    gap: 24px;
+    padding: 20px 0;
+    border-bottom: 1px dashed var(--ink-line);
+    align-items: baseline;
+  }
+  .type-row:last-child { border-bottom: none; }
+  .type-row .label {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    color: var(--ink-mid);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    line-height: 1.5;
+  }
+  .type-row .label .red { color: var(--rev); display: block; margin-bottom: 4px; }
+  .ts-display { font-family: "Boldonse", serif; font-weight: 400; font-size: 44px; line-height: 0.9; letter-spacing: 0.005em; text-transform: uppercase; color: var(--ink); }
+  .ts-title { font-family: "Bricolage Grotesque"; font-variation-settings: "wdth" 90; font-size: 26px; line-height: 1.15; font-weight: 600; color: var(--ink); letter-spacing: -0.015em; }
+  .ts-body { font-family: "Bricolage Grotesque"; font-size: 15px; line-height: 1.55; color: var(--ink-soft); }
+  .ts-mono { font-family: "JetBrains Mono", monospace; font-size: 13px; color: var(--rev); letter-spacing: 0.02em; }
+
+  .spec-col {
+    background: var(--paper-warm);
+    border: 1px solid var(--ink-line);
+    padding: 24px;
+  }
+  .spec-col h3 {
+    font-family: "Boldonse", serif;
+    font-weight: 400;
+    font-size: 18px;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--ink);
+    margin-bottom: 14px;
+  }
+  .sw-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .sw {
+    aspect-ratio: 3/2;
+    padding: 10px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    border: 1px solid rgba(0,0,0,0.06);
+    font-family: "JetBrains Mono", monospace;
+    font-size: 9px;
+    letter-spacing: 0.04em;
+  }
+  .sw .nm { opacity: 0.75; }
+  .sw .hx { opacity: 0.55; }
+
+  /* === FOOTER STRIP === */
+  .foot-strip {
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    gap: 32px;
+    align-items: center;
+    padding: 18px 56px;
+    background: var(--paper-warm);
+    border-top: 2px solid var(--ink);
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--ink-mid);
+    text-transform: uppercase;
+  }
+  .foot-strip .left { display: flex; gap: 14px; align-items: center; }
+  .foot-strip .seal {
+    border: 1px solid var(--ink);
+    padding: 4px 10px;
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .foot-strip .center {
+    display: flex; gap: 24px; align-items: baseline;
+  }
+  .foot-strip .right { color: var(--rev); font-weight: 600; }
+  .foot-strip .pg .v { color: var(--ink); font-weight: 600; }
+
+  /* === ANIMATIONS === */
+  @keyframes breathe {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  @keyframes pinPulse {
+    0%, 100% { box-shadow: 0 0 8px rgba(232,163,86,0.6), 0 0 0 1px var(--scr-amber); }
+    50% { box-shadow: 0 0 16px rgba(232,163,86,0.9), 0 0 0 2px var(--scr-amber); }
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+  @keyframes wave { 0% { left: -40%; } 100% { left: 100%; } }
+
+  @media (max-width: 1200px) {
+    .atlas-grid { grid-template-columns: 1fr 1fr; }
+    .atlas-grid .frame-block.featured { grid-template-columns: 1fr; grid-column: span 2; }
+    .comp-grid, .spec { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="sheet">
+
+  <!-- HEAD STRIP -->
+  <div class="head-strip">
+    <div class="head-doc">
+      <span class="k">Document</span>
+      <span class="v">FB-IDE-AND-001 · ANDROID CLIENT · DESIGN REFERENCE</span>
+    </div>
+    <div>
+      <span class="k">Issue</span>
+      <span class="v">01</span>
+    </div>
+    <div class="head-rev">
+      <span class="k">Revision</span>
+      <span class="v">A · 28.05.2026</span>
+    </div>
+    <div class="head-classify">
+      <span class="k">Status</span>
+      <span class="v">INTERNAL</span>
+    </div>
+    <div>
+      <span class="k">Page</span>
+      <span class="v">01 / 04</span>
+    </div>
+  </div>
+
+  <!-- TITLE BLOCK -->
+  <div class="title-block">
+    <div>
+      <h1>The IDE,<br/>at <span class="em">arm's reach.</span></h1>
+      <p class="subtitle">An Android client for the ForgeBoard development kit. Same loop as the desktop — <span class="em">write, compile, flash, observe</span> — rebuilt for one thumb, one cable, one board on the bench.</p>
+    </div>
+    <div class="badge-col">
+      <div class="stamp">ISS-01 / REV-A</div>
+      <div class="barcode-block">
+        FB-IDE-AND-001<br/>
+        28 . 05 . 2026<br/>
+        <div class="bars">
+          <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- === SECTION I: DIRECTIVE === -->
+  <div class="sec-head">
+    <span class="num">§ I</span>
+    <h2>Directive</h2>
+    <span class="right">Intent · Constraints · Voice</span>
+  </div>
+
+  <div class="directive">
+    <div class="margin">
+      <div class="row"><b>01</b>VOICE</div>
+      <div class="row"><b>02</b>SCOPE</div>
+      <div class="row"><b>03</b>FORM</div>
+    </div>
+    <div class="body-col">
+      <p>An Arduino IDE for the phone is a strange thing to want. Cables are for desks; phones are for elsewhere. Which is the whole point. The bench is wherever the board is — a vehicle bay, a hangar floor, the back of a Land Cruiser. <span class="em">The IDE follows.</span></p>
+      <p>This document fixes the visual direction of the Android client: the form the screens take, the typography that carries them, the single warm signal we permit through the cool dark of the chassis, and the moments we let breathe. Everything else is plumbing.</p>
+
+      <div class="axioms">
+        <div class="axiom"><span class="code">A.01</span><span class="text">RESTRAINT — one accent, one moment, one verb per screen.</span></div>
+        <div class="axiom"><span class="code">A.02</span><span class="text">TACTILITY — touch targets ≥ 44 px. No exceptions, including in serial.</span></div>
+        <div class="axiom"><span class="code">A.03</span><span class="text">CONTINUITY — the desktop tokens travel; we retune, we do not redesign.</span></div>
+        <div class="axiom"><span class="code">A.04</span><span class="text">CANDOUR — surface what the board is doing. Lying to the operator is the only sin.</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- === SECTION II: ATLAS === -->
+  <div class="sec-head">
+    <span class="num">§ II</span>
+    <h2>Atlas of Screens</h2>
+    <span class="right">Five frames · core operational loop</span>
+  </div>
+
+  <div class="atlas">
+    <div class="atlas-grid">
+
+      <!-- FRAME 01 — HOME -->
+      <div class="frame-block">
+        <div class="frame-id">
+          <span class="code">01</span>
+          <span class="label">Sketchbook</span>
+          <span class="sub">— entry surface</span>
+        </div>
+        <div class="phone"><div class="phone-screen">
+          <div class="scr-status"><span>09:41</span><div class="right">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M5 12a10 10 0 0 1 14 0M2 9a14 14 0 0 1 20 0M8 15a6 6 0 0 1 8 0M12 19h.01"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="9" width="18" height="6" rx="1"/><rect x="20" y="11" width="2" height="2"/></svg>
+          </div></div>
+          <div class="scr1-header"><h2>Sketches</h2><span class="meta">14 LOC · 03 CLD</span></div>
+          <div class="scr-body">
+            <div class="board-strip">
+              <div class="live-dot"></div>
+              <div class="label"><div class="l1">ForgeBoard · A4F2</div><div class="l2">ESP32-S3 · USB OTG</div></div>
+              <div class="swap">SWAP</div>
+            </div>
+            <div class="scr-divider">Recent · 04</div>
+            <div class="sk-list">
+              <div class="sk-row"><div class="sk-thumb">B</div><div class="sk-info"><div class="nm">blink_amber</div><div class="mt">LED · pin 16 · 4 min ago</div></div><div class="sk-pill flashed">FLASHED</div></div>
+              <div class="sk-row"><div class="sk-thumb">T</div><div class="sk-info"><div class="nm">telemetry_dht</div><div class="mt">DHT11 → serial · 22 min</div></div><div class="sk-pill">DRAFT</div></div>
+              <div class="sk-row"><div class="sk-thumb">R</div><div class="sk-info"><div class="nm">rgb_breath</div><div class="mt">Pin 3 · HSV sweep · 1 d</div></div><div class="sk-pill">DRAFT</div></div>
+              <div class="sk-row"><div class="sk-thumb">P</div><div class="sk-info"><div class="nm">peripheral_test</div><div class="mt">Bundled · 2 d</div></div><div class="sk-pill">EXAMPLE</div></div>
+            </div>
+            <div class="scr-fab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg></div>
+          </div>
+          <div class="scr-nav">
+            <div class="nav-i act"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 7l9-4 9 4-9 4-9-4zM3 12l9 4 9-4M3 17l9 4 9-4"/></svg>SKETCH</div>
+            <div class="nav-i"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M8 2v4M16 2v4M8 22v-4M16 22v-4"/></svg>BOARDS</div>
+            <div class="nav-i"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>SERIAL</div>
+            <div class="nav-i"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/></svg>SETUP</div>
+          </div>
+        </div></div>
+        <div class="frame-foot">
+          <div class="row"><span class="k">SURFACE</span><span class="v">SKETCHBOOK / LANDING</span></div>
+          <div class="row"><span class="k">PRIM ACT</span><span class="v">+ NEW · STAMP-CUT FAB</span></div>
+          <div class="row"><span class="k">SIGNAL</span><span class="v">GREEN BREATHING · CONNECTED</span></div>
+        </div>
+      </div>
+
+      <!-- FRAME 02 — EDITOR (featured 2-col with callouts) -->
+      <div class="frame-block featured">
+        <div>
+          <div class="frame-id">
+            <span class="code">02</span>
+            <span class="label">Edit Surface</span>
+            <span class="sub">— core verb</span>
+          </div>
+          <div class="phone"><div class="phone-screen">
+            <div class="scr-status"><span>09:41</span><div class="right">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M5 12a10 10 0 0 1 14 0"/></svg>
+              <svg viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="9" width="18" height="6" rx="1"/></svg>
+            </div></div>
+            <div class="scr2-tabs">
+              <div class="scr2-tab act">blink_amber.ino<span class="dot"></span></div>
+              <div class="scr2-tab">pins.h</div>
+              <div class="scr2-tab">README</div>
+            </div>
+            <div class="scr2-code">
+              <div class="ln"><span class="ln-n">1</span><span class="ln-t"><span class="cm">// ForgeBoard · LED breathing</span></span></div>
+              <div class="ln"><span class="ln-n">2</span><span class="ln-t"><span class="kw">#include</span> <span class="st">&lt;Arduino.h&gt;</span></span></div>
+              <div class="ln"><span class="ln-n">3</span><span class="ln-t"> </span></div>
+              <div class="ln"><span class="ln-n">4</span><span class="ln-t"><span class="kw">constexpr</span> <span class="ty">uint8_t</span> <span class="vr">LED</span> = <span class="pin-hi">16</span>;</span></div>
+              <div class="ln"><span class="ln-n">5</span><span class="ln-t"><span class="kw">constexpr</span> <span class="ty">uint16_t</span> <span class="vr">PERIOD_MS</span> = <span class="nm">2400</span>;</span></div>
+              <div class="ln"><span class="ln-n">6</span><span class="ln-t"> </span></div>
+              <div class="ln"><span class="ln-n">7</span><span class="ln-t"><span class="ty">void</span> <span class="fn">setup</span>() {</span></div>
+              <div class="ln"><span class="ln-n">8</span><span class="ln-t">  <span class="fn">pinMode</span>(<span class="vr">LED</span>, <span class="kw">OUTPUT</span>);</span></div>
+              <div class="ln"><span class="ln-n">9</span><span class="ln-t">  <span class="vr">Serial</span>.<span class="fn">begin</span>(<span class="nm">115200</span>);</span></div>
+              <div class="ln"><span class="ln-n">10</span><span class="ln-t">}</span></div>
+              <div class="ln"><span class="ln-n">11</span><span class="ln-t"> </span></div>
+              <div class="ln act"><span class="ln-n">12</span><span class="ln-t"><span class="ty">void</span> <span class="fn">loop</span>() {</span></div>
+              <div class="ln"><span class="ln-n">13</span><span class="ln-t">  <span class="ty">float</span> <span class="vr">t</span> = <span class="fn">millis</span>() / <span class="nm">1000.0f</span>;</span></div>
+              <div class="ln"><span class="ln-n">14</span><span class="ln-t">  <span class="ty">uint8_t</span> <span class="vr">d</span> = <span class="fn">sin</span>(<span class="vr">t</span>) * <span class="nm">127</span> + <span class="nm">128</span>;</span></div>
+              <div class="ln"><span class="ln-n">15</span><span class="ln-t">  <span class="fn">analogWrite</span>(<span class="vr">LED</span>, <span class="vr">d</span>);</span></div>
+              <div class="ln"><span class="ln-n">16</span><span class="ln-t">  <span class="fn">delay</span>(<span class="nm">8</span>);</span></div>
+              <div class="ln"><span class="ln-n">17</span><span class="ln-t">}</span></div>
+            </div>
+            <div class="scr2-bar">
+              <div class="scr2-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div>
+              <div class="scr2-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 6L9 17l-5-5"/></svg></div>
+              <div class="scr2-flash"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12l7-7 7 7"/></svg>FLASH</div>
+              <div class="scr2-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></div>
+            </div>
+          </div></div>
+        </div>
+
+        <!-- callouts that bind to the phone -->
+        <div class="callouts">
+          <div class="callout">
+            <div class="ix">1</div>
+            <div class="body">
+              <div class="h">Pin literal <span class="red">— autohighlight</span></div>
+              <div class="t">Numeric pin values matching the connected board's pinmap glow amber. Tap to open the live pinout (see Frame 03).</div>
+            </div>
+          </div>
+          <div class="callout">
+            <div class="ix">2</div>
+            <div class="body">
+              <div class="h">Active line · <span class="red">amber rail</span></div>
+              <div class="t">Cursor row gets a thin amber rail and amber gutter number. Replaces the desktop's hover ring — kinder to small screens.</div>
+            </div>
+          </div>
+          <div class="callout">
+            <div class="ix">3</div>
+            <div class="body">
+              <div class="h">FLASH · <span class="red">stamp-cut primary</span></div>
+              <div class="t">The only saturated surface on the screen. Cut-corner geometry; reads as a stamped metal plate, not a chip pill.</div>
+            </div>
+          </div>
+          <div class="callout">
+            <div class="ix">4</div>
+            <div class="body">
+              <div class="h">Dirty marker · <span class="red">3 px dot</span></div>
+              <div class="t">Unsaved state surfaces as a single amber dot on the active tab. No floating "•", no "(modified)" suffix.</div>
+            </div>
+          </div>
+        </div>
+        <div class="frame-foot" style="grid-column: 1 / -1;">
+          <div class="row"><span class="k">SURFACE</span><span class="v">EDIT · MULTI-TAB · ACTIVE LINE</span></div>
+          <div class="row"><span class="k">PRIM ACT</span><span class="v">FLASH · CLIP-PATH STAMP</span></div>
+          <div class="row"><span class="k">SIGNAL</span><span class="v">PIN LITERALS · AMBER · 1 PX HALO</span></div>
+        </div>
+      </div>
+
+      <!-- FRAME 03 — PINOUT -->
+      <div class="frame-block">
+        <div class="frame-id">
+          <span class="code">03</span>
+          <span class="label">Live Pinout</span>
+          <span class="sub">— the moment</span>
+        </div>
+        <div class="phone"><div class="phone-screen">
+          <div class="scr-status"><span>09:41</span><div class="right">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M5 12a10 10 0 0 1 14 0"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="9" width="18" height="6" rx="1"/></svg>
+          </div></div>
+          <div class="scr3-h"><div><div class="t">A4F2 · PINOUT</div><div class="s">ESP32-S3 · live probe</div></div><div class="x">×</div></div>
+          <div class="scr3-wrap">
+            <div class="pcb">
+              <div class="mcu"><div class="mc1">ESP32-S3-WROOM-1</div>N16R8</div>
+              <div class="pcb-side pcb-l">
+                <div class="pn"><span class="lb">3V3</span></div>
+                <div class="pn"><span class="lb">GND</span></div>
+                <div class="pn live"><span class="lb">GPIO16 · LED</span></div>
+                <div class="pn"><span class="lb">GPIO17</span></div>
+                <div class="pn"><span class="lb">GPIO21 · LDR</span></div>
+                <div class="pn"><span class="lb">GPIO45 · DHT</span></div>
+                <div class="pn"><span class="lb">GPIO46 · IR</span></div>
+              </div>
+              <div class="pcb-side pcb-r">
+                <div class="pn"><span class="lb">5V</span></div>
+                <div class="pn"><span class="lb">GND</span></div>
+                <div class="pn"><span class="lb">GPIO3 · RGB</span></div>
+                <div class="pn"><span class="lb">GPIO4</span></div>
+                <div class="pn"><span class="lb">GPIO5</span></div>
+                <div class="pn"><span class="lb">GPIO47</span></div>
+                <div class="pn"><span class="lb">GPIO48 · BUZ</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="pin-table">
+            <div class="pt-row"><span class="pn-n">16</span><span class="pn-l">LED</span><span class="pn-f">· digital</span></div>
+            <div class="pt-row"><span class="pn-n">03</span><span class="pn-l">RGB</span><span class="pn-f">· neopx</span></div>
+            <div class="pt-row"><span class="pn-n">21</span><span class="pn-l">LDR</span><span class="pn-f">· analog</span></div>
+            <div class="pt-row"><span class="pn-n">45</span><span class="pn-l">DHT11</span><span class="pn-f">· 1-wire</span></div>
+            <div class="pt-row"><span class="pn-n">46</span><span class="pn-l">IR RX</span><span class="pn-f">· int</span></div>
+            <div class="pt-row"><span class="pn-n">48</span><span class="pn-l">BUZZ</span><span class="pn-f">· pwm</span></div>
+          </div>
+        </div></div>
+        <div class="frame-foot">
+          <div class="row"><span class="k">SURFACE</span><span class="v">PROBE · MODAL</span></div>
+          <div class="row"><span class="k">PRIM ACT</span><span class="v">HOVER / TAP A PIN</span></div>
+          <div class="row"><span class="k">SIGNAL</span><span class="v">SINGLE AMBER · PULSED 1.8 S</span></div>
+        </div>
+      </div>
+
+      <!-- FRAME 04 — BOARDS -->
+      <div class="frame-block">
+        <div class="frame-id">
+          <span class="code">04</span>
+          <span class="label">Board Picker</span>
+          <span class="sub">— USB / WiFi</span>
+        </div>
+        <div class="phone"><div class="phone-screen">
+          <div class="scr-status"><span>09:41</span><div class="right">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M5 12a10 10 0 0 1 14 0"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="9" width="18" height="6" rx="1"/></svg>
+          </div></div>
+          <div class="scr4">
+            <div class="scr4-back"></div>
+            <div class="scr4-sheet">
+              <div class="scr4-grab"></div>
+              <div class="scr4-title"><div class="t">Select Board</div><div class="scan">SCANNING</div></div>
+              <div class="scr4-sec">USB · OTG</div>
+              <div class="scr4-dev sel">
+                <div class="dv-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18"/><circle cx="7" cy="14" r="1"/></svg></div>
+                <div class="dv-info"><div class="nm">ForgeBoard · A4F2</div><div class="id">303A:1001 · /dev/usb/001/006</div></div>
+                <div class="dv-via">USB</div>
+              </div>
+              <div class="scr4-sec">WiFi · mDNS</div>
+              <div class="scr4-dev">
+                <div class="dv-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 12a10 10 0 0 1 14 0M2 9a14 14 0 0 1 20 0M8 15a6 6 0 0 1 8 0"/><circle cx="12" cy="19" r="1"/></svg></div>
+                <div class="dv-info"><div class="nm">forgeboard-91b3.local</div><div class="id">192.168.1.42 · OTA · 12s</div></div>
+                <div class="dv-via">WIFI</div>
+              </div>
+              <div class="scr4-dev">
+                <div class="dv-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 12a10 10 0 0 1 14 0M8 15a6 6 0 0 1 8 0"/><circle cx="12" cy="19" r="1"/></svg></div>
+                <div class="dv-info"><div class="nm">forgeboard-bench</div><div class="id">192.168.1.51 · 03 min</div></div>
+                <div class="dv-via">WIFI</div>
+              </div>
+            </div>
+          </div>
+        </div></div>
+        <div class="frame-foot">
+          <div class="row"><span class="k">SURFACE</span><span class="v">BOTTOM SHEET</span></div>
+          <div class="row"><span class="k">PRIM ACT</span><span class="v">SELECT TRANSPORT</span></div>
+          <div class="row"><span class="k">SIGNAL</span><span class="v">AMBER RAIL · SELECTED ROW</span></div>
+        </div>
+      </div>
+
+      <!-- FRAME 05 — SERIAL -->
+      <div class="frame-block">
+        <div class="frame-id">
+          <span class="code">05</span>
+          <span class="label">Serial Telemetry</span>
+          <span class="sub">— observation</span>
+        </div>
+        <div class="phone"><div class="phone-screen">
+          <div class="scr-status"><span>09:41</span><div class="right">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M5 12a10 10 0 0 1 14 0"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="9" width="18" height="6" rx="1"/></svg>
+          </div></div>
+          <div class="scr5-h">
+            <div class="l"><div class="live-pill">LIVE</div><div class="nm">A4F2 · MON</div></div>
+            <div class="baud">115200 · 8N1</div>
+          </div>
+          <div class="scr5-body">
+            <div class="lg"><span class="ts">00:00.124</span><span class="lv i">INF</span><span>boot — fw v2.3.1-rc1</span></div>
+            <div class="lg"><span class="ts">00:00.156</span><span class="lv i">INF</span><span>wifi · rssi <span class="nu">-46</span> dBm</span></div>
+            <div class="lg"><span class="ts">00:00.302</span><span class="lv d">DBG</span><span>sensors · DHT ok · LDR ok</span></div>
+            <div class="lg"><span class="ts">00:01.000</span><span class="lv i">INF</span><span>t=<span class="nu">24.6</span>C h=<span class="nu">58</span>% lx=<span class="nu">412</span></span></div>
+            <div class="lg"><span class="ts">00:02.000</span><span class="lv i">INF</span><span>t=<span class="nu">24.6</span>C h=<span class="nu">58</span>% lx=<span class="nu">410</span></span></div>
+            <div class="lg"><span class="ts">00:03.000</span><span class="lv w">WRN</span><span>heap wm <span class="nu">3220</span> B · low</span></div>
+            <div class="lg"><span class="ts">00:04.000</span><span class="lv i">INF</span><span>t=<span class="nu">24.7</span>C h=<span class="nu">58</span>% lx=<span class="nu">418</span><span class="cur"></span></span></div>
+          </div>
+          <div class="scr5-in">
+            <input placeholder="SEND ↵" />
+            <div class="sd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 12l14-7-3 14-3-6-8-1z"/></svg></div>
+          </div>
+        </div></div>
+        <div class="frame-foot">
+          <div class="row"><span class="k">SURFACE</span><span class="v">TELEMETRY · MONO</span></div>
+          <div class="row"><span class="k">PRIM ACT</span><span class="v">READ. SEND IS SECONDARY.</span></div>
+          <div class="row"><span class="k">SIGNAL</span><span class="v">PULSING AMBER CURSOR</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- === SECTION III: COMPONENTS === -->
+  <div class="sec-head">
+    <span class="num">§ III</span>
+    <h2>Signature Components</h2>
+    <span class="right">Cross-surface · re-used</span>
+  </div>
+
+  <div class="comp-grid">
+    <div class="comp">
+      <div class="code">A · COMPILE WAVE</div>
+      <h4>Progress as<br/>horizon</h4>
+      <div class="desc">Compile and flash are indeterminate. A thin amber wave traces the toolbar instead of a percentage ring. Calmer; readable in peripheral vision while you reach for the cable.</div>
+      <div class="stage"><div class="wave"></div></div>
+    </div>
+    <div class="comp">
+      <div class="code">B · CODER'S ROW</div>
+      <h4>The keys<br/>above the keys</h4>
+      <div class="desc">Soft-keyboard accessory bar with the characters you actually type in C++ — single tap, no holding shift, no swiping to symbols.</div>
+      <div class="stage"><div class="kb"><div class="kk">{</div><div class="kk">}</div><div class="kk">;</div><div class="kk">&lt;</div><div class="kk">&gt;</div><div class="kk">/</div><div class="kk">⇥</div></div></div>
+    </div>
+    <div class="comp">
+      <div class="code">C · STATE PILLS</div>
+      <h4>What the<br/>board is doing</h4>
+      <div class="desc">One pill, one state. Green = link. Amber pulsing = flashing. Red = severed. No icon, no doubt, no ambiguity to the operator.</div>
+      <div class="stage"><div class="pills">
+        <div class="pill ok"><span class="dt"></span>LINK · A4F2</div>
+        <div class="pill fl"><span class="dt"></span>FLASHING · 64%</div>
+        <div class="pill er"><span class="dt"></span>USB DETACHED</div>
+      </div></div>
+    </div>
+  </div>
+
+  <!-- === SECTION IV: SPEC === -->
+  <div class="sec-head">
+    <span class="num">§ IV</span>
+    <h2>System Spec</h2>
+    <span class="right">Type · Palette · Tokens</span>
+  </div>
+
+  <div class="spec">
+    <div class="spec-type">
+      <div class="type-row">
+        <div class="label"><span class="red">A.1</span>DISPLAY<br/>BOLDONSE · 44</div>
+        <div class="ts-display">An IDE for hardware</div>
+      </div>
+      <div class="type-row">
+        <div class="label"><span class="red">A.2</span>TITLE<br/>BRICOLAGE · 26 / 600</div>
+        <div class="ts-title">Recent sketches</div>
+      </div>
+      <div class="type-row">
+        <div class="label"><span class="red">A.3</span>BODY<br/>BRICOLAGE · 15</div>
+        <div class="ts-body">Plug in the board, pick a sketch, ship a binary in three taps. The bench is wherever you are.</div>
+      </div>
+      <div class="type-row">
+        <div class="label"><span class="red">A.4</span>MONO<br/>JETBRAINS · 13</div>
+        <div class="ts-mono">esptool · 921600 baud · 0x1000 → 0x8000 OK</div>
+      </div>
+    </div>
+
+    <div class="spec-col">
+      <h3>Palette</h3>
+      <div class="sw-grid">
+        <div class="sw" style="background:var(--paper); border-color:var(--ink-line);"><span class="nm" style="color:var(--ink);">Paper</span><span class="hx" style="color:var(--ink-soft);">#EDE6D6</span></div>
+        <div class="sw" style="background:var(--ink); color:var(--paper);"><span class="nm">Ink</span><span class="hx">#1A1612</span></div>
+        <div class="sw" style="background:var(--rev); color:var(--paper);"><span class="nm">Revision</span><span class="hx">#B8401C</span></div>
+        <div class="sw" style="background:var(--classify); color:var(--paper);"><span class="nm">Classify</span><span class="hx">#2C4A28</span></div>
+        <div class="sw" style="background:var(--scr-bg); color:var(--scr-ink);"><span class="nm">Screen BG</span><span class="hx">#0B0F14</span></div>
+        <div class="sw" style="background:var(--scr-amber); color:#1A0F04;"><span class="nm">Screen amber</span><span class="hx">#E8A356</span></div>
+      </div>
+      <h3 style="margin-top:24px;">Geometry</h3>
+      <div style="font-family: 'JetBrains Mono'; font-size: 11.5px; color: var(--ink-soft); line-height: 1.9; letter-spacing: 0.02em;">
+        <div>↳ TAP MIN · 44 PX</div>
+        <div>↳ GRID · 4 / 8 / 12 / 16 / 24</div>
+        <div>↳ CORNER · 0 / NONE · CHASSIS-CUT FAB</div>
+        <div>↳ BORDER · 1 PX HAIRLINE</div>
+        <div>↳ MOTION · 1.8 S BREATHE · 1.0 S BLINK</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- === FOOTER STRIP === -->
+  <div class="foot-strip">
+    <div class="left">
+      <span class="seal">DFI</span>
+      <span>ForgeBoard / IDE / Android</span>
+    </div>
+    <div class="center">
+      <span>SHEET · FB-IDE-AND-001</span>
+      <span>ISS-01</span>
+      <span>REV-A · 28.05.2026</span>
+    </div>
+    <div class="right">UNCONTROLLED COPY</div>
+    <div class="pg">PG · <span class="v">01 / 04</span></div>
+  </div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,861 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=1640, initial-scale=1" />
+<title>ForgeBoard IDE — Direction samples</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600;700&display=swap" />
+<style>
+  /* ============================================================
+     Locked palette — Dark mono only for these samples.
+     Cool slate base, near-white accent, no chroma anywhere.
+     ============================================================ */
+  :root {
+    --bg:           #14161d;
+    --surface-1:    #181a23;
+    --surface-2:    #1e2029;
+    --surface-3:    #232531;
+    --editor-bg:    #181a23;
+    --border:       #2a2d38;
+    --border-soft:  #22242e;
+    --fg-bright:    #f1f2f6;
+    --fg-default:   #c8cbd5;
+    --fg-muted:     #7c818e;
+    --fg-subtle:    #555866;
+    --accent:       #e9eaef;
+    --wash:         rgba(255,255,255,0.045);
+    --wash-strong:  rgba(255,255,255,0.075);
+    --hot:          #d8c66b;  /* used only for syntax + status indicators */
+    --cool:         #6b8fb8;
+    --ok:           #6da38a;
+    --warn:         #c89f5c;
+    --err:          #c46a6a;
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background: #0c0d12;
+    color: var(--fg-default);
+    font-family: "Inter Tight", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+  }
+
+  .page-header {
+    padding: 36px 40px 24px;
+    border-bottom: 1px solid var(--border-soft);
+    display: flex;
+    align-items: baseline;
+    gap: 24px;
+  }
+  .page-header h1 {
+    font-family: "Inter Tight";
+    font-weight: 300;
+    font-size: 22px;
+    letter-spacing: -0.01em;
+    margin: 0;
+    color: var(--fg-bright);
+  }
+  .page-header .sub {
+    font-size: 13px;
+    color: var(--fg-muted);
+    letter-spacing: 0.01em;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 520px);
+    gap: 40px;
+    padding: 40px;
+    justify-content: center;
+  }
+  @media (max-width: 1650px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+
+  .column { display: flex; flex-direction: column; gap: 20px; }
+
+  .column-head {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .col-tag {
+    display: inline-block;
+    width: max-content;
+    font-family: "JetBrains Mono";
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--fg-subtle);
+    padding: 2px 8px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+  }
+  .col-title {
+    font-family: "Inter Tight";
+    font-weight: 500;
+    font-size: 18px;
+    color: var(--fg-bright);
+    letter-spacing: -0.005em;
+  }
+  .col-desc {
+    font-size: 12px;
+    line-height: 1.55;
+    color: var(--fg-muted);
+    max-width: 480px;
+  }
+
+  /* ---------- IDE FRAME (shared chassis) ---------- */
+  .ide {
+    width: 520px;
+    border-radius: 8px;
+    border: 1px solid var(--border-soft);
+    background: var(--surface-1);
+    overflow: hidden;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.35);
+  }
+  .title-bar {
+    height: 32px;
+    background: var(--surface-1);
+    border-bottom: 1px solid var(--border-soft);
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    gap: 8px;
+    color: var(--fg-subtle);
+    font-size: 11px;
+  }
+  .title-bar .dots {
+    display: flex;
+    gap: 6px;
+  }
+  .title-bar .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--border);
+  }
+  .title-bar .name {
+    margin-left: 8px;
+    font-family: "JetBrains Mono";
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    color: var(--fg-subtle);
+  }
+
+  /* ============================================================
+     DIRECTION A — Antigravity Throughout
+     Soft, generous, calm in both welcome and editor.
+     ============================================================ */
+  .ide.a .activity {
+    width: 44px;
+    background: var(--surface-1);
+    border-right: 1px solid var(--border-soft);
+    display: flex;
+    flex-direction: column;
+    padding: 14px 0;
+    gap: 18px;
+    align-items: center;
+  }
+  .ide.a .rail-icon { width: 18px; height: 18px; opacity: 0.55; }
+  .ide.a .rail-icon.active { opacity: 1; }
+  .ide.a .sidebar {
+    width: 200px;
+    background: var(--surface-1);
+    border-right: 1px solid var(--border-soft);
+    padding: 22px 18px;
+    font-size: 12px;
+    color: var(--fg-muted);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .ide.a .sidebar h4 {
+    margin: 0;
+    font-family: "Inter Tight";
+    font-weight: 500;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--fg-subtle);
+  }
+  .ide.a .file-row {
+    padding: 7px 8px;
+    border-radius: 4px;
+    font-family: "JetBrains Mono";
+    font-size: 12px;
+    letter-spacing: 0;
+    color: var(--fg-default);
+  }
+  .ide.a .file-row.active { background: var(--wash); color: var(--fg-bright); }
+
+  .ide.a .tabs {
+    height: 36px;
+    display: flex;
+    align-items: stretch;
+    background: var(--surface-1);
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .ide.a .tab {
+    display: flex; align-items: center; gap: 8px;
+    padding: 0 18px;
+    font-family: "Inter Tight";
+    font-size: 13px;
+    color: var(--fg-muted);
+    border-right: 1px solid var(--border-soft);
+    letter-spacing: 0.01em;
+  }
+  .ide.a .tab.active { color: var(--fg-bright); background: var(--editor-bg); border-top: 1px solid var(--accent); }
+  .ide.a .tab-plus {
+    width: 36px; display: flex; align-items: center; justify-content: center;
+    color: var(--fg-subtle); font-size: 16px; line-height: 1;
+    border-right: 1px solid var(--border-soft);
+  }
+
+  .ide.a .editor {
+    background: var(--editor-bg);
+    padding: 22px 0;
+    font-family: "JetBrains Mono";
+    font-size: 13.5px;
+    line-height: 1.75;
+    height: 280px;
+  }
+  .ide.a .ln { display: grid; grid-template-columns: 56px 1fr; }
+  .ide.a .ln .num { color: var(--fg-subtle); text-align: right; padding-right: 20px; }
+  .ide.a .kw { color: var(--cool); }
+  .ide.a .fn { color: var(--accent); }
+  .ide.a .ty { color: var(--hot); }
+  .ide.a .nm { color: var(--fg-default); }
+  .ide.a .st { color: var(--ok); }
+  .ide.a .co { color: var(--fg-subtle); font-style: italic; }
+
+  .ide.a .status {
+    height: 26px;
+    background: var(--surface-1);
+    border-top: 1px solid var(--border-soft);
+    display: flex; align-items: center;
+    padding: 0 14px;
+    gap: 18px;
+    font-family: "Inter Tight";
+    font-size: 11px;
+    color: var(--fg-muted);
+    letter-spacing: 0.02em;
+  }
+  .ide.a .status .led { width: 6px; height: 6px; border-radius: 50%; background: var(--ok); margin-right: 6px; display: inline-block; vertical-align: middle; }
+
+  /* Welcome — Direction A */
+  .welcome.a {
+    background: var(--editor-bg);
+    height: 280px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 24px;
+    gap: 24px;
+  }
+  .welcome.a .mark {
+    font-family: "Inter Tight";
+    font-weight: 300;
+    font-size: 38px;
+    color: var(--fg-bright);
+    letter-spacing: -0.03em;
+  }
+  .welcome.a .mark b { font-weight: 600; }
+  .welcome.a .tagline {
+    font-family: "Inter Tight";
+    font-size: 12px;
+    color: var(--fg-subtle);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+  .welcome.a .actions { display: flex; flex-direction: column; gap: 10px; width: 230px; }
+  .welcome.a .btn {
+    height: 38px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--fg-bright);
+    font-family: "Inter Tight";
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    text-align: center;
+    line-height: 36px;
+    border-radius: 4px;
+  }
+  .welcome.a .btn.primary { border-color: var(--accent); }
+  .welcome.a .recents {
+    margin-top: 4px;
+    display: flex; flex-direction: column;
+    gap: 4px; width: 280px;
+  }
+  .welcome.a .recents h5 {
+    font-family: "Inter Tight";
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--fg-subtle);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin: 0 0 6px;
+  }
+  .welcome.a .recents li {
+    display: flex; justify-content: space-between;
+    padding: 5px 0;
+    font-family: "JetBrains Mono";
+    font-size: 11.5px;
+    color: var(--fg-muted);
+  }
+  .welcome.a .recents li span:last-child { color: var(--fg-subtle); font-size: 10px; }
+
+  /* ============================================================
+     DIRECTION B — Editorial Mono (RECOMMENDED)
+     Calm welcome, dense editor.
+     ============================================================ */
+  .ide.b .activity { width: 44px; background: var(--surface-1); border-right: 1px solid var(--border-soft); display: flex; flex-direction: column; padding: 12px 0; gap: 14px; align-items: center; }
+  .ide.b .rail-icon { width: 17px; height: 17px; opacity: 0.5; }
+  .ide.b .rail-icon.active { opacity: 1; }
+  .ide.b .sidebar { width: 200px; background: var(--surface-1); border-right: 1px solid var(--border-soft); padding: 14px 12px; font-size: 12px; color: var(--fg-muted); display: flex; flex-direction: column; gap: 10px; }
+  .ide.b .sidebar h4 { margin: 0 0 2px; font-family: "Inter Tight"; font-weight: 500; font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--fg-subtle); }
+  .ide.b .file-row { padding: 5px 8px; border-radius: 3px; font-family: "JetBrains Mono"; font-size: 12px; color: var(--fg-default); }
+  .ide.b .file-row.active { background: var(--wash); color: var(--fg-bright); }
+
+  .ide.b .tabs { height: 30px; display: flex; align-items: stretch; background: var(--surface-1); border-bottom: 1px solid var(--border-soft); }
+  .ide.b .tab { display: flex; align-items: center; gap: 6px; padding: 0 12px; font-family: "Inter Tight"; font-size: 12px; color: var(--fg-muted); border-right: 1px solid var(--border-soft); }
+  .ide.b .tab.active { color: var(--fg-bright); background: var(--editor-bg); border-top: 2px solid var(--accent); }
+  .ide.b .tab-plus { width: 28px; display: flex; align-items: center; justify-content: center; color: var(--fg-subtle); font-size: 14px; border-right: 1px solid var(--border-soft); }
+
+  .ide.b .editor { background: var(--editor-bg); padding: 10px 0; font-family: "JetBrains Mono"; font-size: 13px; line-height: 1.55; height: 280px; }
+  .ide.b .ln { display: grid; grid-template-columns: 44px 1fr; }
+  .ide.b .ln .num { color: var(--fg-subtle); text-align: right; padding-right: 14px; }
+  .ide.b .kw { color: var(--cool); }
+  .ide.b .fn { color: var(--accent); }
+  .ide.b .ty { color: var(--hot); }
+  .ide.b .nm { color: var(--fg-default); }
+  .ide.b .st { color: var(--ok); }
+  .ide.b .co { color: var(--fg-subtle); font-style: italic; }
+
+  .ide.b .status { height: 22px; background: var(--surface-1); border-top: 1px solid var(--border-soft); display: flex; align-items: center; padding: 0 12px; gap: 14px; font-family: "Inter Tight"; font-size: 11px; color: var(--fg-muted); }
+  .ide.b .status .led { width: 6px; height: 6px; border-radius: 50%; background: var(--ok); margin-right: 5px; display: inline-block; vertical-align: middle; }
+
+  /* Welcome — Direction B (same calm as A) */
+  .welcome.b { background: var(--editor-bg); height: 280px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; gap: 24px; }
+  .welcome.b .mark { font-family: "Inter Tight"; font-weight: 300; font-size: 38px; color: var(--fg-bright); letter-spacing: -0.03em; }
+  .welcome.b .mark b { font-weight: 600; }
+  .welcome.b .tagline { font-family: "Inter Tight"; font-size: 12px; color: var(--fg-subtle); letter-spacing: 0.18em; text-transform: uppercase; }
+  .welcome.b .actions { display: flex; flex-direction: column; gap: 10px; width: 230px; }
+  .welcome.b .btn { height: 38px; border: 1px solid var(--border); background: transparent; color: var(--fg-bright); font-family: "Inter Tight"; font-size: 13px; letter-spacing: 0.02em; text-align: center; line-height: 36px; border-radius: 4px; }
+  .welcome.b .btn.primary { border-color: var(--accent); }
+  .welcome.b .recents { margin-top: 4px; display: flex; flex-direction: column; gap: 4px; width: 280px; }
+  .welcome.b .recents h5 { font-family: "Inter Tight"; font-size: 10px; font-weight: 500; color: var(--fg-subtle); letter-spacing: 0.18em; text-transform: uppercase; margin: 0 0 6px; }
+  .welcome.b .recents li { display: flex; justify-content: space-between; padding: 5px 0; font-family: "JetBrains Mono"; font-size: 11.5px; color: var(--fg-muted); }
+  .welcome.b .recents li span:last-child { color: var(--fg-subtle); font-size: 10px; }
+
+  /* ============================================================
+     DIRECTION C — Brutalist Mono
+     Mono-everywhere typography, square, exposed labels.
+     ============================================================ */
+  .ide.c { border-radius: 0; }
+  .ide.c .activity { width: 44px; background: var(--surface-1); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 10px 0; gap: 12px; align-items: center; }
+  .ide.c .rail-icon { width: 17px; height: 17px; opacity: 0.55; }
+  .ide.c .rail-icon.active { opacity: 1; }
+  .ide.c .sidebar {
+    width: 200px;
+    background: var(--surface-1);
+    border-right: 1px solid var(--border);
+    padding: 12px 10px;
+    font-family: "JetBrains Mono";
+    font-size: 11.5px;
+    color: var(--fg-muted);
+  }
+  .ide.c .sidebar h4 {
+    margin: 0 0 8px;
+    font-family: "JetBrains Mono";
+    font-weight: 700;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--fg-subtle);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 6px;
+  }
+  .ide.c .file-row {
+    padding: 5px 6px;
+    font-family: "JetBrains Mono";
+    font-size: 11.5px;
+    color: var(--fg-default);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .ide.c .file-row.active { background: var(--wash-strong); color: var(--fg-bright); border-left: 2px solid var(--accent); padding-left: 4px; }
+
+  .ide.c .tabs { height: 30px; display: flex; align-items: stretch; background: var(--surface-1); border-bottom: 1px solid var(--border); }
+  .ide.c .tab { display: flex; align-items: center; gap: 6px; padding: 0 12px; font-family: "JetBrains Mono"; font-size: 11px; color: var(--fg-muted); border-right: 1px solid var(--border); text-transform: uppercase; letter-spacing: 0.08em; }
+  .ide.c .tab.active { color: var(--fg-bright); background: var(--editor-bg); border-top: 2px solid var(--accent); }
+  .ide.c .tab-plus { width: 28px; display: flex; align-items: center; justify-content: center; color: var(--fg-subtle); font-family: "JetBrains Mono"; font-weight: 700; font-size: 14px; border-right: 1px solid var(--border); }
+
+  .ide.c .editor { background: var(--editor-bg); padding: 8px 0; font-family: "JetBrains Mono"; font-size: 12.5px; line-height: 1.5; height: 280px; }
+  .ide.c .ln { display: grid; grid-template-columns: 44px 1fr; }
+  .ide.c .ln .num { color: var(--fg-subtle); text-align: right; padding-right: 12px; }
+  .ide.c .kw { color: var(--cool); }
+  .ide.c .fn { color: var(--accent); }
+  .ide.c .ty { color: var(--hot); }
+  .ide.c .nm { color: var(--fg-default); }
+  .ide.c .st { color: var(--ok); }
+  .ide.c .co { color: var(--fg-subtle); }
+
+  .ide.c .status {
+    height: 24px;
+    background: var(--surface-1);
+    border-top: 1px solid var(--border);
+    display: flex; align-items: center;
+    padding: 0 12px;
+    gap: 14px;
+    font-family: "JetBrains Mono";
+    font-size: 10.5px;
+    color: var(--fg-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .ide.c .status .led { width: 6px; height: 6px; background: var(--ok); margin-right: 5px; display: inline-block; vertical-align: middle; }
+
+  /* Welcome — Direction C */
+  .welcome.c {
+    background: var(--editor-bg);
+    height: 280px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 18px 22px;
+    gap: 14px;
+  }
+  .welcome.c .mark {
+    font-family: "JetBrains Mono";
+    font-weight: 700;
+    font-size: 30px;
+    color: var(--fg-bright);
+    letter-spacing: 0.04em;
+    line-height: 1;
+  }
+  .welcome.c .mark-rule {
+    width: 220px;
+    height: 1px;
+    background: var(--accent);
+    margin-top: 6px;
+  }
+  .welcome.c .tagline {
+    font-family: "JetBrains Mono";
+    font-size: 10.5px;
+    color: var(--fg-subtle);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+  .welcome.c .actions { display: flex; flex-direction: row; gap: 8px; }
+  .welcome.c .btn {
+    height: 32px;
+    padding: 0 14px;
+    border: 1px solid var(--accent);
+    background: transparent;
+    color: var(--fg-bright);
+    font-family: "JetBrains Mono";
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    line-height: 30px;
+    border-radius: 0;
+  }
+  .welcome.c .btn.ghost { border-color: var(--border); color: var(--fg-default); }
+  .welcome.c .recents {
+    margin-top: 6px;
+    display: flex; flex-direction: column;
+    gap: 2px; width: 280px;
+    font-family: "JetBrains Mono";
+    font-size: 11px;
+  }
+  .welcome.c .recents h5 {
+    font-family: "JetBrains Mono";
+    font-weight: 700;
+    font-size: 10px;
+    color: var(--fg-subtle);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    margin: 0 0 4px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 3px;
+  }
+  .welcome.c .recents li {
+    display: flex; justify-content: space-between;
+    padding: 3px 0;
+    color: var(--fg-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .welcome.c .recents li span:last-child { color: var(--fg-subtle); }
+  .welcome.c .recents li::before { content: "▸ "; color: var(--fg-subtle); margin-right: 4px; }
+
+  /* ---------- Body row (sidebar + main) shared layout ---------- */
+  .ide-body { display: flex; min-height: 380px; }
+  .ide-main { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+
+  /* Section spacers between welcome card + editor card */
+  .pair-label {
+    font-family: "JetBrains Mono";
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--fg-subtle);
+    margin-top: 6px;
+    margin-bottom: -8px;
+  }
+
+  /* Compare strip */
+  .compare {
+    margin: 20px 40px 60px;
+    border-top: 1px solid var(--border-soft);
+    padding-top: 24px;
+    color: var(--fg-muted);
+    font-size: 12px;
+    display: grid;
+    grid-template-columns: 220px repeat(3, 1fr);
+    gap: 16px;
+  }
+  .compare h3 {
+    grid-column: 1 / -1;
+    margin: 0 0 10px;
+    color: var(--fg-bright);
+    font-family: "Inter Tight";
+    font-weight: 500;
+    font-size: 16px;
+    letter-spacing: -0.005em;
+  }
+  .compare .row { display: contents; }
+  .compare .label { color: var(--fg-subtle); font-family: "JetBrains Mono"; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; padding: 6px 0; }
+  .compare .cell { padding: 6px 0; line-height: 1.55; }
+  .compare .cell b { color: var(--fg-default); font-weight: 500; }
+  .compare hr { grid-column: 1 / -1; border: none; border-top: 1px solid var(--border-soft); margin: 4px 0; }
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <h1>ForgeBoard IDE — direction samples</h1>
+  <span class="sub">Same monochrome palette, same content. Different design language. Pick a direction.</span>
+</header>
+
+<div class="grid">
+
+  <!-- ============================================================
+       DIRECTION A
+       ============================================================ -->
+  <section class="column">
+    <div class="column-head">
+      <span class="col-tag">Direction A</span>
+      <span class="col-title">Antigravity Throughout</span>
+      <span class="col-desc">Soft, generous, calm in welcome and editor alike. Large UI type. Lots of whitespace. The editor breathes the same way the welcome does.</span>
+    </div>
+
+    <span class="pair-label">— Welcome (first launch)</span>
+    <div class="ide a">
+      <div class="title-bar">
+        <div class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+        <span class="name">ForgeBoard IDE</span>
+      </div>
+      <div class="welcome a">
+        <div class="mark">Forge<b>Board</b></div>
+        <div class="tagline">Build · Burn · Run</div>
+        <div class="actions">
+          <div class="btn primary">New sketch</div>
+          <div class="btn">Open sketch</div>
+        </div>
+        <div class="recents">
+          <h5>Recent</h5>
+          <li><span>blink.ino</span><span>2h ago</span></li>
+          <li><span>wifi_scanner.ino</span><span>yesterday</span></li>
+          <li><span>i2c_probe.ino</span><span>3 days</span></li>
+        </div>
+      </div>
+    </div>
+
+    <span class="pair-label">— Editor</span>
+    <div class="ide a">
+      <div class="title-bar">
+        <div class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+        <span class="name">blink.ino — ForgeBoard IDE</span>
+      </div>
+      <div class="ide-body">
+        <div class="activity">
+          <svg class="rail-icon active" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 6h18M3 12h18M3 18h12"/></svg>
+          <svg class="rail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <svg class="rail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2v20M2 12h20"/></svg>
+          <svg class="rail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2 2 7l10 5 10-5z"/><path d="m2 17 10 5 10-5"/></svg>
+        </div>
+        <div class="sidebar">
+          <h4>blink</h4>
+          <div class="file-row active">blink.ino</div>
+          <div class="file-row">config.h</div>
+          <div class="file-row">sensors.cpp</div>
+        </div>
+        <div class="ide-main">
+          <div class="tabs">
+            <div class="tab active">blink.ino</div>
+            <div class="tab">config.h</div>
+            <div class="tab-plus">+</div>
+          </div>
+          <div class="editor">
+            <div class="ln"><span class="num">1</span><span><span class="kw">#include</span> <span class="st">&lt;Arduino.h&gt;</span></span></div>
+            <div class="ln"><span class="num">2</span><span>&nbsp;</span></div>
+            <div class="ln"><span class="num">3</span><span><span class="ty">void</span> <span class="fn">setup</span>() {</span></div>
+            <div class="ln"><span class="num">4</span><span>&nbsp;&nbsp;<span class="fn">pinMode</span>(LED_BUILTIN, OUTPUT);</span></div>
+            <div class="ln"><span class="num">5</span><span>&nbsp;&nbsp;Serial.<span class="fn">begin</span>(<span class="ty">115200</span>);</span></div>
+            <div class="ln"><span class="num">6</span><span>}</span></div>
+            <div class="ln"><span class="num">7</span><span>&nbsp;</span></div>
+            <div class="ln"><span class="num">8</span><span><span class="ty">void</span> <span class="fn">loop</span>() {</span></div>
+            <div class="ln"><span class="num">9</span><span>&nbsp;&nbsp;<span class="co">// blink the onboard LED</span></span></div>
+          </div>
+          <div class="status">
+            <span><span class="led"></span>COM7</span>
+            <span>ESP32-S3-DevKitC</span>
+            <span>115200</span>
+            <span style="margin-left:auto">Ln 9, Col 28</span>
+            <span>Arduino</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       DIRECTION B  (RECOMMENDED)
+       ============================================================ -->
+  <section class="column">
+    <div class="column-head">
+      <span class="col-tag">Direction B — recommended</span>
+      <span class="col-title">Editorial Mono</span>
+      <span class="col-desc">Calm welcome. Pragmatic editor. Same palette; spacing tightens when there's real work to read. The way VS Code, Linear and Antigravity actually behave when you look closely.</span>
+    </div>
+
+    <span class="pair-label">— Welcome (first launch)</span>
+    <div class="ide b">
+      <div class="title-bar">
+        <div class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+        <span class="name">ForgeBoard IDE</span>
+      </div>
+      <div class="welcome b">
+        <div class="mark">Forge<b>Board</b></div>
+        <div class="tagline">Build · Burn · Run</div>
+        <div class="actions">
+          <div class="btn primary">New sketch</div>
+          <div class="btn">Open sketch</div>
+        </div>
+        <div class="recents">
+          <h5>Recent</h5>
+          <li><span>blink.ino</span><span>2h ago</span></li>
+          <li><span>wifi_scanner.ino</span><span>yesterday</span></li>
+          <li><span>i2c_probe.ino</span><span>3 days</span></li>
+        </div>
+      </div>
+    </div>
+
+    <span class="pair-label">— Editor (denser, more lines visible)</span>
+    <div class="ide b">
+      <div class="title-bar">
+        <div class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+        <span class="name">blink.ino — ForgeBoard IDE</span>
+      </div>
+      <div class="ide-body">
+        <div class="activity">
+          <svg class="rail-icon active" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 6h18M3 12h18M3 18h12"/></svg>
+          <svg class="rail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <svg class="rail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2v20M2 12h20"/></svg>
+          <svg class="rail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2 2 7l10 5 10-5z"/><path d="m2 17 10 5 10-5"/></svg>
+        </div>
+        <div class="sidebar">
+          <h4>blink</h4>
+          <div class="file-row active">blink.ino</div>
+          <div class="file-row">config.h</div>
+          <div class="file-row">sensors.cpp</div>
+          <div class="file-row">README.md</div>
+          <h4 style="margin-top:6px">Outline</h4>
+          <div class="file-row">setup()</div>
+          <div class="file-row">loop()</div>
+        </div>
+        <div class="ide-main">
+          <div class="tabs">
+            <div class="tab active">blink.ino</div>
+            <div class="tab">config.h</div>
+            <div class="tab">sensors.cpp</div>
+            <div class="tab-plus">+</div>
+          </div>
+          <div class="editor">
+            <div class="ln"><span class="num">1</span><span><span class="kw">#include</span> <span class="st">&lt;Arduino.h&gt;</span></span></div>
+            <div class="ln"><span class="num">2</span><span><span class="kw">#include</span> <span class="st">"config.h"</span></span></div>
+            <div class="ln"><span class="num">3</span><span>&nbsp;</span></div>
+            <div class="ln"><span class="num">4</span><span><span class="ty">const</span> <span class="ty">uint8_t</span> PIN_LED = <span class="ty">LED_BUILTIN</span>;</span></div>
+            <div class="ln"><span class="num">5</span><span>&nbsp;</span></div>
+            <div class="ln"><span class="num">6</span><span><span class="ty">void</span> <span class="fn">setup</span>() {</span></div>
+            <div class="ln"><span class="num">7</span><span>&nbsp;&nbsp;<span class="fn">pinMode</span>(PIN_LED, OUTPUT);</span></div>
+            <div class="ln"><span class="num">8</span><span>&nbsp;&nbsp;Serial.<span class="fn">begin</span>(<span class="ty">115200</span>);</span></div>
+            <div class="ln"><span class="num">9</span><span>&nbsp;&nbsp;Serial.<span class="fn">println</span>(<span class="st">"boot"</span>);</span></div>
+            <div class="ln"><span class="num">10</span><span>}</span></div>
+            <div class="ln"><span class="num">11</span><span>&nbsp;</span></div>
+            <div class="ln"><span class="num">12</span><span><span class="ty">void</span> <span class="fn">loop</span>() {</span></div>
+            <div class="ln"><span class="num">13</span><span>&nbsp;&nbsp;<span class="co">// blink onboard LED at 1 Hz</span></span></div>
+            <div class="ln"><span class="num">14</span><span>&nbsp;&nbsp;<span class="fn">digitalWrite</span>(PIN_LED, HIGH);</span></div>
+            <div class="ln"><span class="num">15</span><span>&nbsp;&nbsp;<span class="fn">delay</span>(<span class="ty">500</span>);</span></div>
+            <div class="ln"><span class="num">16</span><span>&nbsp;&nbsp;<span class="fn">digitalWrite</span>(PIN_LED, LOW);</span></div>
+            <div class="ln"><span class="num">17</span><span>&nbsp;&nbsp;<span class="fn">delay</span>(<span class="ty">500</span>);</span></div>
+          </div>
+          <div class="status">
+            <span><span class="led"></span>COM7</span>
+            <span>ESP32-S3-DevKitC</span>
+            <span>115200</span>
+            <span>Flash 18%</span>
+            <span style="margin-left:auto">Ln 17, Col 14</span>
+            <span>UTF-8</span>
+            <span>Arduino</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       DIRECTION C
+       ============================================================ -->
+  <section class="column">
+    <div class="column-head">
+      <span class="col-tag">Direction C</span>
+      <span class="col-title">Brutalist Mono</span>
+      <span class="col-desc">JetBrains Mono everywhere — UI included. Sharp corners, exposed labels, all-caps tab names, hairline dividers. "Industrial tool" feel.</span>
+    </div>
+
+    <span class="pair-label">— Welcome (first launch)</span>
+    <div class="ide c">
+      <div class="title-bar">
+        <div class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+        <span class="name">FORGEBOARD-IDE / READY</span>
+      </div>
+      <div class="welcome c">
+        <div class="mark">FORGEBOARD</div>
+        <div class="mark-rule"></div>
+        <div class="tagline">/ BUILD / BURN / RUN /</div>
+        <div class="actions">
+          <div class="btn">[ NEW SKETCH ]</div>
+          <div class="btn ghost">[ OPEN SKETCH ]</div>
+        </div>
+        <div class="recents">
+          <h5>$ RECENT</h5>
+          <li><span>BLINK.INO</span><span>2H</span></li>
+          <li><span>WIFI_SCANNER.INO</span><span>1D</span></li>
+          <li><span>I2C_PROBE.INO</span><span>3D</span></li>
+        </div>
+      </div>
+    </div>
+
+    <span class="pair-label">— Editor</span>
+    <div class="ide c">
+      <div class="title-bar">
+        <div class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+        <span class="name">FILE: BLINK.INO · FQBN: ESP32:ESP32:ESP32S3</span>
+      </div>
+      <div class="ide-body">
+        <div class="activity">
+          <svg class="rail-icon active" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="2"/><rect x="3" y="11" width="18" height="2"/><rect x="3" y="18" width="12" height="2"/></svg>
+          <svg class="rail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="14" height="14"/><path d="m17 17 4 4"/></svg>
+          <svg class="rail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18"/><path d="M12 3v18M3 12h18"/></svg>
+          <svg class="rail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 6h18v12H3z"/><path d="M3 10h18"/></svg>
+        </div>
+        <div class="sidebar">
+          <h4>$ SKETCH</h4>
+          <div class="file-row active">BLINK.INO</div>
+          <div class="file-row">CONFIG.H</div>
+          <div class="file-row">SENSORS.CPP</div>
+          <h4 style="margin-top:8px">$ FQBN</h4>
+          <div class="file-row" style="text-transform:none">esp32:esp32<br>:esp32s3</div>
+        </div>
+        <div class="ide-main">
+          <div class="tabs">
+            <div class="tab active">BLINK.INO</div>
+            <div class="tab">CONFIG.H</div>
+            <div class="tab">SENSORS.CPP</div>
+            <div class="tab-plus">+</div>
+          </div>
+          <div class="editor">
+            <div class="ln"><span class="num">1</span><span><span class="kw">#include</span> <span class="st">&lt;Arduino.h&gt;</span></span></div>
+            <div class="ln"><span class="num">2</span><span><span class="kw">#include</span> <span class="st">"config.h"</span></span></div>
+            <div class="ln"><span class="num">3</span><span>&nbsp;</span></div>
+            <div class="ln"><span class="num">4</span><span><span class="ty">const</span> <span class="ty">uint8_t</span> PIN_LED = <span class="ty">LED_BUILTIN</span>;</span></div>
+            <div class="ln"><span class="num">5</span><span>&nbsp;</span></div>
+            <div class="ln"><span class="num">6</span><span><span class="ty">void</span> <span class="fn">setup</span>() {</span></div>
+            <div class="ln"><span class="num">7</span><span>&nbsp;&nbsp;<span class="fn">pinMode</span>(PIN_LED, OUTPUT);</span></div>
+            <div class="ln"><span class="num">8</span><span>&nbsp;&nbsp;Serial.<span class="fn">begin</span>(<span class="ty">115200</span>);</span></div>
+            <div class="ln"><span class="num">9</span><span>}</span></div>
+            <div class="ln"><span class="num">10</span><span>&nbsp;</span></div>
+            <div class="ln"><span class="num">11</span><span><span class="ty">void</span> <span class="fn">loop</span>() {</span></div>
+            <div class="ln"><span class="num">12</span><span>&nbsp;&nbsp;<span class="co">// 1 HZ BLINK</span></span></div>
+            <div class="ln"><span class="num">13</span><span>&nbsp;&nbsp;<span class="fn">digitalWrite</span>(PIN_LED, HIGH);</span></div>
+            <div class="ln"><span class="num">14</span><span>&nbsp;&nbsp;<span class="fn">delay</span>(<span class="ty">500</span>);</span></div>
+            <div class="ln"><span class="num">15</span><span>&nbsp;&nbsp;<span class="fn">digitalWrite</span>(PIN_LED, LOW);</span></div>
+            <div class="ln"><span class="num">16</span><span>&nbsp;&nbsp;<span class="fn">delay</span>(<span class="ty">500</span>);</span></div>
+          </div>
+          <div class="status">
+            <span><span class="led"></span>COM7</span>
+            <span>ESP32S3</span>
+            <span>115200</span>
+            <span style="margin-left:auto">LN17 · COL14</span>
+            <span>UTF8</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- ============================================================
+     Compare row
+     ============================================================ -->
+<section class="compare">
+  <h3>At-a-glance comparison</h3>
+
+  <span class="label">UI font</span>
+  <span class="cell"><b>Inter Tight</b> · large 14–15px chrome</span>
+  <span class="cell"><b>Inter Tight</b> · tighter 11–13px chrome</span>
+  <span class="cell"><b>JetBrains Mono</b> everywhere · UPPERCASE</span>
+
+  <hr />
+
+  <span class="label">Editor density</span>
+  <span class="cell">Spacious — ~9 lines / 280 px</span>
+  <span class="cell"><b>Dense — ~17 lines / 280 px</b></span>
+  <span class="cell">Dense — ~16 lines / 280 px</span>
+
+  <hr />
+
+  <span class="label">Shape language</span>
+  <span class="cell">4 px radius, soft borders</span>
+  <span class="cell">3 px radius, hairline borders</span>
+  <span class="cell">Square, hard edges, 2 px accent stripe on active</span>
+
+  <hr />
+
+  <span class="label">Tab labels</span>
+  <span class="cell">blink.ino</span>
+  <span class="cell">blink.ino</span>
+  <span class="cell">BLINK.INO</span>
+
+  <hr />
+
+  <span class="label">Best for</span>
+  <span class="cell">Looks great in a screenshot. Quiet daily use.</span>
+  <span class="cell"><b>Looks great in a screenshot AND fits a 13" laptop coding session.</b></span>
+  <span class="cell">Identity statement. Polarizing. Students may bounce.</span>
+
+  <hr />
+
+  <span class="label">Risk</span>
+  <span class="cell">Editor feels too quiet on 13" displays.</span>
+  <span class="cell">Subtle — distinction lives in details, not "wow".</span>
+  <span class="cell">Reads as unfinished or aggressive to novices.</span>
+</section>
+
+</body>
+</html>

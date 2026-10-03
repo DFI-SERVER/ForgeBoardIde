@@ -1,0 +1,43 @@
+/* tokens.css — ForgeBoard brand colour + type tokens (mobile IDE).
+   A tight 2-palette system (warm-dark + cream) with the brand amber kept only
+   as a reference token — the IDE itself runs fully monochrome (see ide.css,
+   where --accent is overridden to a hueless warm white / ink). Type is a
+   2-font system: Instrument Sans (display/body) + JetBrains Mono (machine
+   text). */
+
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Instrument+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;700&family=Fira+Code:wght@400;500;700&display=swap');
+
+:root {
+  /* ---------- Core brand ---------- */
+  --fb-black:        #000000;
+  --fb-white:        #FFFFFF;
+  --fb-amber:        #FFA600;    /* brand accent — reference only; IDE is mono */
+
+  /* ---------- Dark palette ---------- */
+  --fb-warm-dark:    #000000;
+  --fb-warm-darker:  #0A0A0A;
+
+  /* ---------- Light palette (cream side) ---------- */
+  --fb-cream:        #ECE9DF;
+  --fb-cream-hover:  #E0DCCE;
+  --fb-ink:          #1F1E1C;
+  --fb-ink-muted:    #5A5856;
+
+  /* ---------- Neutrals (dark-side text hierarchy) ---------- */
+  --fb-gray:         #8a8a8a;
+  --fb-body-dim:     #bfbfbf;
+  --fb-body-muted:   #a8a8a8;
+  --fb-label-dim:    #9a9a9a;
+
+  /* ---------- Type families ---------- */
+  --fb-font-display: 'Instrument Sans', system-ui, sans-serif;
+  --fb-font-body:    'Instrument Sans', system-ui, sans-serif;
+  --fb-font-mono:    'JetBrains Mono', ui-monospace, monospace;
+
+  /* ---------- Motion ---------- */
+  --fb-ease:       cubic-bezier(0.4, 0, 0.2, 1);
+  --fb-ease-out:   cubic-bezier(0.2, 0.8, 0.2, 1);
+  --fb-dur-fast:   .2s;
+  --fb-dur:        .25s;
+  --fb-dur-slow:   .4s;
+}

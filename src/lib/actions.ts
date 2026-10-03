@@ -22,7 +22,7 @@ import { getActiveEditor } from "../components/MonacoEditor";
 import { parseDiagnostics, type Diagnostic } from "./diagnostics";
 import { parseCompileSize } from "./size-parser";
 import { pushCompileSize } from "./compile-history";
-import { effectiveFqbn } from "./effective-fqbn";
+import { effectiveFqbn, isPortlessUploadFqbn } from "./effective-fqbn";
 import {
   currentSketch,
   activeRail,
@@ -41,6 +41,8 @@ import {
   toast,
   serialConnected,
   serialBaud,
+  editorGroups,
+  activeGroupIndex,
 } from "../state/appState";
 import { serialApi } from "../ipc/serial";
 
@@ -66,14 +68,35 @@ export function newSketch() {
   newSketchDialogOpen.value = true;
 }
 
-/** Create a sketch on disk and load it into the editor. Throws on failure so
- *  the dialog can surface the error inline. */
+/** Create a sketch on disk. On the welcome screen this window swaps to the
+ *  new sketch; with a sketch already open, the new sketch lands as a tab
+ *  here (sketchPath set so compile/upload follow the active tab) — same
+ *  mechanism as openExample. Never call loadSketch in the second branch:
+ *  that would wipe the user's other tabs. Throws on failure so the dialog
+ *  can surface the error inline. */
 export async function createSketch(
   name: string,
   location: string | null,
 ): Promise<void> {
   const created = await projectApi.create(name, location);
-  await loadSketch(created);
+  if (!currentSketch.value) {
+    await loadSketch(created);
+    return;
+  }
+  const main = created.files.find((f) => f.is_main) ?? created.files[0];
+  if (!main) return;
+  const content = await projectApi.readFile(main.path);
+  fileContents.value = new Map(fileContents.value).set(main.path, content);
+  addTabToActiveGroup({
+    path: main.path,
+    name: main.name,
+    modified: false,
+    sketchPath: created.path,
+  });
+  toast.value = {
+    text: `Created "${created.name}" as a tab — compile/upload follow the active tab.`,
+    kind: "success",
+  };
 }
 
 /**
@@ -114,16 +137,32 @@ export async function openExample(
         throw e;
       }
     }
-    // Seed the new sketch's main .ino with the example's source, then reload
-    // so the editor shows the example content rather than the blank stub.
+    // Seed the new sketch's main .ino with the example's source.
     const main = created.files.find((f) => f.is_main) ?? created.files[0];
     if (main) {
       await projectApi.saveFile(main.path, source);
     }
-    const fresh = await projectApi.open(created.path);
-    await loadSketch(fresh);
+    // Open the example as a tab in the CURRENT window without changing
+    // currentSketch — the user wants to view/edit the example alongside their
+    // own sketch, not swap into it and lose their other tabs. The example is
+    // still a real sketch folder on disk, so they can switch to it later via
+    // Recent Sketches when they want to compile/upload it.
+    if (main) {
+      fileContents.value = new Map(fileContents.value).set(main.path, source);
+      addTabToActiveGroup({
+        path: main.path,
+        name: main.name,
+        modified: false,
+        // Mark this tab as belonging to the example's sketch folder so
+        // compile/upload target what is on screen, not the user's other
+        // sketch that happens to be `currentSketch`.
+        sketchPath: created.path,
+      });
+    }
     toast.value = {
-      text: `Opened "${exampleName}" as a new sketch`,
+      text:
+        `Opened "${exampleName}" as a tab — saved to ${created.path}. ` +
+        `Compile/upload now follow the active tab.`,
       kind: "success",
     };
   } catch (e) {
@@ -144,32 +183,35 @@ function isAlreadyExists(e: unknown): boolean {
   );
 }
 
-/** Open an existing sketch — native folder picker, then load it. */
+/** Open an existing sketch — native folder picker, then open it in a fresh
+ *  IDE window so the current sketch isn't replaced under the user's feet. */
 export async function openSketch(): Promise<void> {
   const picked = await openNativeDialog({
     directory: true,
     title: "Open a sketch folder",
   });
   if (typeof picked !== "string") return;
-  try {
-    const opened = await projectApi.open(picked);
-    await loadSketch(opened);
-  } catch (e) {
-    toast.value = {
-      text: `Couldn't open that folder: ${errText(e)}`,
-      kind: "warn",
-    };
-  }
+  await openSketchInNewWindow(picked);
 }
 
-/** Open a specific recent sketch by its folder path (used by Open Recent). */
+/** Open a specific recent sketch by its folder path. The new sketch opens
+ *  in a fresh IDE window so the current window's work survives untouched —
+ *  clicking Recent must never silently swap the open sketch (that surprised
+ *  the user, since autosave or no, the tabs and view state vanish). */
 export async function openRecentSketch(path: string): Promise<void> {
+  await openSketchInNewWindow(path);
+}
+
+/** Helper — spawn a new ForgeBoard IDE window pointed at `path`. Surfaces
+ *  failures as a toast in the calling window (the failing window-create
+ *  never reaches the new app, so the original keeps the user informed). */
+async function openSketchInNewWindow(path: string): Promise<void> {
   try {
-    const opened = await projectApi.open(path);
-    await loadSketch(opened);
+    const { spawnNewSketchWindow } = await import("./window-mgmt");
+    await spawnNewSketchWindow(path);
   } catch (e) {
     toast.value = {
-      text: `Couldn't open that sketch: ${errText(e)}`,
+      text: `Couldn't open that sketch in a new window: ${errText(e)}`,
       kind: "warn",
     };
   }
@@ -409,6 +451,34 @@ function recordDiagnostics(stderr: string) {
 }
 
 /**
+ * Diagnose an upload failure and return a one-paragraph hint when the symptoms
+ * match the ESP32-S3 native-USB "port glitched mid-upload" pattern — only the
+ * bootloader chunk lands, the chip is left with `invalid header: 0xffffffff`
+ * on next boot. Returns null when the failure doesn't match (compile error,
+ * locked port, wrong chip, etc.) so the caller doesn't overlay an irrelevant
+ * suggestion onto a different problem.
+ */
+export function uploadFailureHint(
+  outputLines: readonly string[],
+  stderr: string,
+): string | null {
+  const combined = `${outputLines.join("\n")}\n${stderr}`;
+  // Strip ANSI so a coloured progress bar still matches.
+  const clean = combined.replace(/\x1b\[[0-9;]*m/g, "");
+  const serialPostError =
+    /Cannot configure port/i.test(clean) ||
+    /PermissionError\(\s*13/.test(clean) ||
+    /A serial exception/i.test(clean);
+  if (!serialPostError) return null;
+  return [
+    "Hint: the upload dropped mid-flash on a native-USB ESP32-S3 board. Only the",
+    "bootloader landed, so the chip will boot to `invalid header: 0xffffffff`.",
+    "Try: (1) hit Upload again, (2) hold BOOT on the board while clicking Upload,",
+    "(3) swap to a known-good USB data cable — many USB-C cables are charge-only.",
+  ].join("\n");
+}
+
+/**
  * Parse the size summary out of a finished build's output and publish it.
  *
  * arduino-cli's two `Sketch uses … / Global variables use …` lines reach us on
@@ -431,7 +501,42 @@ function recordCompileSize(stderr: string) {
   pushCompileSize(effectiveFqbn(), flashPercent);
 }
 
-/** Verify / Compile the current sketch. */
+/**
+ * Build target derived from the active editor tab.
+ *
+ * The active tab's sketch is what gets compiled / uploaded — so what is on
+ * screen is what gets built. For a tab that belongs to `currentSketch`
+ * (no `sketchPath` set), this is `currentSketch.path` plus its profile.
+ * For an example tab opened via `openExample`, this is the example's own
+ * folder with no profile (the active profile is bound to `currentSketch`
+ * and would be the wrong yaml for a different sketch).
+ */
+function activeBuildTarget(): {
+  path: string;
+  name: string;
+  profile: string | null;
+} | null {
+  // Read from editorGroups directly (source of truth) instead of the
+  // openTabs / activeTabIndex mirrors. The mirrors are kept in sync via
+  // effects, but a write that bypasses the suppression flag can leave
+  // them lagging the source for a tick — and an upload triggered in
+  // that window would build the wrong sketch.
+  const groups = editorGroups.value;
+  const group = groups[activeGroupIndex.value] ?? groups[0];
+  const active = group?.tabs[group.activeTabIndex];
+  if (active?.sketchPath) {
+    const segs = active.sketchPath.split(/[\\/]/);
+    const name = segs.filter((s) => s.length > 0).pop() ?? active.sketchPath;
+    return { path: active.sketchPath, name, profile: null };
+  }
+  const sketch = currentSketch.value;
+  if (sketch) {
+    return { path: sketch.path, name: sketch.name, profile: activeProfile.value };
+  }
+  return null;
+}
+
+/** Verify / Compile the sketch the active tab belongs to. */
 export async function compileSketch(): Promise<void> {
   // Re-entry guard: keyboard shortcuts (Ctrl+R) bypass the ActionBar's
   // disabled state, so a second invocation while a compile or upload is
@@ -443,8 +548,8 @@ export async function compileSketch(): Promise<void> {
   // Without this, a student typing a fix and immediately hitting Verify/Upload
   // would compile the 2-second-old version and chase a phantom bug.
   await flushSaveAsync();
-  const sketch = currentSketch.value;
-  if (!sketch) {
+  const target = activeBuildTarget();
+  if (!target) {
     reportPrecheck("No sketch open — open or create a sketch first.");
     return;
   }
@@ -453,10 +558,10 @@ export async function compileSketch(): Promise<void> {
   buildPhase.value = "compiling";
   try {
     const result = await arduinoApi.compile(
-      sketch.path,
+      target.path,
       selectedFqbn.value,
       settings.value.verboseBuild,
-      activeProfile.value,
+      target.profile,
     );
     buildPhase.value = result.success ? "success" : "error";
     if (!result.success && result.stderr.trim()) {
@@ -483,13 +588,16 @@ export async function uploadSketch(): Promise<void> {
   // Without this, a student typing a fix and immediately hitting Verify/Upload
   // would compile the 2-second-old version and chase a phantom bug.
   await flushSaveAsync();
-  const sketch = currentSketch.value;
-  if (!sketch) {
+  const target = activeBuildTarget();
+  if (!target) {
     reportPrecheck("No sketch open — open or create a sketch first.");
     return;
   }
   const port = connectedPort.value;
-  if (!port) {
+  // STM32 DFU/SWD uploads find the target themselves (no COM port exists in
+  // DFU mode) — only serial-flashed families need a port selected up front.
+  const portless = isPortlessUploadFqbn(effectiveFqbn());
+  if (!port && !portless) {
     reportPrecheck("No port selected — connect a board first.");
     return;
   }
@@ -516,15 +624,28 @@ export async function uploadSketch(): Promise<void> {
 
   try {
     const result = await arduinoApi.upload(
-      sketch.path,
+      target.path,
       selectedFqbn.value,
-      port,
+      port ?? null,
       settings.value.verboseBuild,
-      activeProfile.value,
+      target.profile,
     );
     buildPhase.value = result.success ? "success" : "error";
     if (!result.success && result.stderr.trim()) {
       buildOutput.value = [...buildOutput.value, "", result.stderr.trimEnd()];
+    }
+    // Append a focused hint when the failure matches the ESP32-S3 native-USB
+    // "port glitched mid-upload" pattern — bootloader write at 0x0 succeeded,
+    // but the connection dropped before the partition table and app firmware
+    // could land. The chip will then loop on `invalid header: 0xffffffff`.
+    // The hint tells the user exactly what to try next, without lying about
+    // the upload having succeeded.
+    if (!result.success) {
+      const hint = uploadFailureHint(buildOutput.value, result.stderr);
+      if (hint) {
+        buildOutput.value = [...buildOutput.value, "", hint];
+        toast.value = { text: "Upload failed mid-flash — see Output", kind: "warn" };
+      }
     }
     recordDiagnostics(result.stderr);
     if (result.success) recordCompileSize(result.stderr);

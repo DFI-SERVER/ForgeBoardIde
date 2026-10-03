@@ -420,3 +420,95 @@
 .stv-row.stacked .stv-row-control {
   align-self: stretch;
 }
+
+/* ============================================================
+   Platform corrections — read-only listing under the toggle.
+   Each card shows: title + status badge, target platform pattern,
+   the upstream-bug explanation, and an optional issue link.
+   Visually quiet so it reads as informational, not actionable.
+   ============================================================ */
+.stv-corrections {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-top: var(--space-2);
+  padding: 0 var(--space-7);
+}
+.stv-corrections-error {
+  color: var(--error);
+  font-size: var(--text-sm);
+  padding: 0 var(--space-7);
+}
+.stv-correction {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+.stv-correction.active {
+  border-color: var(--border-strong);
+}
+.stv-correction-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+.stv-correction-title {
+  color: var(--fg-bright);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+}
+.stv-correction-badge {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 2px var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  color: var(--fg-subtle);
+}
+.stv-correction-badge-active {
+  color: var(--sage);
+  border-color: var(--sage);
+}
+.stv-correction-badge-pending {
+  color: var(--warning);
+  border-color: var(--warning);
+}
+.stv-correction-badge-n-a {
+  color: var(--fg-disabled);
+  border-color: var(--border-subtle);
+}
+.stv-correction-target {
+  font-size: var(--text-xs);
+  color: var(--fg-muted);
+}
+.stv-correction-target code {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--fg-default);
+}
+.stv-correction-path {
+  color: var(--fg-subtle);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+}
+.stv-correction-reason {
+  font-size: var(--text-xs);
+  color: var(--fg-muted);
+  line-height: 1.5;
+}
+.stv-correction-link {
+  align-self: flex-start;
+  font-size: var(--text-xs);
+  color: var(--fg-default);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.stv-correction-link:hover { color: var(--fg-bright); }

@@ -269,6 +269,144 @@ void loop() {
 }
 `;
 
+/* --------------------------------------------------- Peripheral test --- */
+
+const PERIPHERAL_TEST = `/*
+ * ============================================================
+ *  FORGE BOARDS - ESP32-S3 PERIPHERAL TEST (SAMPLE CODE)
+ * ============================================================
+ *  This is a SAMPLE test sketch made by Forge Boards.
+ *  It checks each onboard peripheral one by one and prints
+ *  the result to the Serial Monitor (115200 baud).
+ *
+ *  Peripherals tested:
+ *    - LED      on GPIO16  (simple on/off LED)
+ *    - RGB      on GPIO3   (WS2812B addressable LED)
+ *    - DHT11    on GPIO45  (temperature + humidity)
+ *    - LDR      on GPIO21  (light sensor, digital out)
+ *    - BUZZER   on GPIO48  (beeper)
+ *    - IR       on GPIO46  (LM393 obstacle sensor, digital out)
+ *
+ *  Board   : ESP32-S3 (Forge Boards)
+ *  Author  : Forge Boards
+ *  Note    : Sample / demo code for hardware bring-up testing.
+ * ============================================================
+ */
+
+#define LED_PIN     16
+#define RGB_PIN     3
+#define DHT_PIN     45
+#define LDR_PIN     21
+#define BUZZER_PIN  48
+#define IR_PIN      46
+
+// ---------- minimal dependency-free DHT11 reader ----------
+// Returns true on success, fills temperature (C) and humidity (%).
+bool readDHT11(uint8_t pin, float &temperature, float &humidity) {
+  uint8_t data[5] = {0, 0, 0, 0, 0};
+
+  // start signal: pull low >18ms, then release
+  pinMode(pin, OUTPUT);
+  digitalWrite(pin, LOW);
+  delay(20);
+  digitalWrite(pin, HIGH);
+  delayMicroseconds(40);
+  pinMode(pin, INPUT_PULLUP);
+
+  // wait for DHT response (low ~80us, high ~80us)
+  unsigned long t = micros();
+  while (digitalRead(pin) == HIGH) if (micros() - t > 100) return false;
+  t = micros();
+  while (digitalRead(pin) == LOW)  if (micros() - t > 100) return false;
+  t = micros();
+  while (digitalRead(pin) == HIGH) if (micros() - t > 100) return false;
+
+  // read 40 bits
+  for (int i = 0; i < 40; i++) {
+    t = micros();
+    while (digitalRead(pin) == LOW)  if (micros() - t > 100) return false; // 50us low
+    t = micros();
+    while (digitalRead(pin) == HIGH) if (micros() - t > 100) break;        // 26us=0 / 70us=1
+    if (micros() - t > 45) data[i / 8] |= (1 << (7 - (i % 8)));
+  }
+
+  // checksum
+  if (data[4] != ((data[0] + data[1] + data[2] + data[3]) & 0xFF)) return false;
+
+  humidity    = data[0] + data[1] * 0.1f;
+  temperature = data[2] + data[3] * 0.1f;
+  return true;
+}
+
+void setup() {
+  Serial.begin(115200);
+  delay(800);
+
+  pinMode(LED_PIN, OUTPUT);
+  pinMode(LDR_PIN, INPUT);
+  pinMode(IR_PIN, INPUT_PULLUP);
+  pinMode(BUZZER_PIN, OUTPUT);
+  digitalWrite(BUZZER_PIN, LOW);
+
+  Serial.println("===========================================");
+  Serial.println(" FORGE BOARDS - ESP32-S3 PERIPHERAL TEST");
+  Serial.println(" Sample code by Forge Boards");
+  Serial.println("===========================================");
+}
+
+void loop() {
+  // ---------- TEST 1: LED on GPIO16 ----------
+  Serial.println("\\n[1] LED test (GPIO16) - blinking 3 times");
+  for (int i = 0; i < 3; i++) {
+    digitalWrite(LED_PIN, HIGH);
+    Serial.println("    LED ON");
+    delay(300);
+    digitalWrite(LED_PIN, LOW);
+    Serial.println("    LED OFF");
+    delay(300);
+  }
+
+  // ---------- TEST 2: RGB (WS2812B) on GPIO3 ----------
+  Serial.println("[2] RGB test (GPIO3) - Red, Green, Blue");
+  neopixelWrite(RGB_PIN, 64, 0, 0);  Serial.println("    RED");   delay(500);
+  neopixelWrite(RGB_PIN, 0, 64, 0);  Serial.println("    GREEN"); delay(500);
+  neopixelWrite(RGB_PIN, 0, 0, 64);  Serial.println("    BLUE");  delay(500);
+  neopixelWrite(RGB_PIN, 0, 0, 0);   Serial.println("    OFF");   delay(300);
+
+  // ---------- TEST 3: DHT11 on GPIO45 ----------
+  Serial.println("[3] DHT11 test (GPIO45)");
+  float tC, rh;
+  if (readDHT11(DHT_PIN, tC, rh)) {
+    Serial.printf("    OK  -> Temp: %.1f C   Humidity: %.1f %%\\n", tC, rh);
+  } else {
+    Serial.println("    FAIL -> no valid data (check wiring / DHT11)");
+  }
+
+  // ---------- TEST 4: LDR on GPIO21 ----------
+  Serial.println("[4] LDR test (GPIO21) - digital light state");
+  int ldr = digitalRead(LDR_PIN);
+  Serial.printf("    LDR raw = %d  -> %s\\n", ldr, (ldr == LOW) ? "DARK" : "LIGHT");
+
+  // ---------- TEST 5: BUZZER on GPIO48 ----------
+  Serial.println("[5] Buzzer test (GPIO48) - 2 beeps");
+  for (int i = 0; i < 2; i++) {
+    digitalWrite(BUZZER_PIN, HIGH);
+    Serial.println("    BEEP");
+    delay(200);
+    digitalWrite(BUZZER_PIN, LOW);
+    delay(200);
+  }
+
+  // ---------- TEST 6: IR sensor on GPIO46 ----------
+  Serial.println("[6] IR test (GPIO46) - obstacle detection");
+  int ir = digitalRead(IR_PIN);
+  Serial.printf("    IR raw = %d  -> %s\\n", ir, (ir == LOW) ? "OBJECT DETECTED" : "clear");
+
+  Serial.println("--- cycle complete, repeating in 3s ---");
+  delay(3000);
+}
+`;
+
 /**
  * The bundled starter examples, in the order they appear in the Examples view.
  */
@@ -314,6 +452,12 @@ export const CURATED_EXAMPLES: readonly CuratedExample[] = [
     description: "List nearby Wi-Fi networks with signal strength.",
     category: "WiFi",
     source: WIFI_SCAN,
+  },
+  {
+    name: "Peripheral Test",
+    description: "ForgeBoard bring-up sweep: LED, RGB, DHT11, LDR, buzzer, IR.",
+    category: "ForgeBoard",
+    source: PERIPHERAL_TEST,
   },
 ];
 

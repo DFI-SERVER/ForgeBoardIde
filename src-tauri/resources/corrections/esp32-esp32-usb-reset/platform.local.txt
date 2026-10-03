@@ -1,0 +1,57 @@
+# ============================================================================
+# ForgeBoard IDE platform correction
+#   ID:     esp32-esp32-usb-reset
+#   Target: esp32:esp32@3.3.x (esptool v5.x)
+#   Reason: arduino-esp32 3.3.x hardcodes `--before default-reset` for every
+#           ESP32 variant, including those with native USB-Serial/JTAG (ESP32-S3,
+#           ESP32-C3, ESP32-C6, ESP32-H2). The emulated DTR/RTS used by
+#           default-reset on native USB-CDC chips drops the USB endpoint after
+#           the first write chunk, so multi-file flash writes only land the
+#           bootloader and the chip boots to `invalid header: 0xffffffff`.
+#
+# This overlay turns the hardcoded `--before default-reset` into a per-board
+# variable (`upload.reset_before`), with a safe default. Per-board values are
+# set in boards.local.txt.
+#
+# Remove this file (and ForgeBoard's boards.local.txt) to restore arduino-esp32
+# defaults. ForgeBoard manages this file automatically while corrections are
+# enabled in Settings.
+# ============================================================================
+
+# Regular Upload — APP ONLY at 0x10000, --no-stub, no compression.
+#
+# Empirically the failure pattern on ESP32-S3 native USB-Serial/JTAG was:
+# esptool loads its stub flasher into RAM at 115200, bumps to higher baud,
+# starts writing. The stub batches writes into a 16 KB buffer. When the
+# buffer fills, the stub flushes (erases the next 4 KB flash sector +
+# writes the data). The flash-erase op stalls the CPU for ~50-100 ms,
+# during which the chip's USB-CDC firmware can't service the endpoint and
+# the host driver sees the device drop. esptool reports
+# `PermissionError(13)` and exits.
+#
+# The fix: bypass the stub. `--no-stub` makes esptool talk directly to the
+# ROM bootloader's flash commands, which transfer in 256-byte SLIP packets
+# with per-packet ACK. Each packet is small enough that USB-CDC service
+# always wins, even during a sector erase. Slower (~80-120 KB/s instead of
+# the stub's ~300+ KB/s), but actually finishes.
+#
+# We also drop the `-z` compression flag because ROM commands don't support
+# decompression — the stub did that. Uncompressed transfer ≈ 1.5× the bytes
+# but a single-file 870 KB app still finishes in ~10-12 s.
+#
+# Boards whose `upload.reset_before` we leave at default-reset (classic
+# ESP32, ESP32-S2 via external USB-Serial converter) also get --no-stub
+# here, but they could go faster — TODO: add a per-chip-family override
+# that keeps the stub for converter-based boards.
+tools.esptool_py.upload.pattern_args=--chip {build.mcu} --no-stub --port "{serial.port}" --baud {upload.speed} {upload.flags} --before {upload.reset_before} --after {upload.reset_after} write-flash --flash-mode keep --flash-freq keep --flash-size keep 0x10000 "{build.path}/{build.project_name}.bin" {upload.extra_flags}
+
+# Burn Bootloader — writes the static parts (bootloader + partition table +
+# boot_app0). Also --no-stub for the same reason as above; multi-file is
+# fine here as long as each individual chunk write doesn't trip the stub.
+tools.esptool_py.bootloader.pattern_args=--chip {build.mcu} --no-stub --port "{serial.port}" --baud {upload.speed} {upload.flags} --before {upload.reset_before} --after {upload.reset_after} write-flash --flash-mode keep --flash-freq keep --flash-size keep {build.bootloader_addr} "{build.path}/{build.project_name}.bootloader.bin" 0x8000 "{build.path}/{build.project_name}.partitions.bin" 0xe000 "{runtime.platform.path}/tools/partitions/boot_app0.bin"
+
+# Defaults applied to any board that doesn't override them in boards.local.txt
+# — keep the platform's original behaviour for everything except the boards we
+# explicitly target.
+upload.reset_before=default-reset
+upload.reset_after=hard-reset

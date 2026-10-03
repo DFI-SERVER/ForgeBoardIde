@@ -17,29 +17,49 @@ pub async fn arduino_detect_ports(app: tauri::AppHandle) -> Result<Vec<DetectedB
 #[tauri::command]
 pub async fn arduino_compile(
     app: tauri::AppHandle,
+    window: tauri::Window,
     sketch: PathBuf,
     fqbn: String,
     verbose: bool,
     profile: Option<String>,
 ) -> Result<CompileResult, String> {
-    super::compile::compile_sketch(&app, &sketch, &fqbn, verbose, profile.as_deref()).await
+    super::compile::compile_sketch(
+        &app,
+        window.label(),
+        &sketch,
+        &fqbn,
+        verbose,
+        profile.as_deref(),
+    )
+    .await
 }
 
 #[tauri::command]
 pub async fn arduino_upload(
     app: tauri::AppHandle,
+    window: tauri::Window,
     sketch: PathBuf,
     fqbn: String,
-    port: String,
+    port: Option<String>,
     verbose: bool,
     profile: Option<String>,
 ) -> Result<UploadResult, String> {
-    super::upload::upload_sketch(&app, &sketch, &fqbn, &port, verbose, profile.as_deref()).await
+    super::upload::upload_sketch(
+        &app,
+        window.label(),
+        &sketch,
+        &fqbn,
+        port.as_deref(),
+        verbose,
+        profile.as_deref(),
+    )
+    .await
 }
 
 #[tauri::command]
 pub async fn arduino_burn_bootloader(
     app: tauri::AppHandle,
+    window: tauri::Window,
     fqbn: String,
     port: Option<String>,
     programmer: String,
@@ -47,6 +67,7 @@ pub async fn arduino_burn_bootloader(
 ) -> Result<BurnBootloaderResult, String> {
     super::burn_bootloader::burn_bootloader(
         &app,
+        window.label(),
         &fqbn,
         port.as_deref(),
         &programmer,
@@ -71,9 +92,11 @@ pub async fn arduino_search_cores(
 #[tauri::command]
 pub async fn arduino_install_core(
     app: tauri::AppHandle,
+    window: tauri::Window,
     core_id: String,
+    board_manager_url: Option<String>,
 ) -> Result<i32, String> {
-    super::core::install(&app, &core_id).await
+    super::core::install(&app, window.label(), &core_id, board_manager_url.as_deref()).await
 }
 
 #[tauri::command]
@@ -114,21 +137,30 @@ pub async fn arduino_lib_list_installed(
 }
 
 #[tauri::command]
-pub async fn arduino_lib_install(app: tauri::AppHandle, name: String) -> Result<i32, String> {
-    super::library::install(&app, &name).await
+pub async fn arduino_lib_install(
+    app: tauri::AppHandle,
+    window: tauri::Window,
+    name: String,
+) -> Result<i32, String> {
+    super::library::install(&app, window.label(), &name).await
 }
 
 #[tauri::command]
-pub async fn arduino_lib_uninstall(app: tauri::AppHandle, name: String) -> Result<i32, String> {
-    super::library::uninstall(&app, &name).await
+pub async fn arduino_lib_uninstall(
+    app: tauri::AppHandle,
+    window: tauri::Window,
+    name: String,
+) -> Result<i32, String> {
+    super::library::uninstall(&app, window.label(), &name).await
 }
 
 #[tauri::command]
 pub async fn arduino_lib_install_zip(
     app: tauri::AppHandle,
+    window: tauri::Window,
     zip_path: String,
 ) -> Result<i32, String> {
-    super::library::install_zip(&app, &zip_path).await
+    super::library::install_zip(&app, window.label(), &zip_path).await
 }
 
 /// List example sketches found in the `examples/` folders of installed

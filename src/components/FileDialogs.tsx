@@ -18,6 +18,7 @@ import { Modal } from "./Modal";
 export function NameDialog({
   title,
   label,
+  desc,
   initialValue = "",
   confirmLabel,
   busy = false,
@@ -27,6 +28,9 @@ export function NameDialog({
 }: {
   title: string;
   label: string;
+  /** Optional secondary line under the label — useful for showing where
+   *  the file will land on disk (e.g. "in C:\sketches\blink"). */
+  desc?: string;
   initialValue?: string;
   confirmLabel: string;
   busy?: boolean;
@@ -47,6 +51,7 @@ export function NameDialog({
       <label class="dlg-label" for="file-name-input">
         {label}
       </label>
+      {desc && <div class="dlg-desc">{desc}</div>}
       <input
         id="file-name-input"
         class="dlg-input"

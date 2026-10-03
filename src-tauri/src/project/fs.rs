@@ -163,9 +163,11 @@ pub fn create_sketch(name: &str, location: Option<&Path>) -> Result<Sketch, Proj
     read_sketch(&folder)
 }
 
-/// Read a file's contents as a UTF-8 string.
+/// Read a file's contents as a UTF-8 string. The path must live inside a
+/// sketch folder — the webview must not be able to read arbitrary files.
 pub fn read_file(path: &Path) -> Result<String, ProjectError> {
-    Ok(std::fs::read_to_string(path)?)
+    let validated = validate_file_in_sketch(path)?;
+    Ok(std::fs::read_to_string(validated)?)
 }
 
 /* ------------------------------------------------------------ guards --- */
@@ -249,6 +251,31 @@ fn validate_create_dir(dir: &Path) -> Result<PathBuf, ProjectError> {
     Ok(dir.to_path_buf())
 }
 
+/// How many ancestors of a file the sketch-membership walk inspects. Sketch
+/// files live at the sketch root or in shallow sub-folders (`data/`, `src/`);
+/// the fixed bound keeps the walk cheap and refuses deeply foreign paths.
+const MAX_SKETCH_DEPTH: usize = 4;
+
+/// Confirm `path` is a file inside a sketch folder (a directory containing a
+/// matching main `.ino`), walking up at most MAX_SKETCH_DEPTH ancestors to
+/// find that folder. Gates the read/save IPC commands so the webview cannot
+/// touch files outside sketches; `..` segments and symlinks are resolved by
+/// `is_within` before the containment check.
+fn validate_file_in_sketch(path: &Path) -> Result<PathBuf, ProjectError> {
+    let mut ancestor = path.parent();
+    for _ in 0..MAX_SKETCH_DEPTH {
+        let Some(dir) = ancestor else { break };
+        if read_sketch(dir).is_ok() {
+            if is_within(dir, path) {
+                return Ok(path.to_path_buf());
+            }
+            break;
+        }
+        ancestor = dir.parent();
+    }
+    Err(ProjectError::Invalid(path.to_string_lossy().into_owned()))
+}
+
 /// Reject a user-supplied file/folder name that is empty, a relative
 /// component (`.`/`..`), or contains a path separator. Returned name is
 /// trimmed and safe to join onto a directory.
@@ -324,12 +351,14 @@ pub fn create_folder(dir: &Path, name: &str) -> Result<PathBuf, ProjectError> {
     Ok(dest)
 }
 
-/// Write a file's contents.
+/// Write a file's contents. The path must live inside a sketch folder — the
+/// webview must not be able to write arbitrary files on disk.
 pub fn write_file(path: &Path, contents: &str) -> Result<(), ProjectError> {
-    if let Some(parent) = path.parent() {
+    let validated = validate_file_in_sketch(path)?;
+    if let Some(parent) = validated.parent() {
         std::fs::create_dir_all(parent)?;
     }
-    std::fs::write(path, contents)?;
+    std::fs::write(validated, contents)?;
     Ok(())
 }
 
@@ -549,6 +578,48 @@ mod tests {
         let same = rename_path(&a, "keep.h").unwrap();
         assert_eq!(same, a);
         assert!(same.is_file());
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn read_and_write_inside_a_sketch_are_allowed() {
+        let (dir, sketch) = sketch_fixture();
+        let target = sketch.join("notes.h");
+        write_file(&target, "#define N 1").unwrap();
+        assert_eq!(read_file(&target).unwrap(), "#define N 1");
+        // One level down too (data/ sub-folder).
+        let sub = create_folder(&sketch, "data").unwrap();
+        let nested = sub.join("conf.txt");
+        write_file(&nested, "x").unwrap();
+        assert_eq!(read_file(&nested).unwrap(), "x");
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn read_and_write_outside_any_sketch_are_rejected() {
+        let dir = tmpdir();
+        let loose = dir.join("loose.txt");
+        fs::write(&loose, "secret").unwrap();
+        assert!(matches!(read_file(&loose), Err(ProjectError::Invalid(_))));
+        assert!(matches!(
+            write_file(&dir.join("new.txt"), "x"),
+            Err(ProjectError::Invalid(_))
+        ));
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn traversal_out_of_a_sketch_is_rejected() {
+        let (dir, sketch) = sketch_fixture();
+        let outside = dir.join("outside.txt");
+        fs::write(&outside, "secret").unwrap();
+        let sneaky = sketch.join("..").join("outside.txt");
+        assert!(matches!(read_file(&sneaky), Err(ProjectError::Invalid(_))));
+        assert!(matches!(
+            write_file(&sneaky, "overwrite"),
+            Err(ProjectError::Invalid(_))
+        ));
+        assert_eq!(fs::read_to_string(&outside).unwrap(), "secret");
         fs::remove_dir_all(&dir).unwrap();
     }
 

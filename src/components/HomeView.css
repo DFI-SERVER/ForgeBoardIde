@@ -1,174 +1,143 @@
-/* Home — the activity rail's landing view. Monochrome sidebar idiom, in
-   step with BoardsView / LibrariesView; colour only on the board dot, where
-   it carries connection state. All values come from the design tokens. */
+/* ============================================================
+   Home — Direction C: brutalist mono sidebar.
+   `$ SECTION` headers in mono uppercase with a hairline rule
+   underneath, file rows in mono uppercase with a left accent
+   stripe on hover/focus. Square corners. Hairlines instead of
+   fills. The board card is the only place colour appears
+   (hardware state earns it).
+   ============================================================ */
 
 .hv {
   display: flex;
   flex-direction: column;
   height: 100%;
-  font-family: var(--font-ui);
+  font-family: var(--font-mono);
   background: var(--surface-1);
-}
-
-/* --- Header --- */
-.hv-header {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  padding: var(--space-6) var(--space-6) var(--space-5);
-  border-bottom: 1px solid var(--border-subtle);
-}
-.hv-header-icon {
-  color: var(--fg-muted);
-  flex-shrink: 0;
-}
-.hv-title {
-  color: var(--fg-default);
-  font-weight: var(--weight-semibold);
-  font-size: var(--text-base);
-}
-
-/* --- Body --- */
-.hv-body {
-  flex: 1;
   overflow-y: auto;
-  padding: var(--space-2) 0 var(--space-6);
+  padding-bottom: var(--space-6);
 }
 
-.hv-section-label {
-  color: var(--fg-subtle);
-  letter-spacing: 0.06em;
+/* --- Section frame --- */
+.hv-section {
+  display: flex;
+  flex-direction: column;
+  padding: 0 var(--space-5);
+  margin-top: var(--space-6);
+}
+.hv-section:first-child {
+  margin-top: var(--space-5);
+}
+
+.hv-section-head {
+  font-family: var(--font-mono);
   font-size: var(--text-2xs);
   font-weight: var(--weight-semibold);
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  padding: 0 var(--space-6);
-  margin: var(--space-6) 0 var(--space-3);
+  color: var(--fg-subtle);
+  padding: 0 0 var(--space-3);
+  margin-bottom: var(--space-2);
+  border-bottom: 1px solid var(--border);
 }
 
-/* --- Quick-start actions --- */
-.hv-actions {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  padding: 0 var(--space-5);
-}
-.hv-action {
+/* --- Row primitive — used by actions, recent files, anywhere a
+       single mono-uppercase line of text needs a left accent stripe
+       on hover/focus. --- */
+.hv-row {
   display: flex;
   align-items: center;
-  gap: var(--space-4);
-  width: 100%;
-  box-sizing: border-box;
-  text-align: left;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: var(--space-4);
-  cursor: pointer;
-  transition:
-    background-color var(--dur-fast) var(--ease),
-    border-color var(--dur-fast) var(--ease);
-}
-.hv-action:hover {
-  background: var(--surface-3);
-  border-color: var(--border-strong);
-}
-.hv-action:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 2px var(--accent-ring);
-}
-.hv-action-icon {
-  flex-shrink: 0;
-  color: var(--fg-muted);
-}
-.hv-action:hover .hv-action-icon {
-  color: var(--fg-default);
-}
-.hv-action-text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-.hv-action-title {
-  color: var(--fg-default);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-semibold);
-}
-.hv-action-desc {
-  color: var(--fg-muted);
-  font-size: var(--text-xs);
-  line-height: 1.4;
-}
-
-/* --- Recent sketches --- */
-.hv-empty {
-  color: var(--fg-subtle);
-  padding: var(--space-2) var(--space-6);
-  font-size: var(--text-sm);
-  font-style: italic;
-}
-.hv-recent {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.hv-recent-row {
-  display: flex;
-  align-items: baseline;
   gap: var(--space-3);
   width: 100%;
   text-align: left;
   background: transparent;
   border: none;
-  padding: var(--space-2) var(--space-6);
-  cursor: pointer;
-  transition: background-color var(--dur-fast) var(--ease);
-}
-.hv-recent-row:hover {
-  background: var(--accent-wash-hover);
-}
-.hv-recent-row:focus-visible {
-  outline: none;
-  box-shadow: inset 0 0 0 2px var(--accent-ring);
-}
-.hv-recent-icon {
-  flex-shrink: 0;
-  align-self: center;
-  color: var(--fg-muted);
-}
-.hv-recent-row:hover .hv-recent-icon {
+  border-left: 2px solid transparent;
+  padding: var(--space-2) var(--space-3);
   color: var(--fg-default);
-}
-.hv-recent-name {
-  flex-shrink: 0;
-  color: var(--fg-default);
+  font-family: var(--font-mono);
   font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease);
 }
-.hv-recent-path {
+.hv-row:hover {
+  background: var(--accent-wash-hover);
+  border-left-color: var(--accent);
+  color: var(--fg-bright);
+}
+.hv-row:focus-visible {
+  outline: none;
+  background: var(--accent-wash-hover);
+  border-left-color: var(--accent);
+  color: var(--fg-bright);
+}
+
+.hv-row-prefix {
+  flex-shrink: 0;
+  width: 10px;
+  color: var(--fg-subtle);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  text-align: center;
+}
+.hv-row:hover .hv-row-prefix,
+.hv-row:focus-visible .hv-row-prefix {
+  color: var(--accent);
+}
+
+.hv-row-name {
   flex: 1;
   min-width: 0;
-  color: var(--fg-subtle);
-  font-size: var(--text-xs);
-  font-family: var(--font-mono);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  /* Show the tail of the path — the sketch folder — when it overflows. */
-  direction: rtl;
-  text-align: left;
 }
 
-/* --- Connected board --- */
+/* Action rows (NEW SKETCH / OPEN SKETCH) are slightly more emphatic
+   than file rows — semibold weight, brighter resting color. */
+.hv-action {
+  font-weight: var(--weight-semibold);
+  color: var(--fg-default);
+}
+
+/* File rows (recent sketches) are normal weight, muted resting color. */
+.hv-file {
+  font-weight: var(--weight-normal);
+  color: var(--fg-muted);
+}
+.hv-file:hover,
+.hv-file:focus-visible {
+  color: var(--fg-bright);
+}
+
+.hv-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.hv-empty {
+  padding: var(--space-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--fg-subtle);
+  font-style: italic;
+  letter-spacing: 0.04em;
+}
+
+/* --- Board card — the one place colour earns its place in this panel.
+       Hardware state is at-a-glance critical (am I about to upload to
+       nothing?), so the dot tints by ConnectionState. --- */
 .hv-board {
   display: flex;
   align-items: center;
-  gap: var(--space-4);
-  margin: 0 var(--space-5);
-  padding: var(--space-4);
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-left: 2px solid var(--border);
+  background: transparent;
 }
 .hv-board-dot {
   width: 8px;
@@ -178,7 +147,7 @@
   background: var(--fg-disabled);
 }
 .hv-board-connected {
-  background: var(--sage-wash);
+  border-left-color: var(--sage);
 }
 .hv-board-connected .hv-board-dot {
   background: var(--sage);
@@ -194,11 +163,17 @@
 }
 .hv-board-name {
   color: var(--fg-default);
-  font-size: var(--text-sm);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
   font-weight: var(--weight-medium);
+  letter-spacing: 0.08em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .hv-board-meta {
-  color: var(--fg-muted);
-  font-size: var(--text-xs);
+  color: var(--fg-subtle);
   font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.04em;
 }
