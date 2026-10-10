@@ -71,16 +71,25 @@ jobs:
         shell: bash
         env:
           RAW_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          RAW_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: |
           KEY="$(printf '%s' "$RAW_KEY" | tr -d '\r\n ')"
           echo "::add-mask::$KEY"
           echo "TAURI_SIGNING_PRIVATE_KEY=$KEY" >> "$GITHUB_ENV"
+          # GitHub refuses an empty secret, so a key with no password is stored
+          # as a single space. Only pass a real, non-blank password through.
+          PASSWORD="$(printf '%s' "$RAW_PASSWORD" | tr -d '\r\n')"
+          if [ -n "$(printf '%s' "$PASSWORD" | tr -d ' ')" ]; then
+            echo "::add-mask::$PASSWORD"
+            echo "TAURI_SIGNING_PRIVATE_KEY_PASSWORD=$PASSWORD" >> "$GITHUB_ENV"
+          else
+            echo "TAURI_SIGNING_PRIVATE_KEY_PASSWORD=" >> "$GITHUB_ENV"
+          fi
 
       - name: Build, sign and publish
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_REPO_TOKEN }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           # Apple Developer ID signing — uncomment once the certificate exists.
           # Passing these empty makes codesign try to import an empty certificate.
           # APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
