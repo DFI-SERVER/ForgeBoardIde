@@ -1,0 +1,51 @@
+.ud-version { font-size: var(--text-sm); color: var(--fg-default); }
+.ud-date { color: var(--fg-muted); }
+.ud-notes {
+  margin: var(--space-4) 0 0;
+  max-height: 200px;
+  overflow: auto;
+  padding: var(--space-3);
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  color: var(--fg-default);
+  background: var(--surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  user-select: text;
+}
+.ud-note { margin-top: var(--space-4); font-size: var(--text-xs); color: var(--fg-muted); line-height: 1.5; }
+.ud-progress {
+  position: relative;
+  margin-top: var(--space-4);
+  height: 22px;
+  background: var(--action-wash);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.ud-progress-fill { height: 100%; background: var(--action); transition: width 200ms var(--ease); }
+.ud-progress-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-xs);
+  color: var(--fg-bright);
+  font-variant-numeric: tabular-nums;
+}
+.ud-footer { display: flex; justify-content: flex-end; gap: var(--space-2); margin-top: var(--space-5); }
+.ud-btn {
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--fg-default);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.ud-btn:hover:not(:disabled) { background: var(--accent-wash-hover); color: var(--fg-bright); }
+.ud-btn:disabled { opacity: 0.6; cursor: default; }
+.ud-btn-primary { background: var(--action); color: var(--action-fg); border-color: transparent; }
+.ud-btn-primary:hover:not(:disabled) { background: var(--action-hover); }

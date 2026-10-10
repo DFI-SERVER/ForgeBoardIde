@@ -1,7 +1,7 @@
 {
   "name": "forgeboard-ide",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,20 +10,22 @@
     "tauri": "tauri",
     "test": "vitest run",
     "test:watch": "vitest",
-    "postinstall": "powershell -ExecutionPolicy Bypass -File scripts/download-arduino-cli.ps1"
+    "postinstall": "node scripts/download-arduino-cli.mjs"
   },
   "dependencies": {
     "@preact/signals": "^2.9.0",
-    "@tauri-apps/api": "^2",
+    "@tauri-apps/api": "^2.12.2",
     "@tauri-apps/plugin-dialog": "^2.7.1",
     "@tauri-apps/plugin-opener": "^2",
+    "@tauri-apps/plugin-process": "^2.4.0",
+    "@tauri-apps/plugin-updater": "^2.13.2",
     "lucide-preact": "^1.16.0",
     "monaco-editor": "^0.55.1",
     "preact": "^10.25.1"
   },
   "devDependencies": {
     "@preact/preset-vite": "^2.9.3",
-    "@tauri-apps/cli": "^2",
+    "@tauri-apps/cli": "^2.12.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/preact": "^3.2.4",
     "@types/node": "^25.9.1",

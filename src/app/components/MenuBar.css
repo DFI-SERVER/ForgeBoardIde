@@ -1,0 +1,104 @@
+/* Menu bar — sits in the title bar (surface-0). Buttons and dropdowns are
+   explicitly NOT drag regions so clicks register. */
+.menubar {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+/* Top-level menu button */
+.menubar-button {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-4);
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  color: var(--fg-muted);
+  background: transparent;
+  transition: background-color var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease);
+}
+.menubar-button:hover {
+  background: var(--accent-wash-hover);
+  color: var(--fg-default);
+}
+.menubar-button.open {
+  background: var(--accent-wash-hover);
+  color: var(--fg-default);
+}
+
+/* Dropdown — a floating layer */
+.menu-dropdown {
+  position: fixed;
+  z-index: 250;
+  min-width: 220px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-dropdown);
+  padding: var(--space-2) 0;
+  font-family: var(--font-ui);
+}
+
+/* Menu item — a compact row */
+.menu-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  padding: var(--space-3) var(--space-5);
+  font-size: var(--text-sm);
+  color: var(--fg-default);
+  background: transparent;
+  text-align: left;
+  transition: background-color var(--dur-fast) var(--ease);
+}
+.menu-item:hover {
+  background: var(--accent-wash-hover);
+}
+.menu-item:disabled,
+.menu-item.disabled {
+  color: var(--fg-disabled);
+  background: transparent;
+  cursor: default;
+}
+
+.menu-item-label {
+  flex: 1;
+  white-space: nowrap;
+}
+.menu-item-shortcut {
+  color: var(--fg-subtle);
+  font-size: var(--text-xs);
+  white-space: nowrap;
+}
+.menu-item-arrow {
+  display: flex;
+  align-items: center;
+  color: var(--fg-subtle);
+  margin-right: calc(-1 * var(--space-2));
+}
+
+/* Separator — a hairline between same-tone rows */
+.menu-separator {
+  height: 1px;
+  background: var(--border-subtle);
+  margin: var(--space-2) 0;
+}
+
+/* Submenu — a second floating layer, positioned beside its parent row */
+.menu-submenu-host {
+  position: relative;
+}
+.menu-submenu {
+  position: absolute;
+  top: calc(-1 * var(--space-2));
+  left: 100%;
+  min-width: 220px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-dropdown);
+  padding: var(--space-2) 0;
+}

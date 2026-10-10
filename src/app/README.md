@@ -1,0 +1,1 @@
+# app — The shell around the features: boot and main entry, App layout, title/menu/status bars, rails, bottom panel, toast, window management and global shortcuts. Composes features; owns no domain data.

@@ -1,0 +1,66 @@
+/* Get Board Info dialog — a small definition list of the connected board's
+   port, identity and FQBN, shown inside the shared Modal. */
+
+.bi-empty {
+  color: var(--fg-muted);
+  font-family: var(--font-ui);
+  font-size: var(--text-base);
+  line-height: 1.6;
+}
+
+.bi-list {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.bi-row {
+  display: flex;
+  gap: var(--space-5);
+  align-items: baseline;
+}
+
+.bi-label {
+  flex-shrink: 0;
+  width: 64px;
+  color: var(--fg-subtle);
+  font-family: var(--font-ui);
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.bi-value {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+  color: var(--fg-default);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  word-break: break-all;
+}
+
+/* Forge board context: datasheet + pin diagram */
+.bi-forge { margin-top: var(--space-5); padding-top: var(--space-4); border-top: 1px solid var(--border-subtle); }
+.bi-link {
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--fg-bright);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.bi-link:hover { background: var(--accent-wash-hover); }
+.bi-pinout-title {
+  margin-top: var(--space-5);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--fg-muted);
+}
+.bi-pinout { display: block; max-width: 100%; margin-top: var(--space-3); border-radius: var(--radius-sm); background: #fff; }
+.bi-pinout-missing { margin-top: var(--space-3); font-size: var(--text-xs); color: var(--fg-subtle); font-style: italic; }

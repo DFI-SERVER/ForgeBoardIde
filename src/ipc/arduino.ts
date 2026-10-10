@@ -18,6 +18,10 @@ export interface Board {
   platform: string;
 }
 export interface DetectedBoard {
+  /** USB vendor/product id (4 hex digits) and serial number, when known. */
+  vid?: string;
+  pid?: string;
+  serial_number?: string;
   port: string;
   fqbn?: string;
   name?: string;
@@ -43,6 +47,39 @@ export interface Core {
   version?: string;
   maintainer?: string;
   installed: boolean;
+  installed_version?: string;
+  latest_version?: string;
+  /** Every version the index offers, newest first. */
+  versions: string[];
+  website?: string;
+  update_available: boolean;
+}
+
+/** One selectable value of a board option (`value_label` in arduino-cli). */
+export interface BoardOptionValue {
+  value: string;
+  label: string;
+  /** The platform default. */
+  selected: boolean;
+}
+
+/** A boards.txt menu option, e.g. `CDCOnBoot` "USB CDC On Boot". */
+export interface BoardOption {
+  option: string;
+  label: string;
+  values: BoardOptionValue[];
+}
+
+export interface Programmer {
+  id: string;
+  name: string;
+}
+
+export interface BoardDetails {
+  fqbn: string;
+  name: string;
+  options: BoardOption[];
+  programmers: Programmer[];
 }
 export interface BoardId {
   fqbn: string;
@@ -64,6 +101,10 @@ export interface Library {
   latest_version?: string;
   /** True when a newer version than installed_version is available. */
   update_available: boolean;
+  /** Every version the registry offers, oldest first (registry results only). */
+  available_versions?: string[];
+  /** Registry type tags: Arduino, Partner, Recommended, Contributed, Retired. */
+  types?: string[];
 }
 
 /** An example sketch discovered inside an installed library's `examples/` folder. */
@@ -80,6 +121,10 @@ export interface LibraryExample {
 
 /** Frontend wrapper around the arduino-cli Tauri commands and streaming events. */
 export const arduinoApi = {
+  /** First-launch setup: make sure arduino-cli has its package index and the
+   *  serial-discovery tool (without it no port is ever listed). Resolves true
+   *  when something had to be downloaded, false when all was present. */
+  prepare: () => invoke<boolean>("arduino_prepare"),
   listBoards: () => invoke<Board[]>("arduino_list_boards"),
   detectPorts: () => invoke<DetectedBoard[]>("arduino_detect_ports"),
   /** Compile a sketch. `verbose` runs arduino-cli with `-v` for a full build log.
@@ -137,14 +182,22 @@ export const arduinoApi = {
     thisWindow().listen<string>("upload-output", (e) => cb(e.payload)),
   onBurnBootloaderOutput: (cb: (line: string) => void) =>
     thisWindow().listen<string>("burn-bootloader-output", (e) => cb(e.payload)),
-  listCores: () => invoke<Core[]>("arduino_list_cores"),
-  searchCores: (query: string) => invoke<Core[]>("arduino_search_cores", { query }),
-  /** Install a core. `boardManagerUrl` is required for vendors outside the
-   *  default Arduino index (STM32, RP2040, Teensy…) — it is passed to
-   *  arduino-cli as `--additional-urls` on update-index + install. */
-  installCore: (coreId: string, boardManagerUrl: string | null = null) =>
-    invoke<number>("arduino_install_core", { coreId, boardManagerUrl }),
-  updateIndex: () => invoke<void>("arduino_update_index"),
+  listCores: (additionalUrls: string[] = []) => invoke<Core[]>("arduino_list_cores", { additionalUrls }),
+  /** Search the board index; an empty query lists everything. `additionalUrls`
+   *  are extra board-manager indexes (Settings + the curated vendor URL). */
+  searchCores: (query: string, additionalUrls: string[] = []) =>
+    invoke<Core[]>("arduino_search_cores", { query, additionalUrls }),
+  /** Install a core, optionally pinned (`esp32:esp32@3.0.7`). Vendors outside
+   *  the default Arduino index (ESP32, STM32, RP2040, Teensy…) need their
+   *  board-manager URL in `additionalUrls`; it is passed to arduino-cli as
+   *  `--additional-urls` on update-index + install. */
+  installCore: (coreId: string, additionalUrls: string[] = []) =>
+    invoke<number>("arduino_install_core", { coreId, additionalUrls }),
+  uninstallCore: (coreId: string) => invoke<number>("arduino_uninstall_core", { coreId }),
+  /** The options (USB CDC, partition scheme…) and programmers of a board. */
+  boardDetails: (fqbn: string) => invoke<BoardDetails>("arduino_board_details", { fqbn }),
+  updateIndex: (additionalUrls: string[] = []) =>
+    invoke<void>("arduino_update_index", { additionalUrls }),
   identifyBoard: (port: string) => invoke<BoardId>("arduino_identify_board", { port }),
   onCoreInstallOutput: (cb: (line: string) => void) =>
     thisWindow().listen<string>("core-install-output", (e) => cb(e.payload)),

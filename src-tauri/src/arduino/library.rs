@@ -30,6 +30,18 @@ pub struct Library {
     pub latest_version: Option<String>,
     /// True when a newer version than `installed_version` is available.
     pub update_available: bool,
+    /// Every version the registry offers, newest last (registry results only).
+    #[serde(default)]
+    pub available_versions: Vec<String>,
+    /// Registry type tags: Arduino, Partner, Recommended, Contributed, Retired.
+    #[serde(default)]
+    pub types: Vec<String>,
+}
+
+fn string_list(v: Option<&Value>) -> Vec<String> {
+    v.and_then(Value::as_array)
+        .map(|a| a.iter().filter_map(Value::as_str).map(String::from).collect())
+        .unwrap_or_default()
 }
 
 /// Pull the common metadata fields out of an arduino-cli metadata object
@@ -58,6 +70,8 @@ fn parse_search_entry(v: &Value) -> Option<Library> {
         installed_version: None,
         latest_version,
         update_available: false,
+        available_versions: string_list(v.get("available_versions")),
+        types: string_list(latest.get("types")),
     })
 }
 
@@ -90,6 +104,8 @@ fn parse_installed_item(v: &Value) -> Option<Library> {
         installed_version,
         latest_version,
         update_available,
+        available_versions: Vec::new(),
+        types: string_list(lib.get("types")),
     })
 }
 

@@ -1,0 +1,1 @@
+# build — Compile and upload. Streams arduino-cli output into the Output panel, parses diagnostics into Problems and editor squiggles, parses sizes for the memory bar and history. Owns the build lifecycle.

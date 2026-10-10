@@ -135,27 +135,11 @@ fn version_matches(pattern: &str, version: &str) -> bool {
     helper(pattern.as_bytes(), version.as_bytes())
 }
 
-/// Resolve arduino-cli's data directory. Mirrors arduino-cli's own default —
-/// `directories.data` from its config, fall back to the platform-standard
-/// location when arduino-cli hasn't been run yet.
-///
-/// We ask arduino-cli for the truth rather than guessing because the user
-/// may have moved their Arduino15 dir via `arduino-cli config set
-/// directories.data <path>`.
-///
-/// Implementation note: arduino-cli 1.5.0's `config dump --format json` only
-/// emits keys the user explicitly overrode — defaults are missing, so a
-/// JSON-pointer lookup against the dump fails for fresh installs. The
-/// per-key `config get directories.data` form does include the resolved
-/// default, so we use that instead.
+/// Resolve arduino-cli's data directory — see `arduino::cli::data_dir`, which
+/// asks arduino-cli for `directories.data` so a user-relocated Arduino15 is
+/// honoured on every platform.
 async fn arduino_data_dir(app: &tauri::AppHandle) -> Result<PathBuf, String> {
-    use crate::arduino::cli;
-    let out = cli::run_capture(app, &["config", "get", "directories.data"]).await?;
-    let trimmed = out.trim();
-    if trimmed.is_empty() {
-        return Err("arduino-cli config get directories.data returned empty".into());
-    }
-    Ok(PathBuf::from(trimmed))
+    crate::arduino::cli::data_dir(app).await
 }
 
 /// Find the on-disk platform directory for a given vendor/arch and return

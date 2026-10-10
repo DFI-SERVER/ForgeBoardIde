@@ -1,0 +1,1 @@
+# editor — Monaco editor, tabs and editor groups, file contents, autosave and format-on-save, the Arduino grammar and snippets, cursor position, recently focused files. Owns the text the user is editing.

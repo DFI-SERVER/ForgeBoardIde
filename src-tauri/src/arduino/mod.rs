@@ -5,6 +5,7 @@ pub mod core;
 pub mod library;
 pub mod examples;
 pub mod detect;
+pub mod setup;
 pub mod compile;
 pub mod upload;
 pub mod burn_bootloader;

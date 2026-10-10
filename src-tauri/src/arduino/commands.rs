@@ -77,31 +77,67 @@ pub async fn arduino_burn_bootloader(
 }
 
 #[tauri::command]
-pub async fn arduino_list_cores(app: tauri::AppHandle) -> Result<Vec<super::core::Core>, String> {
-    super::core::list_installed(&app).await
+pub async fn arduino_list_cores(
+    app: tauri::AppHandle,
+    additional_urls: Option<Vec<String>>,
+) -> Result<Vec<super::core::Core>, String> {
+    super::core::list_installed(&app, &additional_urls.unwrap_or_default()).await
 }
 
+/// Search the board index. `additional_urls` are the user's extra
+/// board-manager indexes (Settings) plus any curated vendor URL.
 #[tauri::command]
 pub async fn arduino_search_cores(
     app: tauri::AppHandle,
     query: String,
+    additional_urls: Option<Vec<String>>,
 ) -> Result<Vec<super::core::Core>, String> {
-    super::core::search(&app, &query).await
+    super::core::search(&app, &query, &additional_urls.unwrap_or_default()).await
 }
 
+/// Install a core, optionally at a specific version (`esp32:esp32@3.0.7`).
 #[tauri::command]
 pub async fn arduino_install_core(
     app: tauri::AppHandle,
     window: tauri::Window,
     core_id: String,
-    board_manager_url: Option<String>,
+    additional_urls: Option<Vec<String>>,
 ) -> Result<i32, String> {
-    super::core::install(&app, window.label(), &core_id, board_manager_url.as_deref()).await
+    super::core::install(&app, window.label(), &core_id, &additional_urls.unwrap_or_default()).await
 }
 
 #[tauri::command]
-pub async fn arduino_update_index(app: tauri::AppHandle) -> Result<(), String> {
-    super::core::update_index(&app).await
+pub async fn arduino_uninstall_core(
+    app: tauri::AppHandle,
+    window: tauri::Window,
+    core_id: String,
+) -> Result<i32, String> {
+    super::core::uninstall(&app, window.label(), &core_id).await
+}
+
+/// Options (USB CDC, partition scheme, upload speed…) and programmers a
+/// board offers.
+#[tauri::command]
+pub async fn arduino_board_details(
+    app: tauri::AppHandle,
+    fqbn: String,
+) -> Result<super::board::BoardDetails, String> {
+    super::board::details(&app, &fqbn).await
+}
+
+#[tauri::command]
+pub async fn arduino_update_index(
+    app: tauri::AppHandle,
+    additional_urls: Option<Vec<String>>,
+) -> Result<(), String> {
+    super::core::update_index(&app, &additional_urls.unwrap_or_default()).await
+}
+
+/// First-launch setup — see `setup::prepare`. Returns true when it had to
+/// download anything.
+#[tauri::command]
+pub async fn arduino_prepare(app: tauri::AppHandle) -> Result<bool, String> {
+    super::setup::prepare(&app).await
 }
 
 #[tauri::command]

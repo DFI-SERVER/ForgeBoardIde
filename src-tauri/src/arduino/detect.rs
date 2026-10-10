@@ -1,7 +1,7 @@
 use super::cli;
 use serde::Serialize;
 use serde_json::Value;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::Stdio;
 use tokio::process::Command;
 
@@ -32,16 +32,19 @@ fn chip_to_board(chip: &str) -> Option<(&'static str, &'static str)> {
     Some(m)
 }
 
-/// Locate the esptool binary inside the installed ESP32 core.
-fn find_esptool() -> Option<PathBuf> {
-    let base = dirs::data_local_dir()?
-        .join("Arduino15")
+/// Locate the esptool binary inside the installed ESP32 core, under the
+/// arduino-cli data directory (see `cli::data_dir` — `Arduino15` on Windows
+/// and macOS, `.arduino15` on Linux). The tool is `esptool.exe` on Windows
+/// and a bare `esptool` elsewhere.
+fn find_esptool(data_dir: &Path) -> Option<PathBuf> {
+    let base = data_dir
         .join("packages")
         .join("esp32")
         .join("tools")
         .join("esptool_py");
+    let name = if cfg!(windows) { "esptool.exe" } else { "esptool" };
     for entry in std::fs::read_dir(&base).ok()?.flatten() {
-        let exe = entry.path().join("esptool.exe");
+        let exe = entry.path().join(name);
         if exe.is_file() {
             return Some(exe);
         }
@@ -145,9 +148,11 @@ pub async fn identify(app: &tauri::AppHandle, port: &str) -> Result<BoardId, Str
         }
     }
 
-    if let Some(esptool) = find_esptool() {
-        if let Some(id) = probe_chip(&esptool, port).await {
-            return Ok(id);
+    if let Ok(data_dir) = cli::data_dir(app).await {
+        if let Some(esptool) = find_esptool(&data_dir) {
+            if let Some(id) = probe_chip(&esptool, port).await {
+                return Ok(id);
+            }
         }
     }
 

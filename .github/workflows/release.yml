@@ -1,0 +1,101 @@
+# Flow State release pipeline.
+#
+# One pushed tag (v0.2.0) builds the app on Windows, macOS and Linux, signs
+# each update bundle with the Flow State updater key, and publishes the
+# installers plus latest.json as one GitHub Release in the PUBLIC repo
+# DFI-SERVER/flowstate-releases. Installed apps fetch latest.json there on
+# every launch and offer the update; see src/app/update-check.ts.
+#
+# Secrets required in THIS (private) repo:
+#   RELEASE_REPO_TOKEN                   PAT with write access to flowstate-releases
+#   TAURI_SIGNING_PRIVATE_KEY            contents of ~/.tauri/flowstate.key
+#   TAURI_SIGNING_PRIVATE_KEY_PASSWORD   its password (empty if none)
+# Optional, for OS code signing once the certificates exist:
+#   APPLE_CERTIFICATE, APPLE_CERTIFICATE_PASSWORD, APPLE_SIGNING_IDENTITY,
+#   APPLE_ID, APPLE_PASSWORD, APPLE_TEAM_ID
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos-latest
+            args: "--target aarch64-apple-darwin"
+          - platform: windows-latest
+            args: ""
+          - platform: ubuntu-22.04
+            args: ""
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin' || '' }}
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Linux build dependencies
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file \
+            libssl-dev libayatana-appindicator3-dev librsvg2-dev libudev-dev patchelf
+
+      # Also downloads the arduino-cli sidecar for this platform (postinstall).
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build, sign and publish
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_REPO_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        with:
+          owner: DFI-SERVER
+          repo: flowstate-releases
+          releaseCommitish: main
+          tagName: ${{ github.ref_name }}
+          releaseName: "Flow State ${{ github.ref_name }}"
+          releaseBody: "Download the installer for your system below. Installed copies of Flow State offer this update on their next launch."
+          releaseDraft: false
+          prerelease: false
+          includeUpdaterJson: true
+          updaterJsonPreferNsis: true
+          args: ${{ matrix.args }}
+
+      # macOS: also ship the .pkg installer (the dmg needs a drag; the pkg does not).
+      - name: Build and upload the macOS pkg
+        if: matrix.platform == 'macos-latest'
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_REPO_TOKEN }}
+        run: |
+          sh scripts/make-pkg.sh
+          gh release upload "${{ github.ref_name }}" src-tauri/target/release/bundle/pkg/*.pkg \
+            --repo DFI-SERVER/flowstate-releases --clobber

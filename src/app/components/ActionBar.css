@@ -1,0 +1,126 @@
+.actionbar {
+  position: relative;
+  height: var(--actionbar-h);
+  background: var(--surface-1);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  padding: 0 var(--space-6);
+}
+.actionbar-spacer { flex: 1; }
+
+.btn {
+  padding: var(--space-4) var(--space-5);
+  font-size: var(--text-sm);
+  font-family: var(--font-ui);
+  letter-spacing: 0.3px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  transition: background-color var(--dur-fast) var(--ease);
+}
+.btn:focus-visible {
+  box-shadow: 0 0 0 2px var(--accent-ring);
+}
+.btn:disabled {
+  color: var(--fg-disabled);
+}
+.btn-ghost {
+  border: 1px solid var(--border);
+  color: var(--fg-default);
+  background: transparent;
+}
+.btn-ghost:hover {
+  background: var(--accent-wash-hover);
+}
+.btn-primary {
+  background: var(--accent);
+  color: var(--accent-fg);
+  font-weight: var(--weight-semibold);
+}
+.btn-primary:hover {
+  background: var(--accent-hover);
+}
+/* Icon-only square button used for view-state actions (Split Editor Right). */
+.btn-icon {
+  padding: var(--space-3);
+  color: var(--fg-default);
+  background: transparent;
+  border: 1px solid var(--border);
+  width: 30px;
+  height: 30px;
+  justify-content: center;
+}
+.btn-icon:hover {
+  background: var(--accent-wash-hover);
+}
+
+.pill {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--fg-default);
+  padding: var(--space-3) var(--space-5);
+  font-size: var(--text-sm);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-family: var(--font-ui);
+}
+.pill-dot.sage { color: var(--sage); }
+.pill-dot-connected {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--sage);
+  box-shadow: 0 0 5px var(--sage);
+}
+.pill-caret { color: var(--fg-muted); font-size: var(--text-2xs); }
+
+/* Primary actions — red, the only hue in the chrome. */
+.btn-action {
+  background: var(--action);
+  color: var(--action-fg);
+  font-weight: var(--weight-semibold);
+  border: 1px solid transparent;
+}
+.btn-action:hover:not(:disabled) { background: var(--action-hover); }
+.btn-action:active:not(:disabled) { background: var(--action-press); }
+.btn-action:disabled { background: var(--action-wash); color: var(--fg-muted); }
+.btn-action-upload { padding-left: var(--space-6); padding-right: var(--space-6); }
+
+/* Build status line: real stage + percentage. */
+.actionbar-status {
+  font-size: var(--text-sm);
+  color: var(--fg-muted);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.actionbar-status.is-error { color: var(--error); }
+
+/* Determinate progress bar along the bottom edge of the toolbar. */
+.actionbar-progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  overflow: hidden;
+  background: var(--action-wash);
+}
+.actionbar-progress-fill {
+  height: 100%;
+  width: 0;
+  background: var(--action);
+  transition: width 240ms var(--ease);
+}
+/* Before the first stage marker arrives there is nothing to measure yet. */
+.actionbar-progress.is-indeterminate .actionbar-progress-fill {
+  position: absolute;
+  width: 30%;
+  animation: actionbar-progress-slide 1.05s ease-in-out infinite;
+}
+@keyframes actionbar-progress-slide {
+  0% { left: -30%; }
+  100% { left: 100%; }
+}

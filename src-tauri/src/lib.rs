@@ -3,6 +3,7 @@ mod arduino;
 mod serial;
 mod commands;
 mod corrections;
+mod preflight;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -10,6 +11,8 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_process::init())
         .manage(serial::commands::SerialState(std::sync::Mutex::new(
             std::collections::HashMap::new(),
         )))
@@ -42,7 +45,10 @@ pub fn run() {
             project::commands::project_sketchbook_set,
             project::commands::project_archive_sketch,
             project::commands::project_read_profiles,
+            arduino::commands::arduino_prepare,
             arduino::commands::arduino_list_boards,
+            arduino::commands::arduino_board_details,
+            arduino::commands::arduino_uninstall_core,
             arduino::commands::arduino_detect_ports,
             arduino::commands::arduino_compile,
             arduino::commands::arduino_upload,
@@ -66,6 +72,8 @@ pub fn run() {
             corrections::commands::corrections_list,
             corrections::commands::corrections_apply,
             corrections::commands::corrections_remove,
+            preflight::commands::setup_check,
+            preflight::commands::setup_fix,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

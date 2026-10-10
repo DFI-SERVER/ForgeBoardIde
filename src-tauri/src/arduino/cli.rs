@@ -1,7 +1,7 @@
 use std::collections::VecDeque;
 use std::path::PathBuf;
 use std::process::Stdio;
-use tauri::{Emitter, EventTarget, Manager};
+use tauri::{Emitter, EventTarget};
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::process::Command;
 
@@ -15,17 +15,58 @@ const CREATE_NO_WINDOW: u32 = 0x0800_0000;
 const STDERR_HEAD_LINES: usize = 2_000;
 const STDERR_TAIL_LINES: usize = 8_000;
 
-/// Resolve the bundled arduino-cli binary — from the crate in dev builds,
-/// from the app's bundled resources in release builds.
-fn arduino_cli_path(app: &tauri::AppHandle) -> Result<PathBuf, String> {
-    const BIN: &str = "binaries/arduino-cli-x86_64-pc-windows-msvc.exe";
+/// arduino-cli cancels any download that runs longer than
+/// `network.connection_timeout` — default **60 s** — with "context deadline
+/// exceeded". The esp32 core has single archives over 500 MB, so on anything
+/// slower than ~10 MB/s the install fails every time, after a long wait.
+/// This is the exact failure Arduino IDE users work around by editing
+/// arduino-cli.yaml; we set it on every invocation instead (environment
+/// variables override the config file, and we never touch the shared yaml
+/// that Arduino IDE also reads). One hour covers a 560 MB file at 160 KB/s;
+/// the install retry in `core::install` handles anything worse.
+const NETWORK_TIMEOUT_ENV: &str = "ARDUINO_NETWORK_CONNECTION_TIMEOUT";
+const NETWORK_TIMEOUT: &str = "3600s";
+
+/// Resolve the bundled arduino-cli binary. It is a Tauri external binary
+/// (sidecar): `tauri.conf.json` lists `binaries/arduino-cli`, and the build
+/// expects `binaries/arduino-cli-<target-triple>[.exe]` for the platform it
+/// is producing — `scripts/download-arduino-cli.mjs` fetches that file. The
+/// bundler then places the sidecar next to the app executable, without the
+/// triple suffix, on Windows, macOS (`Contents/MacOS/`) and Linux alike.
+fn arduino_cli_path(_app: &tauri::AppHandle) -> Result<PathBuf, String> {
+    let exe_suffix = if cfg!(windows) { ".exe" } else { "" };
     if cfg!(debug_assertions) {
-        Ok(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(BIN))
+        let triple = tauri::utils::platform::target_triple().map_err(|e| e.to_string())?;
+        Ok(PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("binaries")
+            .join(format!("arduino-cli-{triple}{exe_suffix}")))
     } else {
-        app.path()
-            .resolve(BIN, tauri::path::BaseDirectory::Resource)
-            .map_err(|e| e.to_string())
+        let exe = std::env::current_exe().map_err(|e| e.to_string())?;
+        let dir = exe
+            .parent()
+            .ok_or_else(|| "app executable has no parent directory".to_string())?;
+        Ok(dir.join(format!("arduino-cli{exe_suffix}")))
     }
+}
+
+/// The arduino-cli data directory (`directories.data`): `Arduino15` under
+/// `%LOCALAPPDATA%` on Windows, `~/Library/Arduino15` on macOS, `~/.arduino15`
+/// on Linux — or wherever the user moved it with
+/// `arduino-cli config set directories.data <path>`. Asked of arduino-cli
+/// rather than guessed, for exactly that reason.
+///
+/// Implementation note: arduino-cli 1.5.0's `config dump --format json` only
+/// emits keys the user explicitly overrode — defaults are missing, so a
+/// JSON-pointer lookup against the dump fails for fresh installs. The
+/// per-key `config get directories.data` form does include the resolved
+/// default, so we use that instead.
+pub async fn data_dir(app: &tauri::AppHandle) -> Result<PathBuf, String> {
+    let out = run_capture(app, &["config", "get", "directories.data"]).await?;
+    let trimmed = out.trim();
+    if trimmed.is_empty() {
+        return Err("arduino-cli config get directories.data returned empty".into());
+    }
+    Ok(PathBuf::from(trimmed))
 }
 
 /// Emit one line to `event_name`, but only to the window labelled `target` —
@@ -48,6 +89,7 @@ pub async fn run_streaming(
     let binary = arduino_cli_path(app)?;
     let mut cmd = Command::new(binary);
     cmd.args(args).stdout(Stdio::piped()).stderr(Stdio::piped());
+    cmd.env(NETWORK_TIMEOUT_ENV, NETWORK_TIMEOUT);
     #[cfg(windows)]
     cmd.creation_flags(CREATE_NO_WINDOW);
 
@@ -107,6 +149,7 @@ pub async fn run_capture(app: &tauri::AppHandle, args: &[&str]) -> Result<String
     let binary = arduino_cli_path(app)?;
     let mut cmd = Command::new(binary);
     cmd.args(args);
+    cmd.env(NETWORK_TIMEOUT_ENV, NETWORK_TIMEOUT);
     #[cfg(windows)]
     cmd.creation_flags(CREATE_NO_WINDOW);
     let output = cmd.output().await.map_err(|e| e.to_string())?;

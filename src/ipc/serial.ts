@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
-import { appendSerialLog, serialConnected } from "../state/appState";
+import { appendSerialLog, serialConnected } from "@/features/serial/state";
 
 export interface SerialLine {
   ts: number;
