@@ -1,6 +1,6 @@
 [package]
 name = "forgeboard-ide"
-version = "0.2.1"
+version = "0.2.2"
 description = "Flow State — the Forge Board IDE"
 authors = ["Defence Forge Industries"]
 edition = "2021"

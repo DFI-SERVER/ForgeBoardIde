@@ -7,7 +7,7 @@ import "./HelpDialogs.css";
 
 /** App version — kept here so the About box and any future "check for updates"
  *  surface read the same source. */
-export const APP_VERSION = "0.2.1";
+export const APP_VERSION = "0.2.2";
 
 /** About ForgeBoard — app name + version + open-source credits. */
 export function AboutDialog({ onClose }: { onClose: () => void }) {

@@ -143,7 +143,7 @@ describe("MenuBar", () => {
     fireEvent.click(screen.getByText("Help"));
     fireEvent.click(screen.getByText("About ForgeBoard"));
     expect(screen.getByText("About ForgeBoard IDE")).toBeInTheDocument();
-    expect(screen.getByText(/Version 0\.2\.1/)).toBeInTheDocument();
+    expect(screen.getByText(/Version 0\.2\.2/)).toBeInTheDocument();
   });
 
   it("Help → Keyboard Shortcuts opens the shortcuts modal", () => {
