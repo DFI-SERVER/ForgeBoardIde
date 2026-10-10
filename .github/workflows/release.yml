@@ -118,5 +118,5 @@ jobs:
           GH_TOKEN: ${{ secrets.RELEASE_REPO_TOKEN }}
         run: |
           sh scripts/make-pkg.sh
-          gh release upload "${{ github.ref_name }}" src-tauri/target/release/bundle/pkg/*.pkg \
+          gh release upload "${{ github.ref_name }}" src-tauri/target/pkg/*.pkg \
             --repo DFI-SERVER/flowstate-releases --clobber
