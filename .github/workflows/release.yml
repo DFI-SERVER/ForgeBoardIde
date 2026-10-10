@@ -10,9 +10,8 @@
 #   RELEASE_REPO_TOKEN                   PAT with write access to flowstate-releases
 #   TAURI_SIGNING_PRIVATE_KEY            contents of ~/.tauri/flowstate.key
 #   TAURI_SIGNING_PRIVATE_KEY_PASSWORD   its password (empty if none)
-# Optional, for OS code signing once the certificates exist:
-#   APPLE_CERTIFICATE, APPLE_CERTIFICATE_PASSWORD, APPLE_SIGNING_IDENTITY,
-#   APPLE_ID, APPLE_PASSWORD, APPLE_TEAM_ID
+# Optional, for OS code signing once the certificates exist — see the
+# commented APPLE_* block below.
 name: release
 
 on:
@@ -65,18 +64,31 @@ jobs:
       # Also downloads the arduino-cli sidecar for this platform (postinstall).
       - run: pnpm install --frozen-lockfile
 
+      # The updater key must be a single base64 line. A pasted secret usually
+      # carries a trailing newline, which the signer rejects ("Invalid symbol
+      # 10"), so strip line breaks and spaces before handing it to the build.
+      - name: Prepare updater signing key
+        shell: bash
+        env:
+          RAW_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+        run: |
+          KEY="$(printf '%s' "$RAW_KEY" | tr -d '\r\n ')"
+          echo "::add-mask::$KEY"
+          echo "TAURI_SIGNING_PRIVATE_KEY=$KEY" >> "$GITHUB_ENV"
+
       - name: Build, sign and publish
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_REPO_TOKEN }}
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          # Apple Developer ID signing — uncomment once the certificate exists.
+          # Passing these empty makes codesign try to import an empty certificate.
+          # APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          # APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          # APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          # APPLE_ID: ${{ secrets.APPLE_ID }}
+          # APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          # APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         with:
           owner: DFI-SERVER
           repo: flowstate-releases
